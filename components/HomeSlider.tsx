@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Image, Dimensions } from 'react-native';
+import React from 'react';
+import { View, StyleSheet, Image, Dimensions, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
@@ -13,14 +13,15 @@ import Animated, {
 interface SlideButtonProps {
   onSlideComplete: () => void;
   text: string;
+  width?: number;
 }
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const BUTTON_WIDTH = SCREEN_WIDTH - 40; // Adjust based on your padding
-const SLIDER_WIDTH = 86;
-const SLIDE_THRESHOLD = BUTTON_WIDTH - SLIDER_WIDTH - 10; // Threshold to trigger slide complete
+const SlideButton: React.FC<SlideButtonProps> = ({ onSlideComplete, text, width }) => {
+  const { width: SCREEN_WIDTH } = useWindowDimensions();
+  const BUTTON_WIDTH = width || SCREEN_WIDTH * 0.9; // Use provided width or default to 90% of screen width
+  const SLIDER_WIDTH = BUTTON_WIDTH * 0.25; // 25% of button width
+  const SLIDE_THRESHOLD = BUTTON_WIDTH * 0.75; // 75% of button width
 
-const SlideButton: React.FC<SlideButtonProps> = ({ onSlideComplete, text }) => {
   const translateX = useSharedValue(0);
 
   const panGesture = Gesture.Pan()
@@ -60,10 +61,10 @@ const SlideButton: React.FC<SlideButtonProps> = ({ onSlideComplete, text }) => {
   }));
 
   return (
-    <Animated.View style={[styles.container, backgroundColorStyle]}>
+    <Animated.View style={[styles.container, backgroundColorStyle, { width: BUTTON_WIDTH }]}>
       <Animated.Text style={[styles.text, textOpacityStyle]}>{text}</Animated.Text>
       <GestureDetector gesture={panGesture}>
-        <Animated.View style={[styles.slider, animatedStyle]}>
+        <Animated.View style={[styles.slider, animatedStyle, { width: SLIDER_WIDTH }]}>
           <Image
             source={require('@/assets/images/cute_ninja.png')}
             style={styles.icon}
@@ -94,13 +95,11 @@ const styles = StyleSheet.create({
     height: 60,
     justifyContent: 'center',
     overflow: 'hidden',
-    width: BUTTON_WIDTH,
   },
   slider: {
     position: 'absolute',
     left: 0,
-    width: SLIDER_WIDTH,
-    height: 56,
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#ffd7f4',
@@ -116,16 +115,16 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   icon: {
-    width: 30,
-    height: 50,
+    width: '35%',
+    height: '80%',
   },
   arrow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 5,
+    marginLeft: '5%',
   },
   arrowLine: {
-    width: 20,
+    width: '20%',
     height: 2,
     backgroundColor: '#ff8c00',
   },
@@ -143,9 +142,9 @@ const styles = StyleSheet.create({
   },
   houseIconContainer: {
     position: 'absolute',
-    right: 10,
-    width: 40,
-    height: 40,
+    right: '3%',
+    width: '12%',
+    aspectRatio: 1,
   },
   houseIcon: {
     width: '100%',

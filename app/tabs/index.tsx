@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Image, StyleSheet, Platform, View, TouchableOpacity, Dimensions } from 'react-native';
+import { Image, StyleSheet, Platform, View, TouchableOpacity, Dimensions, useWindowDimensions } from 'react-native';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 import { ref, onValue, set, increment, DataSnapshot } from 'firebase/database';
 import { database, auth } from '../../firebaseConfig';
@@ -20,21 +20,17 @@ export default function HomeScreen() {
   const [user, setUser] = useState<User | null>(null);
   const [units, setUnits] = useState<number>(0);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const { width: SCREEN_WIDTH } = useWindowDimensions();
+  const BUTTON_WIDTH = SCREEN_WIDTH * 0.9; // 90% of screen width
 
   useEffect(() => {
     const authUnsubscribe = auth.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        const userRef = ref(database, `users/${currentUser.uid}`);
-        const unsubscribe = onValue(userRef, (snapshot: DataSnapshot) => {
-          const userData = snapshot.val();
-          setUnits(userData?.units || 0);
-          
-          // Store first name if it doesn't exist
-          if (!userData?.firstName && currentUser.displayName) {
-            const firstName = currentUser.displayName.split(' ')[0];
-            set(ref(database, `users/${currentUser.uid}/firstName`), firstName);
-          }
+        const unitsRef = ref(database, `users/${currentUser.uid}/units`);
+        const unsubscribe = onValue(unitsRef, (snapshot: DataSnapshot) => {
+          const data = snapshot.val();
+          setUnits(data || 0);
         });
         return () => unsubscribe();
       }
@@ -98,17 +94,19 @@ export default function HomeScreen() {
         }>
         <ThemedView style={styles.contentContainer}>
           <ThemedView style={styles.titleContainer}>
-            <ThemedText type="title">Konnichiwa</ThemedText>
+            <ThemedText type="title">
+              {user ? `Konnichiwa, ${user.displayName?.split(' ')[0]}` : 'Konnichiwa'}
+            </ThemedText>
             <HelloWave />
           </ThemedView>
           <ThemedView style={styles.stepContainer}>
             {user ? (
               <>
                 <ThemedText type="default" style={styles.welcomeText}>
-                  Välkommen till dojon, {user.displayName?.split(' ')[0]}!
+                  Välkommen till dojon!
                 </ThemedText>
                 <View style={styles.buttonContainer}>
-                  <TouchableOpacity style={styles.combinedButton} onPress={takeUnit}>
+                  <TouchableOpacity style={[styles.combinedButton, { width: BUTTON_WIDTH }]} onPress={takeUnit}>
                     <Image
                       source={require('@/assets/images/beer_can.png')}
                       style={styles.beerCanIcon}
@@ -122,6 +120,7 @@ export default function HomeScreen() {
                   <HomeSlider
                     onSlideComplete={arrivedHomeSafely}
                     text="Bekräfta Hemkomst"
+                    width={BUTTON_WIDTH}
                   />
                 </View>
               </>
@@ -146,8 +145,7 @@ const styles = StyleSheet.create({
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 4, 
+    gap: 8
   },
   stepContainer: {
     gap: 8,
@@ -182,7 +180,7 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontWeight: 'bold',
     fontSize: 20,
-    marginBottom: 16,
+    marginBottom: 25,
     color: '#ffa9e8',
   },
   combinedButton: {
@@ -191,12 +189,10 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#ffffff',
     paddingVertical: 15,
-    paddingHorizontal: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    width: SCREEN_WIDTH - 40, // Match the width of HomeSlider
-    height: 130, // Match the height of HomeSlider
+    height: 130, 
   },
   beerCanIcon: {
     width: 100,
@@ -211,8 +207,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   buttonContainer: {
-    width: '100%',
     alignItems: 'center',
-    gap: 16,
+    gap: 20,
   },
 });
