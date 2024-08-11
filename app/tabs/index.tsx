@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Image, StyleSheet, Platform, View, TouchableOpacity, Dimensions, useWindowDimensions } from 'react-native';
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+import React, { useState, useEffect, useCallback } from 'react';
+import { Image, StyleSheet, Platform, View, useWindowDimensions } from 'react-native';
 import { ref, onValue, set, increment, DataSnapshot } from 'firebase/database';
 import { database, auth } from '../../firebaseConfig';
 import { User } from 'firebase/auth';
 import * as Haptics from 'expo-haptics';
-import { Audio } from 'expo-av';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { HelloWave } from '@/components/HelloWave';
@@ -14,12 +12,11 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import GoogleSignInButton from '@/components/GoogleSignInButton';
 import HomeSlider from '@/components/HomeSlider';
-import TestComponent from '@/components/TestComponent';
+import TakeUnitButton from '@/components/TakeUnitButton';
 
 export default function HomeScreen() {
   const [user, setUser] = useState<User | null>(null);
   const [units, setUnits] = useState<number>(0);
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
   const { width: SCREEN_WIDTH } = useWindowDimensions();
   const BUTTON_WIDTH = SCREEN_WIDTH * 0.9; // 90% of screen width
 
@@ -36,38 +33,17 @@ export default function HomeScreen() {
       }
     });
 
-    // Load the sound file
-    async function loadSound() {
-      const { sound } = await Audio.Sound.createAsync(
-        require('@/assets/sounds/unit_taken.wav')
-      );
-      setSound(sound);
-    }
-
-    loadSound();
-
     return () => {
       authUnsubscribe();
-      if (sound) {
-        sound.unloadAsync();
-      }
     };
   }, []);
 
-  const takeUnit = async () => {
-    if (Platform.OS !== 'web') {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
-    if (user) {
+  const takeUnit = useCallback(async () => {
+    if (user && units > 0) {
       const unitsRef = ref(database, `users/${user.uid}/units`);
-      set(unitsRef, increment(1));
-
-      // Play the sound
-      if (sound) {
-        await sound.replayAsync();
-      }
+      set(unitsRef, increment(-1));
     }
-  };
+  }, [user, units]);
 
   const arrivedHomeSafely = async () => {
     if (Platform.OS !== 'web') {
@@ -106,17 +82,11 @@ export default function HomeScreen() {
                   Välkommen till dojon!
                 </ThemedText>
                 <View style={styles.buttonContainer}>
-                  <TouchableOpacity style={[styles.combinedButton, { width: BUTTON_WIDTH }]} onPress={takeUnit}>
-                    <Image
-                      source={require('@/assets/images/beer_can.png')}
-                      style={styles.beerCanIcon}
-                      resizeMode="contain"
-                    />
-                    <View style={styles.unitsContainer}>
-                      <ThemedText style={styles.unitsValue}>{units}</ThemedText>
-                      <ThemedText style={styles.unitsLabel}>enheter</ThemedText>
-                    </View>
-                  </TouchableOpacity>
+                  <TakeUnitButton
+                    onPress={takeUnit}
+                    units={units}
+                    width={BUTTON_WIDTH}
+                  />
                   <HomeSlider
                     onSlideComplete={arrivedHomeSafely}
                     text="Bekräfta Hemkomst"
@@ -162,41 +132,11 @@ const styles = StyleSheet.create({
     width: '80%',
     height: '80%',
   },
-  unitsContainer: {
-    alignItems: 'flex-end',
-    paddingRight: 20,
-  },
-  unitsLabel: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#ffffff',
-  },
-  unitsValue: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    lineHeight: 40,
-  },
   welcomeText: {
     fontWeight: 'bold',
     fontSize: 20,
     marginBottom: 25,
     color: '#ffa9e8',
-  },
-  combinedButton: {
-    backgroundColor: '#ff00bb',
-    borderRadius: 20,
-    borderWidth: 2,
-    borderColor: '#ffffff',
-    paddingVertical: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    height: 130, 
-  },
-  beerCanIcon: {
-    width: 100,
-    height: 100,
   },
   contentContainer: {
     gap: 1,
