@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, FlatList, Image } from 'react-native';
+import { StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
-import { Button } from '@/components/Button';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
+import { AntDesign } from '@expo/vector-icons';
 
 interface User {
   id: string;
@@ -60,8 +60,18 @@ export default function AdminScreen() {
         <ThemedText style={styles.userUnits}>{item.units} units</ThemedText>
       </ThemedView>
       <ThemedView style={styles.buttonContainer}>
-        <Button title="-" onPress={() => updateUnits(item.id, -1)} />
-        <Button title="+" onPress={() => updateUnits(item.id, 1)} />
+        <TouchableOpacity 
+          onPress={() => updateUnits(item.id, -1)} 
+          style={styles.unitButton}
+        >
+          <AntDesign name="minus" size={30} color="white" />
+        </TouchableOpacity>
+        <TouchableOpacity 
+          onPress={() => updateUnits(item.id, 1)} 
+          style={styles.unitButton}
+        >
+          <AntDesign name="plus" size={30} color="white" />
+        </TouchableOpacity>
       </ThemedView>
     </ThemedView>
   );
@@ -116,5 +126,15 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: 'row',
+    alignItems: 'center',
+  },
+  unitButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 5,
+    backgroundColor: '#007AFF',
   },
 });
