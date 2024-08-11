@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
+import { StyleSheet, FlatList, Image, TouchableOpacity, View } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
-import { getDatabase, ref, onValue, set } from 'firebase/database';
+import { getDatabase, ref, onValue, set, remove } from 'firebase/database';
 import { AntDesign } from '@expo/vector-icons';
 
 interface User {
@@ -16,8 +16,16 @@ interface FirebaseUser {
   units: number;
 }
 
+interface HighPromilleNotification {
+  id: string;
+  userId: string;
+  promille: number;
+  timestamp: number;
+}
+
 export default function AdminScreen() {
   const [users, setUsers] = useState<User[]>([]);
+  const [notifications, setNotifications] = useState<HighPromilleNotification[]>([]);
 
   useEffect(() => {
     const db = getDatabase();
@@ -39,7 +47,26 @@ export default function AdminScreen() {
       setUsers(userList);
     });
 
-    return () => unsubscribe();
+    const notificationsRef = ref(getDatabase(), 'notifications/highPromille');
+    const notificationsUnsubscribe = onValue(notificationsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const notificationList: HighPromilleNotification[] = Object.entries(data).map(([id, notification]: [string, any]) => ({
+          id,
+          userId: notification.userId,
+          promille: notification.promille,
+          timestamp: notification.timestamp,
+        }));
+        setNotifications(notificationList);
+      } else {
+        setNotifications([]);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      notificationsUnsubscribe();
+    };
   }, []);
 
   const updateUnits = (userId: string, change: number) => {
@@ -48,6 +75,23 @@ export default function AdminScreen() {
     const newUnits = Math.max(0, users.find(u => u.id === userId)!.units + change);
     set(userRef, newUnits);
   };
+
+  const dismissNotification = (notificationId: string) => {
+    const db = getDatabase();
+    const notificationRef = ref(db, `notifications/highPromille/${notificationId}`);
+    remove(notificationRef);
+  };
+
+  const renderNotification = ({ item }: { item: HighPromilleNotification }) => (
+    <ThemedView style={styles.notificationItem}>
+      <ThemedText style={styles.notificationText}>
+        User {item.userId} has a dangerous promille level of {item.promille.toFixed(2)}‰
+      </ThemedText>
+      <TouchableOpacity onPress={() => dismissNotification(item.id)} style={styles.dismissButton}>
+        <AntDesign name="close" size={24} color="white" />
+      </TouchableOpacity>
+    </ThemedView>
+  );
 
   const renderUser = ({ item }: { item: User }) => (
     <ThemedView style={styles.userItem}>
@@ -79,6 +123,16 @@ export default function AdminScreen() {
   return (
     <ThemedView style={styles.container}>
       <ThemedText style={styles.title}>User Management</ThemedText>
+      {notifications.length > 0 && (
+        <View style={styles.notificationsContainer}>
+          <ThemedText style={styles.notificationsTitle}>High Promille Alerts</ThemedText>
+          <FlatList
+            data={notifications}
+            renderItem={renderNotification}
+            keyExtractor={(item) => item.id}
+          />
+        </View>
+      )}
       <FlatList
         data={users}
         renderItem={renderUser}
@@ -136,5 +190,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: 5,
     backgroundColor: '#007AFF',
+  },
+  notificationsContainer: {
+    marginBottom: 20,
+  },
+  notificationsTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  notificationItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 10,
+    marginBottom: 10,
+    backgroundColor: '#FF9800',
+    borderRadius: 5,
+  },
+  notificationText: {
+    flex: 1,
+    color: 'white',
+  },
+  dismissButton: {
+    padding: 5,
   },
 });

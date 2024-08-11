@@ -13,6 +13,7 @@ import { ThemedView } from '@/components/ThemedView';
 import GoogleSignInButton from '@/components/GoogleSignInButton';
 import HomeSlider from '@/components/HomeSlider';
 import TakeUnitButton from '@/components/TakeUnitButton';
+import PromilleMeter from '@/components/PromilleMeter';
 
 import { DrinkEntry } from '../../firebaseConfig';
 
@@ -41,7 +42,13 @@ export default function HomeScreen() {
           if (data) {
             const drinkEntries: DrinkEntry[] = Object.values(data);
             setDrinks(drinkEntries);
-            calculateBAC(drinkEntries);
+            const promille = calculateBAC(drinkEntries);
+            setEstimatedBAC(promille);
+            
+            // Notify admin if promille is dangerously high
+            if (promille >= 2.0 && user) {
+              notifyAdmin(user.uid, promille);
+            }
           } else {
             setDrinks([]);
             setEstimatedBAC(0);
@@ -60,7 +67,7 @@ export default function HomeScreen() {
     };
   }, []);
 
-  const calculateBAC = (drinkEntries: DrinkEntry[]) => {
+  const calculateBAC = (drinkEntries: DrinkEntry[]): number => {
     // This is a simplified BAC calculation and should not be used for actual medical purposes
     const weight = 70; // kg, should be user-specific in a real app
     const gender = 'male'; // should be user-specific in a real app
@@ -81,22 +88,36 @@ export default function HomeScreen() {
 
     const bac = (totalAlcohol / (weight * 1000 * bodyWaterConstant)) * 100;
     const promille = Math.max(0, bac) * 10; // Convert BAC to promille
-    setEstimatedBAC(promille);
+    return promille;
+  };
+
+  const notifyAdmin = (userId: string, promille: number) => {
+    const notificationRef = ref(database, 'notifications/highPromille');
+    push(notificationRef, {
+      userId,
+      promille,
+      timestamp: serverTimestamp()
+    });
   };
 
   const takeUnit = useCallback(async () => {
     if (user && units > 0) {
-      const unitsRef = ref(database, `users/${user.uid}/units`);
-      const drinksRef = ref(database, `users/${user.uid}/drinks`);
-      
-      // Decrease available units
-      set(unitsRef, increment(-1));
-      
-      // Add drink entry
-      push(drinksRef, {
-        timestamp: serverTimestamp(),
-        units: 1
-      });
+      try {
+        const unitsRef = ref(database, `users/${user.uid}/units`);
+        const drinksRef = ref(database, `users/${user.uid}/drinks`);
+        
+        // Decrease available units
+        await set(unitsRef, increment(-1));
+        
+        // Add drink entry
+        await push(drinksRef, {
+          timestamp: serverTimestamp(),
+          units: 1
+        });
+      } catch (error) {
+        console.error("Error taking unit:", error);
+        // Handle the error appropriately, e.g., show an error message to the user
+      }
     }
   }, [user, units]);
 
@@ -142,6 +163,7 @@ export default function HomeScreen() {
                     units={units}
                     width={BUTTON_WIDTH}
                   />
+                  <PromilleMeter promille={estimatedBAC} width={BUTTON_WIDTH} />
                   <HomeSlider
                     onSlideComplete={arrivedHomeSafely}
                     text="Bekräfta Hemkomst"
@@ -160,11 +182,6 @@ export default function HomeScreen() {
               </>
             )}
           </ThemedView>
-          {user && (
-            <ThemedText style={styles.bacText}>
-              Promille: {estimatedBAC.toFixed(2)}
-            </ThemedText>
-          )}
         </ThemedView>
       </ParallaxScrollView>
     </GestureHandlerRootView>
