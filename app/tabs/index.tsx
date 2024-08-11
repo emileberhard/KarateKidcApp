@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Image, StyleSheet, Platform, View, useWindowDimensions } from 'react-native';
-import { ref, onValue, set, increment, DataSnapshot } from 'firebase/database';
+import { ref, onValue, push, serverTimestamp, increment, set, DataSnapshot } from 'firebase/database';
 import { database, auth } from '../../firebaseConfig';
 import { User } from 'firebase/auth';
 import * as Haptics from 'expo-haptics';
@@ -14,9 +14,13 @@ import GoogleSignInButton from '@/components/GoogleSignInButton';
 import HomeSlider from '@/components/HomeSlider';
 import TakeUnitButton from '@/components/TakeUnitButton';
 
+import { DrinkEntry } from '../../firebaseConfig';
+
 export default function HomeScreen() {
   const [user, setUser] = useState<User | null>(null);
   const [units, setUnits] = useState<number>(0);
+  const [drinks, setDrinks] = useState<DrinkEntry[]>([]);
+  const [estimatedBAC, setEstimatedBAC] = useState<number>(0);
   const { width: SCREEN_WIDTH } = useWindowDimensions();
   const BUTTON_WIDTH = SCREEN_WIDTH * 0.9; // 90% of screen width
 
@@ -25,11 +29,29 @@ export default function HomeScreen() {
       setUser(currentUser);
       if (currentUser) {
         const unitsRef = ref(database, `users/${currentUser.uid}/units`);
-        const unsubscribe = onValue(unitsRef, (snapshot: DataSnapshot) => {
+        const drinksRef = ref(database, `users/${currentUser.uid}/drinks`);
+        
+        const unitsUnsubscribe = onValue(unitsRef, (snapshot: DataSnapshot) => {
           const data = snapshot.val();
           setUnits(data || 0);
         });
-        return () => unsubscribe();
+
+        const drinksUnsubscribe = onValue(drinksRef, (snapshot: DataSnapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            const drinkEntries: DrinkEntry[] = Object.values(data);
+            setDrinks(drinkEntries);
+            calculateBAC(drinkEntries);
+          } else {
+            setDrinks([]);
+            setEstimatedBAC(0);
+          }
+        });
+
+        return () => {
+          unitsUnsubscribe();
+          drinksUnsubscribe();
+        };
       }
     });
 
@@ -38,10 +60,43 @@ export default function HomeScreen() {
     };
   }, []);
 
+  const calculateBAC = (drinkEntries: DrinkEntry[]) => {
+    // This is a simplified BAC calculation and should not be used for actual medical purposes
+    const weight = 70; // kg, should be user-specific in a real app
+    const gender = 'male'; // should be user-specific in a real app
+    const metabolismRate = gender === 'male' ? 0.015 : 0.017;
+    const bodyWaterConstant = gender === 'male' ? 0.68 : 0.55;
+
+    const now = Date.now();
+    const last24Hours = now - 24 * 60 * 60 * 1000;
+
+    let totalAlcohol = 0;
+    drinkEntries.forEach(entry => {
+      if (entry.timestamp > last24Hours) {
+        const hoursAgo = (now - entry.timestamp) / (60 * 60 * 1000);
+        const remainingAlcohol = Math.max(0, entry.units * 10 - (hoursAgo * metabolismRate));
+        totalAlcohol += remainingAlcohol;
+      }
+    });
+
+    const bac = (totalAlcohol / (weight * 1000 * bodyWaterConstant)) * 100;
+    const promille = Math.max(0, bac) * 10; // Convert BAC to promille
+    setEstimatedBAC(promille);
+  };
+
   const takeUnit = useCallback(async () => {
     if (user && units > 0) {
       const unitsRef = ref(database, `users/${user.uid}/units`);
+      const drinksRef = ref(database, `users/${user.uid}/drinks`);
+      
+      // Decrease available units
       set(unitsRef, increment(-1));
+      
+      // Add drink entry
+      push(drinksRef, {
+        timestamp: serverTimestamp(),
+        units: 1
+      });
     }
   }, [user, units]);
 
@@ -105,6 +160,11 @@ export default function HomeScreen() {
               </>
             )}
           </ThemedView>
+          {user && (
+            <ThemedText style={styles.bacText}>
+              Promille: {estimatedBAC.toFixed(2)}
+            </ThemedText>
+          )}
         </ThemedView>
       </ParallaxScrollView>
     </GestureHandlerRootView>
@@ -149,5 +209,11 @@ const styles = StyleSheet.create({
   buttonContainer: {
     alignItems: 'center',
     gap: 20,
+  },
+  bacText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 10,
+    color: '#ffa9e8',
   },
 });

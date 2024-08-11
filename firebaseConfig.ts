@@ -17,6 +17,12 @@ const firebaseConfig = {
   measurementId: "G-S61QSG9EMZ"
 };
 
+// Add this type definition
+export interface DrinkEntry {
+  timestamp: number;
+  units: number;
+}
+
 // Initialize Firebase
 const app: FirebaseApp = initializeApp(firebaseConfig);
 
