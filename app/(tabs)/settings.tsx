@@ -1,0 +1,68 @@
+import { StyleSheet, Pressable } from 'react-native';
+import { ThemedView } from '@/components/ThemedView';
+import { ThemedText } from '@/components/ThemedText';
+import { auth } from '../../firebaseConfig';
+import * as Haptics from 'expo-haptics';
+
+export default function SettingsScreen() {
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      console.log('User logged out successfully');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
+  const handlePress = () => {
+    Haptics.selectionAsync(); 
+    handleLogout();
+  };
+
+  return (
+    <ThemedView style={styles.container}>
+      <ThemedText type="title" style={styles.title}>Inställningar</ThemedText>
+      <ThemedView style={styles.content}>
+        {/* Settings here */}
+      </ThemedView>
+      <Pressable onPress={handlePress} style={styles.logoutButton}>
+        <ThemedText style={styles.logoutButtonText}>Logga ut</ThemedText>
+      </Pressable>
+    </ThemedView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'stretch',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  title: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    textAlign: 'left',
+    paddingVertical: 20,
+    marginTop: 50, 
+    marginBottom: 20,
+    paddingHorizontal: 10,
+  },
+  content: {
+    flex: 1,
+    width: '100%',
+  },
+  logoutButton: {
+    marginBottom: 20,
+    padding: 10,
+    backgroundColor: '#b20d0d',
+    borderRadius: 8,
+    alignSelf: 'stretch',
+  },
+  logoutButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});
