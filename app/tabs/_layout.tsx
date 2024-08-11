@@ -10,27 +10,29 @@ export default function TabLayout() {
     <Tabs
       initialRouteName="index"
       screenOptions={{
+        headerShown: false, // This will hide the header for all tab screens
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Hem',
+          headerShown: false, // This will hide the header for the Home tab
           tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
+          tabBarLabel: 'Hem',
         }}
       />
       <Tabs.Screen
         name="admin"
         options={{
-          title: 'Admin',
-          tabBarIcon: ({ color }) => <TabBarIcon name="settings" color={color} />,
+          tabBarIcon: ({ color }) => <TabBarIcon name="people" color={color} />,
+          tabBarLabel: 'Admin',
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: 'Inställningar',
-          tabBarIcon: ({ color }) => <TabBarIcon name="cog" color={color} />,
+          tabBarIcon: ({ color }) => <TabBarIcon name="settings" color={color} />,
+          tabBarLabel: 'Inställningar',
         }}
       />
     </Tabs>

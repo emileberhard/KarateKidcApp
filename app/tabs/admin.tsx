@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, FlatList } from 'react-native';
+import { StyleSheet, FlatList, Image } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { Button } from '@/components/Button';
@@ -7,6 +7,12 @@ import { getDatabase, ref, onValue, set } from 'firebase/database';
 
 interface User {
   id: string;
+  firstName?: string;
+  units: number;
+}
+
+interface FirebaseUser {
+  firstName?: string;
   units: number;
 }
 
@@ -21,8 +27,13 @@ export default function AdminScreen() {
       const data = snapshot.val();
       const userList: User[] = [];
       for (const [id, user] of Object.entries(data)) {
-        if (typeof user === 'object' && user !== null && 'units' in user) {
-          userList.push({ id, units: Number(user.units) });
+        const typedUser = user as FirebaseUser;
+        if (typedUser && 'units' in typedUser) {
+          userList.push({
+            id,
+            firstName: typedUser.firstName || 'Unknown',
+            units: Number(typedUser.units)
+          });
         }
       }
       setUsers(userList);
@@ -40,8 +51,14 @@ export default function AdminScreen() {
 
   const renderUser = ({ item }: { item: User }) => (
     <ThemedView style={styles.userItem}>
-      <ThemedText>{item.id}</ThemedText>
-      <ThemedText>Units: {item.units}</ThemedText>
+      <Image
+        source={require('@/assets/images/cute_ninja.png')}
+        style={styles.userIcon}
+      />
+      <ThemedView style={styles.userInfo}>
+        <ThemedText style={styles.userName}>{item.firstName}</ThemedText>
+        <ThemedText style={styles.userUnits}>{item.units} units</ThemedText>
+      </ThemedView>
       <ThemedView style={styles.buttonContainer}>
         <Button title="-" onPress={() => updateUnits(item.id, -1)} />
         <Button title="+" onPress={() => updateUnits(item.id, 1)} />
@@ -51,6 +68,7 @@ export default function AdminScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      <ThemedText style={styles.title}>User Management</ThemedText>
       <FlatList
         data={users}
         renderItem={renderUser}
@@ -63,15 +81,38 @@ export default function AdminScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    paddingVertical: 60,
+    paddingHorizontal: 20
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
   },
   userItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
+  },
+  userIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
+  userInfo: {
+    flex: 1,
+    marginLeft: 15,
+  },
+  userName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  userUnits: {
+    fontSize: 16,
+    color: '#666',
   },
   buttonContainer: {
     flexDirection: 'row',

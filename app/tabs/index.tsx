@@ -25,10 +25,16 @@ export default function HomeScreen() {
     const authUnsubscribe = auth.onAuthStateChanged((currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        const unitsRef = ref(database, `users/${currentUser.uid}/units`);
-        const unsubscribe = onValue(unitsRef, (snapshot: DataSnapshot) => {
-          const data = snapshot.val();
-          setUnits(data || 0);
+        const userRef = ref(database, `users/${currentUser.uid}`);
+        const unsubscribe = onValue(userRef, (snapshot: DataSnapshot) => {
+          const userData = snapshot.val();
+          setUnits(userData?.units || 0);
+          
+          // Store first name if it doesn't exist
+          if (!userData?.firstName && currentUser.displayName) {
+            const firstName = currentUser.displayName.split(' ')[0];
+            set(ref(database, `users/${currentUser.uid}/firstName`), firstName);
+          }
         });
         return () => unsubscribe();
       }
