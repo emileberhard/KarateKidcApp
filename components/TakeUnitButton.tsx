@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useEffect } from 'react';
-import { StyleSheet, View, Image } from 'react-native';
+import { StyleSheet, Image } from 'react-native';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import Animated, { 
   useAnimatedStyle, 
@@ -7,13 +7,11 @@ import Animated, {
   withTiming,
   withSpring,
   runOnJS,
-  interpolate,
   interpolateColor,
   Easing,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { Audio } from 'expo-av';
-import { ThemedText } from './ThemedText';
 
 interface TakeUnitButtonProps {
   onPress: () => void;
@@ -49,13 +47,19 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({ onPress, units, width }
   }, []);
 
   const handleHapticFeedback = useCallback(() => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  }, []);
+    if (units > 0) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    }
+  }, [units]);
 
   const handlePress = useCallback(() => {
     handleHapticFeedback();
-    onPress();
-  }, [handleHapticFeedback, onPress]);
+    if (units > 0) {
+      onPress();
+    }
+  }, [handleHapticFeedback, onPress, units]);
 
   const playCrackSound = useCallback(async () => {
     if (crackSound) {
@@ -70,6 +74,7 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({ onPress, units, width }
   }, [openSound]);
 
   const startHapticFeedback = useCallback(() => {
+    if (units === 0) return;
     let intensity = 0;
     hapticIntervalRef.current = setInterval(() => {
       if (progress.value >= 1) {
@@ -85,7 +90,7 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({ onPress, units, width }
       }
       intensity++;
     }, 100); // Reduced from 150ms to 100ms
-  }, [progress]);
+  }, [progress, units]);
 
   const stopHapticFeedback = useCallback(() => {
     if (hapticIntervalRef.current) {
@@ -97,36 +102,38 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({ onPress, units, width }
   const longPressGesture = Gesture.LongPress()
     .minDuration(1000)
     .onBegin(() => {
-      scale.value = withSpring(0.95);
-      progress.value = withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.quad) });
-      runOnJS(startHapticFeedback)();
-      runOnJS(playCrackSound)();
+      if (units > 0) {
+        scale.value = withSpring(0.95);
+        progress.value = withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.quad) });
+        runOnJS(startHapticFeedback)();
+        runOnJS(playCrackSound)();
+      } else {
+        runOnJS(handleHapticFeedback)();
+      }
     })
     .onFinalize((event) => {
       scale.value = withSpring(1);
-      progress.value = withTiming(0, { duration: 200 });
-      runOnJS(stopHapticFeedback)();
-      if (event.duration >= 1000) {
-        runOnJS(playOpenSound)();
-        runOnJS(handlePress)();
+      if (units > 0) {
+        progress.value = withTiming(0, { duration: 200 });
+        runOnJS(stopHapticFeedback)();
+        if (event.duration >= 1000) {
+          runOnJS(playOpenSound)();
+          runOnJS(handlePress)();
+        }
       }
     });
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
-    backgroundColor: interpolateColor(
-      progress.value,
-      [0, 1],
-      ['#ff00bb', '#ffffff']
-    ),
+    backgroundColor: units > 0
+      ? interpolateColor(progress.value, [0, 1], ['#ff00bb', '#ffffff'])
+      : '#808080', // Gray color for disabled state
   }));
 
   const textColorStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(
-      progress.value,
-      [0, 1],
-      ['#ffffff', '#ff00bb']
-    ),
+    color: units > 0
+      ? interpolateColor(progress.value, [0, 1], ['#ffffff', '#ff00bb'])
+      : '#ffffff', // White text for disabled state
   }));
 
   return (

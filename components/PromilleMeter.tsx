@@ -7,14 +7,14 @@ interface PromilleMeterProps {
   width: number;
 }
 
-const PromilleMeter: React.FC<PromilleMeterProps> = ({ promille, width }) => {
-  const getColor = (value: number) => {
-    if (value < 0.6) return '#4CAF50'; // Green
-    if (value < 1.0) return '#FFC107'; // Yellow
-    if (value < 2.0) return '#FF9800'; // Orange
-    return '#F44336'; // Red
-  };
+const interpolateColor = (value: number) => {
+  const r = value < 1.0 ? Math.floor(255 * value) : 255;
+  const g = value < 1.0 ? 255 : Math.floor(255 * (2 - value));
+  const b = 0;
+  return `rgb(${r},${g},${b})`;
+};
 
+const PromilleMeter: React.FC<PromilleMeterProps> = ({ promille, width }) => {
   const getFillWidth = () => {
     const percentage = Math.min(promille / 3, 1);
     return width * percentage;
@@ -27,7 +27,7 @@ const PromilleMeter: React.FC<PromilleMeterProps> = ({ promille, width }) => {
     return '🤢'; // Sick
   };
 
-  const color = getColor(promille);
+  const color = interpolateColor(Math.min(promille / 2, 1));
   const emoji = getEmoji(promille);
 
   return (
