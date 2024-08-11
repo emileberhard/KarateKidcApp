@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, FlatList, Image, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, FlatList, Image, TouchableOpacity, View, Button } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { getDatabase, ref, onValue, set, remove } from 'firebase/database';
 import { AntDesign } from '@expo/vector-icons';
+
+const DEBUG_MODE = process.env.EXPO_PUBLIC_DEBUG_MODE === 'true';
 
 interface User {
   id: string;
@@ -76,6 +78,14 @@ export default function AdminScreen() {
     set(userRef, newUnits);
   };
 
+  const resetUserUnits = (userId: string) => {
+    const db = getDatabase();
+    const userRef = ref(db, `users/${userId}/units`);
+    const drinksRef = ref(db, `users/${userId}/drinks`);
+    set(userRef, 0);
+    remove(drinksRef);
+  };
+
   const dismissNotification = (notificationId: string) => {
     const db = getDatabase();
     const notificationRef = ref(db, `notifications/highPromille/${notificationId}`);
@@ -117,6 +127,13 @@ export default function AdminScreen() {
           <AntDesign name="plus" size={30} color="white" />
         </TouchableOpacity>
       </ThemedView>
+      {DEBUG_MODE && (
+        <Button
+          title="Reset Units"
+          onPress={() => resetUserUnits(item.id)}
+          color="#FF0000"
+        />
+      )}
     </ThemedView>
   );
 

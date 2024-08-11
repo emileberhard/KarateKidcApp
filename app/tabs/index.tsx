@@ -164,11 +164,6 @@ export default function HomeScreen() {
                     width={BUTTON_WIDTH}
                   />
                   <PromilleMeter promille={estimatedBAC} width={BUTTON_WIDTH} />
-                  <HomeSlider
-                    onSlideComplete={arrivedHomeSafely}
-                    text="Bekräfta Hemkomst"
-                    width={BUTTON_WIDTH}
-                  />
                 </View>
               </>
             ) : (
@@ -184,6 +179,15 @@ export default function HomeScreen() {
           </ThemedView>
         </ThemedView>
       </ParallaxScrollView>
+      {user && (
+        <View style={styles.arrivalButtonContainer}>
+          <HomeSlider
+            onSlideComplete={arrivedHomeSafely}
+            text="Bekräfta Hemkomst"
+            width={BUTTON_WIDTH}
+          />
+        </View>
+      )}
     </GestureHandlerRootView>
   );
 }
@@ -232,5 +236,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 10,
     color: '#ffa9e8',
+  },
+  arrivalButtonContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
   },
 });
