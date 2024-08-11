@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Image, StyleSheet, Platform, View, TouchableOpacity } from 'react-native';
+import { Image, StyleSheet, Platform, View, TouchableOpacity, Dimensions } from 'react-native';
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 import { ref, onValue, set, increment, DataSnapshot } from 'firebase/database';
 import { database, auth } from '../../firebaseConfig';
 import { User } from 'firebase/auth';
@@ -73,7 +74,6 @@ export default function HomeScreen() {
     if (user) {
       const safeArrivalRef = ref(database, `users/${user.uid}/safeArrival`);
       set(safeArrivalRef, new Date().toISOString());
-      // You might want to add some visual feedback here, like a temporary message
     }
   };
 
@@ -101,21 +101,23 @@ export default function HomeScreen() {
                 <ThemedText type="default" style={styles.welcomeText}>
                   Välkommen till dojon, {user.displayName?.split(' ')[0]}!
                 </ThemedText>
-                <TouchableOpacity style={styles.combinedButton} onPress={takeUnit}>
-                  <Image
-                    source={require('@/assets/images/beer_can.png')}
-                    style={styles.beerCanIcon}
-                    resizeMode="contain"
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity style={styles.combinedButton} onPress={takeUnit}>
+                    <Image
+                      source={require('@/assets/images/beer_can.png')}
+                      style={styles.beerCanIcon}
+                      resizeMode="contain"
+                    />
+                    <View style={styles.unitsContainer}>
+                      <ThemedText style={styles.unitsValue}>{units}</ThemedText>
+                      <ThemedText style={styles.unitsLabel}>enheter</ThemedText>
+                    </View>
+                  </TouchableOpacity>
+                  <HomeSlider
+                    onSlideComplete={arrivedHomeSafely}
+                    text="Bekräfta Hemkomst"
                   />
-                  <View style={styles.unitsContainer}>
-                    <ThemedText style={styles.unitsValue}>{units}</ThemedText>
-                    <ThemedText style={styles.unitsLabel}>enheter</ThemedText>
-                  </View>
-                </TouchableOpacity>
-                <HomeSlider
-                  onSlideComplete={arrivedHomeSafely}
-                  text="Bekräfta Hemkomst"
-                />
+                </View>
               </>
             ) : (
               <>
@@ -179,7 +181,7 @@ const styles = StyleSheet.create({
   },
   combinedButton: {
     backgroundColor: '#ff00bb',
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 2,
     borderColor: '#ffffff',
     paddingVertical: 15,
@@ -187,9 +189,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
-    marginVertical: 10,
-    minWidth: 200,
+    width: SCREEN_WIDTH - 40, // Match the width of HomeSlider
+    height: 130, // Match the height of HomeSlider
   },
   beerCanIcon: {
     width: 100,
@@ -202,5 +203,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 20,
     marginBottom: 20,
+  },
+  buttonContainer: {
+    width: '100%',
+    alignItems: 'center',
+    gap: 16,
   },
 });

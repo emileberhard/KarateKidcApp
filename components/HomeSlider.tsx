@@ -1,89 +1,87 @@
-import React, { useState, useRef } from 'react';
-import { View, StyleSheet, PanResponder, Animated, Image } from 'react-native';
-import { ThemedText } from './ThemedText';
+import React, { useState } from 'react';
+import { View, StyleSheet, Image, Dimensions } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+  runOnJS,
+  interpolate,
+  interpolateColor,
+} from 'react-native-reanimated';
 
 interface SlideButtonProps {
   onSlideComplete: () => void;
   text: string;
 }
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const BUTTON_WIDTH = SCREEN_WIDTH - 40; // Adjust based on your padding
+const SLIDER_WIDTH = 86;
+const SLIDE_THRESHOLD = BUTTON_WIDTH - SLIDER_WIDTH - 10; // Threshold to trigger slide complete
+
 const SlideButton: React.FC<SlideButtonProps> = ({ onSlideComplete, text }) => {
-  const [slideAnimation] = useState(new Animated.Value(0));
-  const slidingActive = useRef(false);
-  const startX = useRef(0);
+  const translateX = useSharedValue(0);
 
-  // Add interpolated values for background color and house opacity
-  const backgroundColorInterpolation = slideAnimation.interpolate({
-    inputRange: [0, 250],
-    outputRange: ['#ff8c00', '#4caf50'],
-  });
-
-  const houseOpacityInterpolation = slideAnimation.interpolate({
-    inputRange: [0, 250],
-    outputRange: [1, 0],
-  });
-
-  const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponderCapture: () => slidingActive.current,
-    onPanResponderGrant: (evt) => {
-      slidingActive.current = true;
-      startX.current = evt.nativeEvent.locationX;
-    },
-    onPanResponderMove: (evt, gestureState) => {
-      if (slidingActive.current) {
-        const newValue = Math.max(0, Math.min(gestureState.dx, 250));
-        slideAnimation.setValue(newValue);
-      }
-    },
-    onPanResponderRelease: (evt, gestureState) => {
-      slidingActive.current = false;
-      if (gestureState.dx >= 200) {
-        Animated.timing(slideAnimation, {
-          toValue: 250,
-          duration: 100,
-          useNativeDriver: false,
-        }).start(onSlideComplete);
+  const panGesture = Gesture.Pan()
+    .activeOffsetX([-10, 10])
+    .onChange((event) => {
+      let newValue = event.translationX;
+      newValue = Math.max(0, Math.min(newValue, BUTTON_WIDTH - SLIDER_WIDTH));
+      translateX.value = newValue;
+    })
+    .onFinalize(() => {
+      if (translateX.value >= SLIDE_THRESHOLD) {
+        translateX.value = withTiming(BUTTON_WIDTH - SLIDER_WIDTH, { duration: 100 });
+        runOnJS(onSlideComplete)();
       } else {
-        Animated.spring(slideAnimation, {
-          toValue: 0,
-          friction: 5,
-          useNativeDriver: false,
-        }).start();
+        translateX.value = withTiming(0, { duration: 100 });
       }
-    },
-    onPanResponderTerminate: () => {
-      slidingActive.current = false;
-      Animated.spring(slideAnimation, {
-        toValue: 0,
-        friction: 5,
-        useNativeDriver: false,
-      }).start();
-    },
-  });
+    });
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
+
+  const textOpacityStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(translateX.value, [0, BUTTON_WIDTH / 2], [1, 0]),
+  }));
+
+  const houseOpacityStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(translateX.value, [0, BUTTON_WIDTH / 2], [1, 0]),
+  }));
+
+  const backgroundColorStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(
+      translateX.value,
+      [0, BUTTON_WIDTH - SLIDER_WIDTH],
+      ['#ff8c00', '#4caf50']
+    ),
+  }));
 
   return (
-    <Animated.View style={[styles.container, { backgroundColor: backgroundColorInterpolation }]}>
-      <ThemedText style={styles.text}>{text}</ThemedText>
-      <Animated.View
-        style={[styles.slider, { transform: [{ translateX: slideAnimation }] }]}
-        {...panResponder.panHandlers}
-      >
+    <Animated.View style={[styles.container, backgroundColorStyle]}>
+      <Animated.Text style={[styles.text, textOpacityStyle]}>{text}</Animated.Text>
+      <GestureDetector gesture={panGesture}>
+        <Animated.View style={[styles.slider, animatedStyle]}>
+          <Image
+            source={require('@/assets/images/cute_ninja.png')}
+            style={styles.icon}
+            resizeMode="contain"
+          />
+          <View style={styles.arrow}>
+            <View style={styles.arrowLine} />
+            <View style={styles.arrowHead} />
+          </View>
+        </Animated.View>
+      </GestureDetector>
+      <Animated.View style={[styles.houseIconContainer, houseOpacityStyle]}>
         <Image
-          source={require('@/assets/images/cute_ninja.png')}
-          style={styles.icon}
+          source={require('@/assets/images/ninja_house.png')}
+          style={styles.houseIcon}
           resizeMode="contain"
         />
-        <View style={styles.arrow}>
-          <View style={styles.arrowLine} />
-          <View style={styles.arrowHead} />
-        </View>
       </Animated.View>
-      <Animated.Image
-        source={require('@/assets/images/ninja_house.png')}
-        style={[styles.houseIcon, { opacity: houseOpacityInterpolation }]}
-        resizeMode="contain"
-      />
     </Animated.View>
   );
 };
@@ -96,11 +94,12 @@ const styles = StyleSheet.create({
     height: 60,
     justifyContent: 'center',
     overflow: 'hidden',
+    width: BUTTON_WIDTH,
   },
   slider: {
     position: 'absolute',
     left: 0,
-    width: 86,
+    width: SLIDER_WIDTH,
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
@@ -109,9 +108,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   text: {
+    position: 'absolute',
+    width: '100%',
     textAlign: 'center',
     fontSize: 13,
-    paddingLeft: 30,
     fontWeight: 'bold',
     color: '#ffffff',
   },
@@ -141,11 +141,15 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
     borderLeftColor: '#ff8c00',
   },
-  houseIcon: {
+  houseIconContainer: {
     position: 'absolute',
     right: 10,
     width: 40,
     height: 40,
+  },
+  houseIcon: {
+    width: '100%',
+    height: '100%',
   },
 });
 
