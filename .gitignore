@@ -22,3 +22,4 @@ expo-env.d.ts
 ios
 .env
 GoogleService-Info.plist
+archive/backup_app.json
