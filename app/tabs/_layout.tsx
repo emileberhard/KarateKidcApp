@@ -23,18 +23,18 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="settings"
+        options={{
+          tabBarIcon: ({ color }) => <TabBarIcon name="settings" color={color} />,
+          tabBarLabel: 'Inställningar',
+        }}
+      />
+      <Tabs.Screen
         name="admin"
         options={{
           tabBarIcon: ({ color }) => <TabBarIcon name="people" color={color} />,
           tabBarLabel: 'Admin',
           href: user?.admin ? '/tabs/admin' : null,
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          tabBarIcon: ({ color }) => <TabBarIcon name="settings" color={color} />,
-          tabBarLabel: 'Inställningar',
         }}
       />
     </Tabs>
