@@ -120,9 +120,11 @@ export default function HomeScreen() {
             ) : (
               <>
                 <ThemedText type="default" style={styles.welcomeText}>
-                  Välkommen till DOJO!
+                  Välkommen till dojon! Var vänlig och logga in för att komma igång.
                 </ThemedText>
-                <GoogleSignInButton />
+                <View style={styles.googleSignInContainer}>
+                  <GoogleSignInButton />
+                </View>
               </>
             )}
           </ThemedView>
@@ -195,5 +197,11 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     gap: 1,
+  },
+  googleSignInContainer: {
+    alignItems: 'center',
+    marginTop: 40,
+    marginBottom: 40,
+    width: '100%',
   },
 });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { auth } from '../firebaseConfig';
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
@@ -30,7 +30,33 @@ const GoogleSignInButton = () => {
     }
   };
 
-  return <Button title="Sign in with Google" onPress={handleGoogleSignIn} />;
+  return (
+    <TouchableOpacity style={styles.button} onPress={handleGoogleSignIn}>
+      <Text style={styles.buttonText}>LOGGA IN</Text>
+    </TouchableOpacity>
+  );
 };
+
+const styles = StyleSheet.create({
+  button: {
+    backgroundColor: '#4285F4',
+    paddingVertical: 20,
+    paddingHorizontal: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    width: '90%', // Make the button wider
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 24, // Increase font size
+    fontWeight: 'bold',
+  },
+});
 
 export default GoogleSignInButton;
