@@ -200,8 +200,7 @@ const styles = StyleSheet.create({
   },
   googleSignInContainer: {
     alignItems: 'center',
-    marginTop: 40,
-    marginBottom: 40,
-    width: '100%',
+    marginTop: 20,
+    marginBottom: 20,
   },
 });
