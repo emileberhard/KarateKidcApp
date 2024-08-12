@@ -4,6 +4,8 @@ import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { getDatabase, ref, onValue, set, remove } from 'firebase/database';
 import { AntDesign } from '@expo/vector-icons';
+import { getMessaging, getToken } from 'firebase/messaging';
+import { useAuth } from '@/hooks/useAuth';
 
 const DEBUG_MODE = process.env.EXPO_PUBLIC_DEBUG_MODE === 'true';
 
@@ -28,6 +30,7 @@ interface HighPromilleNotification {
 export default function AdminScreen() {
   const [users, setUsers] = useState<User[]>([]);
   const [notifications, setNotifications] = useState<HighPromilleNotification[]>([]);
+  const { user } = useAuth();
 
   useEffect(() => {
     const db = getDatabase();
@@ -65,11 +68,24 @@ export default function AdminScreen() {
       }
     });
 
+    // Store FCM token for admin users
+    if (user && user.admin) {
+      const messaging = getMessaging();
+      getToken(messaging).then((token) => {
+        if (token) {
+          const adminTokenRef = ref(db, `adminFCMTokens/${user.uid}`);
+          set(adminTokenRef, token);
+        }
+      }).catch((error) => {
+        console.error("Error getting FCM token:", error);
+      });
+    }
+
     return () => {
       unsubscribe();
       notificationsUnsubscribe();
     };
-  }, []);
+  }, [user]);
 
   const updateUnits = (userId: string, change: number) => {
     const db = getDatabase();
