@@ -46,7 +46,7 @@ export default function HomeScreen() {
   const [drinks, setDrinks] = useState<DrinkEntry[]>([]);
   const [estimatedBAC, setEstimatedBAC] = useState<number>(0);
   const { width: SCREEN_WIDTH } = useWindowDimensions();
-  const BUTTON_WIDTH = SCREEN_WIDTH * 0.9; // 90% of screen width
+  const BUTTON_WIDTH = SCREEN_WIDTH * 0.9;
   const [lastNotificationTimestamp, setLastNotificationTimestamp] =
     useState<number>(0);
 
@@ -91,9 +91,8 @@ export default function HomeScreen() {
   }, [user]);
 
   const calculateBAC = (drinkEntries: DrinkEntry[]): number => {
-    // This is a simplified BAC calculation and should not be used for actual medical purposes
-    const weight = 70; // kg, should be user-specific in a real app
-    const gender = "male"; // should be user-specific in a real app
+    const weight = 70;
+    const gender = "male";
     const metabolismRate = gender === "male" ? 0.015 : 0.017;
     const bodyWaterConstant = gender === "male" ? 0.68 : 0.55;
 
@@ -113,7 +112,7 @@ export default function HomeScreen() {
     });
 
     const bac = (totalAlcohol / (weight * 1000 * bodyWaterConstant)) * 100;
-    const promille = Math.max(0, bac) * 10; // Convert BAC to promille
+    const promille = Math.max(0, bac) * 10;
     return promille;
   };
 
@@ -122,6 +121,14 @@ export default function HomeScreen() {
     promille: number
   ) => {
     try {
+      Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: false,
+        }),
+      });
+
       const firstName = user.displayName?.split(" ")[0] || "User";
       await Notifications.scheduleNotificationAsync({
         content: {
@@ -131,10 +138,9 @@ export default function HomeScreen() {
           )} promille alkohol i blodet`,
           data: { userId: user.uid, promille: promille.toString() },
         },
-        trigger: null, // Send immediately
+        trigger: null,
       });
 
-      // Also send to the database for admin notifications
       const db = getDatabase();
       const notificationsRef = ref(db, "notifications/highPromille");
       const newNotificationRef = push(notificationsRef);
@@ -154,28 +160,22 @@ export default function HomeScreen() {
       try {
         const userRef = ref(database, `users/${user.firstName}`);
 
-        // Decrease available units
         await set(child(userRef, "units"), increment(-1));
 
-        // Add drink entry
         const newDrinkRef = push(child(userRef, "unitTakenTimestamps"));
         await set(newDrinkRef, serverTimestamp());
 
-        // Get the new drink entry
         const newDrinkSnapshot = await get(newDrinkRef);
         const newDrink = { timestamp: newDrinkSnapshot.val(), units: 1 };
 
-        // Recalculate BAC with the new drink
         const updatedDrinks = [...drinks, newDrink];
         const newPromille = calculateBAC(updatedDrinks);
 
-        // Check if promille has reached the warning threshold and if enough time has passed since the last notification
         const currentTime = Date.now();
         if (
           newPromille >= PROMILLE_WARNING_THRESHOLD &&
           currentTime - lastNotificationTimestamp > 5 * 60 * 1000
         ) {
-          // 5 minutes cooldown
           console.log("Sending warning notification...");
           await sendWarningNotification(
             { uid: user.userId, firstName: user.firstName },
@@ -185,7 +185,6 @@ export default function HomeScreen() {
         }
       } catch (error) {
         console.error("Error taking unit:", error);
-        // Handle the error appropriately, e.g., show an error message to the user
       }
     }
   }, [user, units, drinks, lastNotificationTimestamp]);

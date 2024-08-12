@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { StyleSheet, TextInput, TouchableOpacity, ActivityIndicator, SafeAreaView, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
-import { cloudFunctions } from '../../firebaseConfig';
+import { cloudFunctions } from '../firebaseConfig';
 
-// Define the expected structure of the function result
+
 interface ChatCompletionResult {
   data: {
     completion: string;

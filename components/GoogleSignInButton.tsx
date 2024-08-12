@@ -8,7 +8,6 @@ import { auth, database } from "../firebaseConfig";
 import { GoogleAuthProvider, signInWithCredential } from "firebase/auth";
 import { ref, set } from "firebase/database";
 
-// Configure GoogleSignin
 GoogleSignin.configure({
   webClientId:
     "341175787162-34emlae8g18b2cm8i08gf7ei1dq97anl.apps.googleusercontent.com",
@@ -22,20 +21,19 @@ const GoogleSignInButton = () => {
       const credential = GoogleAuthProvider.credential(idToken);
       const result = await signInWithCredential(auth, credential);
 
-      // Create or update user in the database
       const userRef = ref(database, `users/${user.givenName}`);
       await set(userRef, {
         userId: result.user.uid,
         firstName: user.givenName,
         lastName: user.familyName,
         email: user.email,
-        admin: false, // Set default admin status
-        units: 0, // Set default units
+        admin: false,
+        units: 0,
       });
 
       console.log("Google Sign-In Successful");
     } catch (error) {
-      const errorCode = (error as { code: string }).code; // Cast error to expected type
+      const errorCode = (error as { code: string }).code;
       if (errorCode === statusCodes.SIGN_IN_CANCELLED) {
         console.log("Sign in cancelled");
       } else if (errorCode === statusCodes.IN_PROGRESS) {
@@ -68,11 +66,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
-    width: "90%", // Make the button wider
+    width: "90%",
   },
   buttonText: {
     color: "#FFFFFF",
-    fontSize: 24, // Increase font size
+    fontSize: 24,
     fontWeight: "bold",
   },
 });

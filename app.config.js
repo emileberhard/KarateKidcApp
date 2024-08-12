@@ -56,6 +56,6 @@ export default ({ config }) => ({
     policy: "appVersion",
   },
   updates: {
-    url: "https://u.expo.dev/06df8d9a-ac9e-460a-a314-10f4ac2bfa4b",
+    url: "https:
   },
 });

@@ -25,9 +25,9 @@ const SlideButton: React.FC<SlideButtonProps> = ({
   width,
 }) => {
   const { width: SCREEN_WIDTH } = useWindowDimensions();
-  const BUTTON_WIDTH = width || SCREEN_WIDTH * 0.9; // Use provided width or default to 90% of screen width
-  const SLIDER_WIDTH = BUTTON_WIDTH * 0.25; // 25% of button width
-  const SLIDE_THRESHOLD = BUTTON_WIDTH * 0.75; // 75% of button width
+  const BUTTON_WIDTH = width || SCREEN_WIDTH * 0.9;
+  const SLIDER_WIDTH = BUTTON_WIDTH * 0.25;
+  const SLIDE_THRESHOLD = BUTTON_WIDTH * 0.75;
 
   const translateX = useSharedValue(0);
 

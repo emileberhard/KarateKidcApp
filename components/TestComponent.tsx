@@ -10,14 +10,13 @@ import {
 } from "react-native-reanimated";
 
 const SliderButton = () => {
-  const END_POSITION = Dimensions.get("screen").width - 90; // Calculating button width
+  const END_POSITION = Dimensions.get("screen").width - 90;
   const onLeft = useSharedValue(true);
   const position = useSharedValue(0);
 
-  const panGesture = Gesture.Pan() // Defining gesture type to Pan
-    .runOnJS(true) // This is required if you want to trigger a function on swipe
+  const panGesture = Gesture.Pan()
+    .runOnJS(true)
     .onUpdate((e) => {
-      // Add 'e' as a parameter
       if (onLeft.value) {
         position.value = e.translationX;
       } else {
@@ -26,10 +25,8 @@ const SliderButton = () => {
     })
     .onEnd(() => {
       if (position.value > END_POSITION / 1.5) {
-        // This is the snap point, adjust 1.5 accordingly
         position.value = withTiming(END_POSITION, { duration: 100 });
         onLeft.value = false;
-        // onSlideCompleted();  You can call any function here when swipe is completed
       } else {
         position.value = withTiming(0, { duration: 100 });
         onLeft.value = true;

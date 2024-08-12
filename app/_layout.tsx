@@ -12,7 +12,6 @@ import { SpaceMono_400Regular as SpaceMono } from "@expo-google-fonts/space-mono
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {

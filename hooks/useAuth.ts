@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface UserData {
   userId: string;
@@ -27,7 +28,7 @@ export function useAuth() {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
         const usersRef = ref(database, 'users');
-        onValue(usersRef, (snapshot) => {
+        onValue(usersRef, async (snapshot) => {
           const usersData = snapshot.val();
           const userEntry = Object.entries(usersData).find(([_, userData]: [string, UserData]) => userData.userId === firebaseUser.uid);
           
@@ -47,7 +48,11 @@ export function useAuth() {
             setUser(userObj);
 
             if (userObj.admin && Platform.OS !== "web") {
-              configurePushNotifications();
+              const hasConfiguredPushNotifications = await AsyncStorage.getItem('hasConfiguredPushNotifications');
+              if (!hasConfiguredPushNotifications) {
+                configurePushNotifications();
+                AsyncStorage.setItem('hasConfiguredPushNotifications', 'true');
+              }
             }
           } else {
             setUser(null);
@@ -84,7 +89,7 @@ export function useAuth() {
       });
     }
 
-    // Set up notification handler
+    
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
         shouldShowAlert: true,
@@ -93,7 +98,7 @@ export function useAuth() {
       }),
     });
 
-    // Register for push notifications
+    
     try {
       const projectId = Constants.expoConfig?.extra?.eas?.projectId;
       if (!projectId) {
@@ -103,7 +108,7 @@ export function useAuth() {
         projectId,
       });
       console.log("Push token:", token);
-      // Here you would typically send this token to your server
+      
     } catch (error) {
       console.error("Error getting push token:", error);
     }

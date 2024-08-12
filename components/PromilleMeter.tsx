@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { ThemedText } from './ThemedText';
+import React from "react";
+import { View, StyleSheet } from "react-native";
+import { ThemedText } from "./ThemedText";
 
 interface PromilleMeterProps {
   promille: number;
@@ -20,14 +20,17 @@ const PromilleMeter: React.FC<PromilleMeterProps> = ({ promille, width }) => {
     return width * percentage;
   };
 
-  // Removed unused function
-
   const color = interpolateColor(Math.min(promille / 2, 1));
 
   return (
     <View style={[styles.container, { width }]}>
       <View style={styles.meterBackground}>
-        <View style={[styles.meterFill, { width: getFillWidth(), backgroundColor: color }]} />
+        <View
+          style={[
+            styles.meterFill,
+            { width: getFillWidth(), backgroundColor: color },
+          ]}
+        />
         <View style={styles.meterContent}>
           <ThemedText style={styles.promilleText}>
             {promille.toFixed(2)}
@@ -51,35 +54,35 @@ const PromilleMeter: React.FC<PromilleMeterProps> = ({ promille, width }) => {
 
 const styles = StyleSheet.create({
   container: {
-    alignSelf: 'center',
+    alignSelf: "center",
     marginBottom: 20,
   },
   meterBackground: {
-    width: '100%',
-    height: 50, // Increased height to accommodate emojis
-    backgroundColor: '#E0E0E0',
-    borderRadius: 25, // Increased border radius
-    overflow: 'hidden',
+    width: "100%",
+    height: 50,
+    backgroundColor: "#E0E0E0",
+    borderRadius: 25,
+    overflow: "hidden",
   },
   meterFill: {
-    height: '100%',
-    borderRadius: 25, // Increased border radius
-    justifyContent: 'center',
+    height: "100%",
+    borderRadius: 25,
+    justifyContent: "center",
   },
   meterContent: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   promilleText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    fontWeight: "bold",
+    color: "white",
+    textShadowColor: "rgba(0, 0, 0, 0.75)",
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
@@ -87,14 +90,14 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   emojiContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 15,
   },
   smallEmoji: {
@@ -102,9 +105,9 @@ const styles = StyleSheet.create({
   },
   warningText: {
     marginTop: 5,
-    color: '#F44336',
-    fontWeight: 'bold',
-    textAlign: 'center',
+    color: "#F44336",
+    fontWeight: "bold",
+    textAlign: "center",
   },
 });
 

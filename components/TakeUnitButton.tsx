@@ -77,7 +77,7 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       }
       intensity++;
-    }, 100); // Reduced from 150ms to 100ms
+    }, 100);
   }, [progress, units]);
 
   const stopHapticFeedback = useCallback(() => {
@@ -119,14 +119,14 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
     backgroundColor:
       units > 0
         ? interpolateColor(progress.value, [0, 1], ["#ff00bb", "#ffffff"])
-        : "#808080", // Gray color for disabled state
+        : "#808080",
   }));
 
   const textColorStyle = useAnimatedStyle(() => ({
     color:
       units > 0
         ? interpolateColor(progress.value, [0, 1], ["#ffffff", "#ff00bb"])
-        : "#ffffff", // White text for disabled state
+        : "#ffffff",
   }));
 
   return (

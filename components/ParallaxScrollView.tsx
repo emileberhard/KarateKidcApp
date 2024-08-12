@@ -42,7 +42,7 @@ export default function ParallaxScrollView({
             [2, 1, 1]
           ),
         },
-      ] as const, // Ensure the transform array is typed correctly
+      ] as const,
     };
   });
 
