@@ -1,17 +1,21 @@
-import React, { useCallback, useRef, useEffect } from 'react';
-import { StyleSheet, Image } from 'react-native';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
-import Animated, { 
-  useAnimatedStyle, 
-  useSharedValue, 
+import React, { useCallback, useRef } from "react";
+import { StyleSheet, Image } from "react-native";
+import { GestureDetector, Gesture } from "react-native-gesture-handler";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
   withTiming,
   withSpring,
   runOnJS,
   interpolateColor,
   Easing,
-} from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
-import { Audio } from 'expo-av';
+} from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
+import { Audio } from "expo-av";
+import { ImageSourcePropType } from "react-native";
+import beerCanImage from "@/assets/images/beer_can.png";
+import crackSound from "@/assets/sounds/crack.wav";
+import openSound from "@/assets/sounds/open.wav";
 
 interface TakeUnitButtonProps {
   onPress: () => void;
@@ -19,31 +23,27 @@ interface TakeUnitButtonProps {
   width: number;
 }
 
-const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({ onPress, units, width }) => {
+const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
+  onPress,
+  units,
+  width,
+}) => {
   const scale = useSharedValue(1);
   const progress = useSharedValue(0);
   const hapticIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [crackSound, setCrackSound] = React.useState<Audio.Sound | null>(null);
-  const [openSound, setOpenSound] = React.useState<Audio.Sound | null>(null);
 
-  useEffect(() => {
-    const loadSounds = async () => {
-      const { sound: crackSoundObject } = await Audio.Sound.createAsync(
-        require('@/assets/sounds/crack.wav')
-      );
-      const { sound: openSoundObject } = await Audio.Sound.createAsync(
-        require('@/assets/sounds/open.wav')
-      );
-      setCrackSound(crackSoundObject);
-      setOpenSound(openSoundObject);
-    };
-
-    loadSounds();
-
-    return () => {
-      if (crackSound) crackSound.unloadAsync();
-      if (openSound) openSound.unloadAsync();
-    };
+  const playSound = useCallback(async (sound: number) => {
+    try {
+      const { sound: audioSound } = await Audio.Sound.createAsync(sound);
+      await audioSound.playAsync();
+      audioSound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded && status.didJustFinish) {
+          audioSound.unloadAsync();
+        }
+      });
+    } catch (error) {
+      console.error("Failed to play sound:", error);
+    }
   }, []);
 
   const handleHapticFeedback = useCallback(() => {
@@ -60,18 +60,6 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({ onPress, units, width }
       onPress();
     }
   }, [handleHapticFeedback, onPress, units]);
-
-  const playCrackSound = useCallback(async () => {
-    if (crackSound) {
-      await crackSound.replayAsync();
-    }
-  }, [crackSound]);
-
-  const playOpenSound = useCallback(async () => {
-    if (openSound) {
-      await openSound.replayAsync();
-    }
-  }, [openSound]);
 
   const startHapticFeedback = useCallback(() => {
     if (units === 0) return;
@@ -104,9 +92,12 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({ onPress, units, width }
     .onBegin(() => {
       if (units > 0) {
         scale.value = withSpring(0.95);
-        progress.value = withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.quad) });
+        progress.value = withTiming(1, {
+          duration: 1000,
+          easing: Easing.inOut(Easing.quad),
+        });
         runOnJS(startHapticFeedback)();
-        runOnJS(playCrackSound)();
+        runOnJS(playSound)(crackSound);
       } else {
         runOnJS(handleHapticFeedback)();
       }
@@ -117,7 +108,7 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({ onPress, units, width }
         progress.value = withTiming(0, { duration: 200 });
         runOnJS(stopHapticFeedback)();
         if (event.duration >= 1000) {
-          runOnJS(playOpenSound)();
+          runOnJS(playSound)(openSound);
           runOnJS(handlePress)();
         }
       }
@@ -125,26 +116,32 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({ onPress, units, width }
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
-    backgroundColor: units > 0
-      ? interpolateColor(progress.value, [0, 1], ['#ff00bb', '#ffffff'])
-      : '#808080', // Gray color for disabled state
+    backgroundColor:
+      units > 0
+        ? interpolateColor(progress.value, [0, 1], ["#ff00bb", "#ffffff"])
+        : "#808080", // Gray color for disabled state
   }));
 
   const textColorStyle = useAnimatedStyle(() => ({
-    color: units > 0
-      ? interpolateColor(progress.value, [0, 1], ['#ffffff', '#ff00bb'])
-      : '#ffffff', // White text for disabled state
+    color:
+      units > 0
+        ? interpolateColor(progress.value, [0, 1], ["#ffffff", "#ff00bb"])
+        : "#ffffff", // White text for disabled state
   }));
 
   return (
     <GestureDetector gesture={longPressGesture}>
       <Animated.View style={[styles.combinedButton, animatedStyle, { width }]}>
         <Animated.View style={styles.textContainer}>
-          <Animated.Text style={[styles.takeUnitText, textColorStyle]}>Ta en enhet</Animated.Text>
-          <Animated.Text style={[styles.unitsText, textColorStyle]}>Kvar: {units}st</Animated.Text>
+          <Animated.Text style={[styles.takeUnitText, textColorStyle]}>
+            Ta en enhet
+          </Animated.Text>
+          <Animated.Text style={[styles.unitsText, textColorStyle]}>
+            Kvar: {units}st
+          </Animated.Text>
         </Animated.View>
         <Image
-          source={require('@/assets/images/beer_can.png')}
+          source={beerCanImage as ImageSourcePropType}
           style={styles.beerCanIcon}
           resizeMode="contain"
         />
@@ -157,27 +154,27 @@ const styles = StyleSheet.create({
   combinedButton: {
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: '#ffffff',
+    borderColor: "#ffffff",
     paddingVertical: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     height: 100,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   textContainer: {
     flex: 1,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
+    alignItems: "flex-start",
+    justifyContent: "center",
     paddingLeft: 20,
   },
   takeUnitText: {
     fontSize: 40,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   unitsText: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     paddingLeft: 4,
   },
   beerCanIcon: {

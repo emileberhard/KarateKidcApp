@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, StyleSheet, Image, Dimensions, useWindowDimensions } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import React from "react";
+import { View, StyleSheet, Image, useWindowDimensions } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -8,7 +8,10 @@ import Animated, {
   runOnJS,
   interpolate,
   interpolateColor,
-} from 'react-native-reanimated';
+} from "react-native-reanimated";
+import { ImageSourcePropType } from "react-native";
+import CuteNinja from "../assets/images/cute_ninja.png";
+import NinjaHouse from "@/assets/images/ninja_house.png";
 
 interface SlideButtonProps {
   onSlideComplete: () => void;
@@ -16,7 +19,11 @@ interface SlideButtonProps {
   width?: number;
 }
 
-const SlideButton: React.FC<SlideButtonProps> = ({ onSlideComplete, text, width }) => {
+const SlideButton: React.FC<SlideButtonProps> = ({
+  onSlideComplete,
+  text,
+  width,
+}) => {
   const { width: SCREEN_WIDTH } = useWindowDimensions();
   const BUTTON_WIDTH = width || SCREEN_WIDTH * 0.9; // Use provided width or default to 90% of screen width
   const SLIDER_WIDTH = BUTTON_WIDTH * 0.25; // 25% of button width
@@ -33,7 +40,9 @@ const SlideButton: React.FC<SlideButtonProps> = ({ onSlideComplete, text, width 
     })
     .onFinalize(() => {
       if (translateX.value >= SLIDE_THRESHOLD) {
-        translateX.value = withTiming(BUTTON_WIDTH - SLIDER_WIDTH, { duration: 100 });
+        translateX.value = withTiming(BUTTON_WIDTH - SLIDER_WIDTH, {
+          duration: 100,
+        });
         runOnJS(onSlideComplete)();
       } else {
         translateX.value = withTiming(0, { duration: 100 });
@@ -56,17 +65,23 @@ const SlideButton: React.FC<SlideButtonProps> = ({ onSlideComplete, text, width 
     backgroundColor: interpolateColor(
       translateX.value,
       [0, BUTTON_WIDTH - SLIDER_WIDTH],
-      ['#ff8c00', '#4caf50']
+      ["#ff8c00", "#4caf50"]
     ),
   }));
 
   return (
-    <Animated.View style={[styles.container, backgroundColorStyle, { width: BUTTON_WIDTH }]}>
-      <Animated.Text style={[styles.text, textOpacityStyle]}>{text}</Animated.Text>
+    <Animated.View
+      style={[styles.container, backgroundColorStyle, { width: BUTTON_WIDTH }]}
+    >
+      <Animated.Text style={[styles.text, textOpacityStyle]}>
+        {text}
+      </Animated.Text>
       <GestureDetector gesture={panGesture}>
-        <Animated.View style={[styles.slider, animatedStyle, { width: SLIDER_WIDTH }]}>
+        <Animated.View
+          style={[styles.slider, animatedStyle, { width: SLIDER_WIDTH }]}
+        >
           <Image
-            source={require('@/assets/images/cute_ninja.png')}
+            source={CuteNinja as ImageSourcePropType}
             style={styles.icon}
             resizeMode="contain"
           />
@@ -78,7 +93,7 @@ const SlideButton: React.FC<SlideButtonProps> = ({ onSlideComplete, text, width 
       </GestureDetector>
       <Animated.View style={[styles.houseIconContainer, houseOpacityStyle]}>
         <Image
-          source={require('@/assets/images/ninja_house.png')}
+          source={NinjaHouse as ImageSourcePropType}
           style={styles.houseIcon}
           resizeMode="contain"
         />
@@ -91,64 +106,64 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: '#ffffff',
+    borderColor: "#ffffff",
     height: 60,
-    justifyContent: 'center',
-    overflow: 'hidden',
+    justifyContent: "center",
+    overflow: "hidden",
   },
   slider: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#ffd7f4',
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#ffd7f4",
     borderRadius: 16,
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   text: {
-    position: 'absolute',
-    width: '100%',
-    textAlign: 'center',
+    position: "absolute",
+    width: "100%",
+    textAlign: "center",
     fontSize: 13,
-    fontWeight: 'bold',
-    color: '#ffffff',
+    fontWeight: "bold",
+    color: "#ffffff",
   },
   icon: {
-    width: '35%',
-    height: '80%',
+    width: "35%",
+    height: "80%",
   },
   arrow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: '5%',
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: "5%",
   },
   arrowLine: {
-    width: '20%',
+    width: "20%",
     height: 2,
-    backgroundColor: '#ff8c00',
+    backgroundColor: "#ff8c00",
   },
   arrowHead: {
     width: 0,
     height: 0,
-    backgroundColor: 'transparent',
-    borderStyle: 'solid',
+    backgroundColor: "transparent",
+    borderStyle: "solid",
     borderTopWidth: 5,
     borderBottomWidth: 5,
     borderLeftWidth: 8,
-    borderTopColor: 'transparent',
-    borderBottomColor: 'transparent',
-    borderLeftColor: '#ff8c00',
+    borderTopColor: "transparent",
+    borderBottomColor: "transparent",
+    borderLeftColor: "#ff8c00",
   },
   houseIconContainer: {
-    position: 'absolute',
-    right: '3%',
-    width: '12%',
+    position: "absolute",
+    right: "3%",
+    width: "12%",
     aspectRatio: 1,
   },
   houseIcon: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
 });
 

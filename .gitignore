@@ -23,3 +23,6 @@ ios
 .env
 GoogleService-Info.plist
 archive/backup_app.json
+prompt.md
+.aider.chat.history.md
+.aider*

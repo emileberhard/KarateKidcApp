@@ -1,3 +1,4 @@
+import React from 'react';
 import { Tabs } from 'expo-router';
 import { useColorScheme } from 'react-native';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
@@ -35,6 +36,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <TabBarIcon name="people" color={color} />,
           tabBarLabel: 'Admin',
           href: user?.admin ? '/tabs/admin' : null,
+        }}
+      />
+      <Tabs.Screen
+        name="chat"
+        options={{
+          tabBarIcon: ({ color }) => <TabBarIcon name="chatbubbles" color={color} />,
+          tabBarLabel: 'Chat',
         }}
       />
     </Tabs>

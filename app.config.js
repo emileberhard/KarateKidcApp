@@ -1,6 +1,4 @@
-// app.config.js
-
-module.exports = ({ config }) => ({
+export default ({ config }) => ({
   ...config,
   name: "KarateKidcApp",
   slug: "KarateKidcApp",
@@ -31,7 +29,17 @@ module.exports = ({ config }) => ({
     output: "static",
     favicon: "./assets/images/favicon.png",
   },
-  plugins: ["expo-router"],
+  plugins: [
+    [
+      "expo-notifications",
+      {
+        icon: "./assets/images/notification-icon.png",
+        color: "#ffffff",
+        sounds: ["./assets/sounds/notification-sound.wav"],
+      },
+    ],
+    "expo-router",
+  ],
   experiments: {
     typedRoutes: true,
   },
@@ -42,5 +50,12 @@ module.exports = ({ config }) => ({
     eas: {
       projectId: "06df8d9a-ac9e-460a-a314-10f4ac2bfa4b",
     },
+  },
+  owner: "emileberhard",
+  runtimeVersion: {
+    policy: "appVersion",
+  },
+  updates: {
+    url: "https://u.expo.dev/06df8d9a-ac9e-460a-a314-10f4ac2bfa4b",
   },
 });

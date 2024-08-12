@@ -20,15 +20,9 @@ const PromilleMeter: React.FC<PromilleMeterProps> = ({ promille, width }) => {
     return width * percentage;
   };
 
-  const getEmoji = (value: number) => {
-    if (value < 0.6) return '😊'; // Slightly tipsy
-    if (value < 1.0) return '🥳'; // Party mood
-    if (value < 2.0) return '🥴'; // Dizzy
-    return '🤢'; // Sick
-  };
+  // Removed unused function
 
   const color = interpolateColor(Math.min(promille / 2, 1));
-  const emoji = getEmoji(promille);
 
   return (
     <View style={[styles.container, { width }]}>

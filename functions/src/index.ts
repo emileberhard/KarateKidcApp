@@ -1,19 +1,31 @@
-import {onRequest} from "firebase-functions/v2/https";
+import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import OpenAI from "openai";
 import {defineSecret} from "firebase-functions/params";
+import * as admin from "firebase-admin";
+
+// Initialize Firebase Admin SDK
+admin.initializeApp();
 
 // Define the secret but don't access its value immediately
 const openaiApiKey = defineSecret("OPENAI_API_KEY");
 
-export const getChatCompletion = onRequest({
+export const getCompletion = onCall({
   secrets: [openaiApiKey],
-}, async (req, res) => {
+  region: "europe-west1",
+}, async (request) => {
+  // Check if the user is authenticated
+  if (!request.auth) {
+    throw new HttpsError(
+      "unauthenticated",
+      "The function must be called while authenticated."
+    );
+  }
+
   try {
-    const prompt = req.body.prompt;
+    const prompt = request.data.prompt;
     if (!prompt) {
-      res.status(400).send("Prompt is required");
-      return;
+      throw new HttpsError("invalid-argument", "Prompt is required");
     }
 
     // Access the secret's value at runtime
@@ -27,9 +39,9 @@ export const getChatCompletion = onRequest({
     });
 
     const messageContent = completion.choices[0].message.content;
-    res.status(200).send({completion: messageContent});
+    return {completion: messageContent};
   } catch (error) {
     logger.error("Error getting chat completion:", error);
-    res.status(500).send("Error getting chat completion");
+    throw new HttpsError("internal", "Error getting chat completion");
   }
 });

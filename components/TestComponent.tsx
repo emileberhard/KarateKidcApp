@@ -1,25 +1,32 @@
 import React from "react";
-import { Dimensions, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, Animated } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { Entypo } from "@expo/vector-icons";
+import { Dimensions } from "react-native";
+import {
+  useSharedValue,
+  withTiming,
+  useAnimatedStyle,
+} from "react-native-reanimated";
 
 const SliderButton = () => {
-  const END_POSITION = Dimensions.get("screen").width - 90;  // Calculating button width
+  const END_POSITION = Dimensions.get("screen").width - 90; // Calculating button width
   const onLeft = useSharedValue(true);
   const position = useSharedValue(0);
 
-  const panGesture = Gesture.Pan()  // Defining gesture type to Pan
-    .runOnJS(true)  // This is required if you want to trigger a function on swipe
+  const panGesture = Gesture.Pan() // Defining gesture type to Pan
+    .runOnJS(true) // This is required if you want to trigger a function on swipe
     .onUpdate((e) => {
+      // Add 'e' as a parameter
       if (onLeft.value) {
         position.value = e.translationX;
       } else {
         position.value = END_POSITION + e.translationX;
       }
     })
-    .onEnd((e) => {
-      if (position.value > END_POSITION / 1.5) {  // This is the snap point, adjust 1.5 accordingly
+    .onEnd(() => {
+      if (position.value > END_POSITION / 1.5) {
+        // This is the snap point, adjust 1.5 accordingly
         position.value = withTiming(END_POSITION, { duration: 100 });
         onLeft.value = false;
         // onSlideCompleted();  You can call any function here when swipe is completed

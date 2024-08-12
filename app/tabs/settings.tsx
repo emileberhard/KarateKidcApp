@@ -1,4 +1,5 @@
-import { StyleSheet, Pressable } from 'react-native';
+import React from 'react';
+import { StyleSheet, Pressable, SafeAreaView } from 'react-native';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
 import { auth } from '../../firebaseConfig';
@@ -20,15 +21,17 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title" style={styles.title}>Inställningar</ThemedText>
-      <ThemedView style={styles.content}>
-        {/* Settings here */}
+    <SafeAreaView style={{ flex: 1 }}>
+      <ThemedView style={styles.container}>
+        <ThemedText type="title" style={styles.title}>Inställningar</ThemedText>
+        <ThemedView style={styles.content}>
+          {/* Settings here */}
+        </ThemedView>
+        <Pressable onPress={handlePress} style={styles.logoutButton}>
+          <ThemedText style={styles.logoutButtonText}>Logga ut</ThemedText>
+        </Pressable>
       </ThemedView>
-      <Pressable onPress={handlePress} style={styles.logoutButton}>
-        <ThemedText style={styles.logoutButtonText}>Logga ut</ThemedText>
-      </Pressable>
-    </ThemedView>
+    </SafeAreaView>
   );
 }
 
@@ -44,7 +47,7 @@ const styles = StyleSheet.create({
     fontSize: 40,
     fontWeight: 'bold',
     textAlign: 'left',
-    paddingVertical: 60,
+    paddingVertical: 15,
     marginBottom: 20,
     paddingHorizontal: 10,
   },

@@ -1,9 +1,10 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getDatabase, Database } from 'firebase/database';
 import { getAuth, Auth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { getMessaging, isSupported, Messaging } from 'firebase/messaging'; // Add 'Messaging' to the import
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import Constants from 'expo-constants';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -18,6 +19,19 @@ const firebaseConfig = {
 };
 
 // Add this type definition
+export interface User {
+  userId: string;
+  pushToken?: string;
+  admin: boolean;
+  units: number;
+  unitTakenTimestamps: { [key: string]: number };
+  safeArrival?: string;
+  firstName: string;
+  lastName?: string;
+  email: string;
+}
+
+// Add this interface
 export interface DrinkEntry {
   timestamp: number;
   units: number;
@@ -28,6 +42,12 @@ const app: FirebaseApp = initializeApp(firebaseConfig);
 
 // Initialize services
 const database: Database = getDatabase(app);
+const functions = getFunctions(app, 'europe-west1');
+
+const cloudFunctions = {
+  getCompletion: httpsCallable(functions, 'getCompletion'),
+  sendAdminNotification: httpsCallable(functions, 'sendAdminNotification'),
+}
 
 let auth: Auth;
 
@@ -39,4 +59,12 @@ if (Platform.OS === 'web') {
   });
 }
 
-export { app, database, auth };
+// Initialize FCM
+let messaging: Messaging | null = null;
+isSupported().then((isSupported) => {
+  if (isSupported) {
+    messaging = getMessaging(app);
+  }
+});
+
+export { app, database, auth, cloudFunctions, messaging };
