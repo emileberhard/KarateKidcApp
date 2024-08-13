@@ -12,6 +12,7 @@ import Animated, {
 import { ImageSourcePropType } from "react-native";
 import CuteNinja from "../assets/images/cute_ninja.png";
 import NinjaHouse from "@/assets/images/ninja_house.png";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 interface SlideButtonProps {
   onSlideComplete: () => void;
@@ -28,6 +29,8 @@ const SlideButton: React.FC<SlideButtonProps> = ({
   const BUTTON_WIDTH = width || SCREEN_WIDTH * 0.9;
   const SLIDER_WIDTH = BUTTON_WIDTH * 0.25;
   const SLIDE_THRESHOLD = BUTTON_WIDTH * 0.75;
+
+  const accentColor = useThemeColor("accent");
 
   const translateX = useSharedValue(0);
 
@@ -71,7 +74,11 @@ const SlideButton: React.FC<SlideButtonProps> = ({
 
   return (
     <Animated.View
-      style={[styles.container, backgroundColorStyle, { width: BUTTON_WIDTH }]}
+      style={[
+        styles.container,
+        backgroundColorStyle,
+        { width: BUTTON_WIDTH, borderColor: accentColor },
+      ]}
     >
       <Animated.Text style={[styles.text, textOpacityStyle]}>
         {text}
@@ -106,7 +113,6 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: "#ffffff",
     height: 60,
     justifyContent: "center",
     overflow: "hidden",

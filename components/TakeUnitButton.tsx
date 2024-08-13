@@ -1,5 +1,6 @@
 import React, { useCallback, useRef } from "react";
-import { StyleSheet, Image } from "react-native";
+import { StyleSheet, Image, Text, ViewStyle } from "react-native";
+import { useThemeColor } from "@/hooks/useThemeColor";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import Animated, {
   useAnimatedStyle,
@@ -7,7 +8,6 @@ import Animated, {
   withTiming,
   withSpring,
   runOnJS,
-  interpolateColor,
   Easing,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
@@ -20,14 +20,17 @@ import openSound from "@/assets/sounds/open.wav";
 interface TakeUnitButtonProps {
   onPress: () => void;
   units: number;
-  width: number;
+  size?: number;
 }
 
 const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
   onPress,
   units,
-  width,
+  size = 100,
 }) => {
+  const backgroundColor = useThemeColor("primary");
+  const borderColor = useThemeColor("accent");
+  const textColor = useThemeColor("base-content");
   const scale = useSharedValue(1);
   const progress = useSharedValue(0);
   const hapticIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -87,13 +90,14 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
     }
   }, []);
 
+  const duration = 250;
   const longPressGesture = Gesture.LongPress()
-    .minDuration(1000)
+    .minDuration(duration)
     .onBegin(() => {
       if (units > 0) {
         scale.value = withSpring(0.95);
         progress.value = withTiming(1, {
-          duration: 1000,
+          duration,
           easing: Easing.inOut(Easing.quad),
         });
         runOnJS(startHapticFeedback)();
@@ -107,7 +111,7 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
       if (units > 0) {
         progress.value = withTiming(0, { duration: 200 });
         runOnJS(stopHapticFeedback)();
-        if (event.duration >= 1000) {
+        if (event.duration >= duration) {
           runOnJS(playSound)(openSound);
           runOnJS(handlePress)();
         }
@@ -116,71 +120,51 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
-    backgroundColor:
-      units > 0
-        ? interpolateColor(progress.value, [0, 1], ["#ff00bb", "#ffffff"])
-        : "#808080",
-  }));
-
-  const textColorStyle = useAnimatedStyle(() => ({
-    color:
-      units > 0
-        ? interpolateColor(progress.value, [0, 1], ["#ffffff", "#ff00bb"])
-        : "#ffffff",
+    opacity: units > 0 ? 1 : 0.5,
   }));
 
   return (
     <GestureDetector gesture={longPressGesture}>
-      <Animated.View style={[styles.combinedButton, animatedStyle, { width }]}>
-        <Animated.View style={styles.textContainer}>
-          <Animated.Text style={[styles.takeUnitText, textColorStyle]}>
-            Ta en enhet
-          </Animated.Text>
-          <Animated.Text style={[styles.unitsText, textColorStyle]}>
-            Kvar: {units}st
-          </Animated.Text>
-        </Animated.View>
+      <Animated.View
+        style={[
+          styles.container,
+          animatedStyle,
+          {
+            width: size / 1.5,
+            height: size,
+            backgroundColor,
+            borderColor,
+          },
+        ]}
+      >
         <Image
           source={beerCanImage as ImageSourcePropType}
           style={styles.beerCanIcon}
-          resizeMode="contain"
         />
+        <Text style={[styles.unitsText, { color: textColor }]}>{units}st</Text>
       </Animated.View>
     </GestureDetector>
   );
 };
 
 const styles = StyleSheet.create({
-  combinedButton: {
+  container: {
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: "#ffffff",
-    paddingVertical: 15,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    height: 100,
-    overflow: "hidden",
-  },
-  textContainer: {
-    flex: 1,
-    alignItems: "flex-start",
-    justifyContent: "center",
-    paddingLeft: 20,
-  },
-  takeUnitText: {
-    fontSize: 40,
-    fontWeight: "bold",
-  },
-  unitsText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    paddingLeft: 4,
   },
   beerCanIcon: {
-    width: 90,
-    height: 80,
-    marginRight: 10,
+    height: "75%",
+    marginLeft: 9,
+    resizeMode: "contain",
+  },
+  unitsText: {
+    fontSize: 40,
+    fontFamily: "Montserrat-Bold",
+    fontWeight: "bold",
+    marginTop: 5,
   },
 });
 

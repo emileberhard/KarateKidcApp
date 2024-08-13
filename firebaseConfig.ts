@@ -2,11 +2,11 @@ import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getDatabase, Database } from 'firebase/database';
 import { getAuth, Auth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { getMessaging, isSupported, Messaging } from 'firebase/messaging'; // Add 'Messaging' to the import
+import { getMessaging, isSupported, Messaging } from 'firebase/messaging'; 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-// Your web app's Firebase configuration
+
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
   authDomain: "karatekidc-e1f0b.firebaseapp.com",
@@ -18,7 +18,7 @@ const firebaseConfig = {
   measurementId: "G-S61QSG9EMZ"
 };
 
-// Add this type definition
+
 export interface User {
   userId: string;
   pushToken?: string;
@@ -31,16 +31,16 @@ export interface User {
   email: string;
 }
 
-// Add this interface
+
 export interface DrinkEntry {
   timestamp: number;
   units: number;
 }
 
-// Initialize Firebase
+
 const app: FirebaseApp = initializeApp(firebaseConfig);
 
-// Initialize services
+
 const database: Database = getDatabase(app);
 const functions = getFunctions(app, 'europe-west1');
 
@@ -59,7 +59,7 @@ if (Platform.OS === 'web') {
   });
 }
 
-// Initialize FCM
+
 let messaging: Messaging | null = null;
 isSupported().then((isSupported) => {
   if (isSupported) {

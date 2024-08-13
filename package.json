@@ -21,6 +21,7 @@
     "@babel/plugin-transform-nullish-coalescing-operator": "^7.24.7",
     "@babel/plugin-transform-numeric-separator": "^7.24.7",
     "@babel/plugin-transform-optional-catch-binding": "^7.24.7",
+    "@charmy.tech/react-native-stroke-text": "^1.2.2",
     "@expo-google-fonts/space-mono": "^0.2.3",
     "@expo/vector-icons": "^14.0.2",
     "@firebase/app": "^0.10.8",

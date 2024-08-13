@@ -5,7 +5,6 @@ import {
   Image,
   TouchableOpacity,
   View,
-  SafeAreaView,
 } from "react-native";
 import { ImageSourcePropType } from "react-native";
 import cuteNinjaImage from "@/assets/images/cute_ninja.png";
@@ -23,13 +22,6 @@ interface User {
   userId: string;
   units: number;
   unitTakenTimestamps?: Record<string, number>;
-}
-
-interface HighPromilleNotification {
-  id: string;
-  userId: string;
-  promille: number;
-  timestamp: number;
 }
 
 export default function AdminScreen() {
@@ -148,11 +140,12 @@ export default function AdminScreen() {
             style={styles.userIcon}
           />
           <ThemedView style={styles.userInfo}>
-            <ThemedText style={styles.userName}>{item.firstName}</ThemedText>
-            <ThemedText style={styles.userUnits}>{item.units} units</ThemedText>
-            <ThemedText style={styles.userUnits}>
-              BAC: {promille.toFixed(2)}
-            </ThemedText>
+            <View style={styles.userTextContainer}>
+              <ThemedText style={styles.userName}>{item.firstName}</ThemedText>
+              <ThemedText style={styles.userDetails}>
+                {item.units} units • BAC: {promille.toFixed(2)}
+              </ThemedText>
+            </View>
           </ThemedView>
           <AntDesign
             name={expandedUser === item.userId ? "up" : "down"}
@@ -164,17 +157,31 @@ export default function AdminScreen() {
           <ThemedView style={styles.expandedContent}>
             <ThemedView style={styles.buttonContainer}>
               <TouchableOpacity
+                onPress={() => updateUnits(item.firstName, -10)}
+                style={[styles.unitButton, styles.largeUnitButton]}
+              >
+                <AntDesign name="doubleleft" size={16} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity
                 onPress={() => updateUnits(item.firstName, -1)}
                 style={styles.unitButton}
               >
-                <AntDesign name="arrowleft" size={20} color="white" />
+                <AntDesign name="minus" size={16} color="white" />
               </TouchableOpacity>
-              <ThemedText style={styles.unitText}>{item.units}</ThemedText>
+              <View style={styles.unitTextContainer}>
+                <ThemedText style={styles.unitText}>{item.units}</ThemedText>
+              </View>
               <TouchableOpacity
                 onPress={() => updateUnits(item.firstName, 1)}
                 style={styles.unitButton}
               >
-                <AntDesign name="arrowright" size={20} color="white" />
+                <AntDesign name="plus" size={16} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => updateUnits(item.firstName, 10)}
+                style={[styles.unitButton, styles.largeUnitButton]}
+              >
+                <AntDesign name="doubleright" size={16} color="white" />
               </TouchableOpacity>
             </ThemedView>
             {DEBUG_MODE && (
@@ -192,32 +199,20 @@ export default function AdminScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ThemedView style={styles.container}>
-        <ThemedText style={styles.title}>User Management</ThemedText>
-        <FlatList
-          data={users}
-          renderItem={renderUser}
-          keyExtractor={(item) => item.userId}
-        />
-      </ThemedView>
-    </SafeAreaView>
+    <FlatList
+      style={styles.container}
+      data={users}
+      renderItem={renderUser}
+      keyExtractor={(item) => item.userId}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
   container: {
     flex: 1,
-    paddingVertical: 60,
+    paddingTop: 60,
     paddingHorizontal: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
   },
   userContainer: {
     marginBottom: 10,
@@ -225,71 +220,89 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.1)",
+    backgroundColor: "#b40075",
   },
   userItem: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 15,
+    padding: 10,
+    backgroundColor: "#48002f",
   },
   userIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 30,
+    height: 30,
+    borderRadius: 20,
   },
   userInfo: {
     flex: 1,
-    marginLeft: 15,
+    marginLeft: 10,
+    backgroundColor: "transparent",
+  },
+  userTextContainer: {
+    flexDirection: "column",
+    justifyContent: "center",
   },
   userName: {
-    fontSize: 18,
+    fontSize: 25,
     fontWeight: "bold",
+    color: "white",
   },
-  userUnits: {
-    fontSize: 16,
-    color: "#666",
+  userDetails: {
+    fontSize: 15,
+    color: "rgba(255, 255, 255, 0.7)",
   },
   expandedContent: {
-    paddingVertical: 15,
-    paddingHorizontal: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
     borderTopWidth: 1,
     borderTopColor: "rgba(255, 255, 255, 0.1)",
     gap: 5,
+    backgroundColor: "#1A0011",
   },
   buttonContainer: {
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
+    height: 40,
+    backgroundColor: "transparent",
   },
   unitButton: {
-    width: 70,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#007AFF",
   },
+  largeUnitButton: {
+    width: 44,
+  },
+  unitTextContainer: {
+    width: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "transparent",
+  },
   unitText: {
     fontSize: 24,
     fontWeight: "bold",
-    marginHorizontal: 15,
-    width: 60,
     textAlign: "center",
+    color: "white",
   },
   resetButton: {
     backgroundColor: "#FF3B30",
-    width: 230,
-    height: 40,
-    borderRadius: 20,
+    width: 180,
+    height: 36,
+    borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
     alignSelf: "center",
-    marginTop: 8,
+    marginTop: 5,
   },
   resetButtonText: {
     color: "white",
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 14,
   },
 });

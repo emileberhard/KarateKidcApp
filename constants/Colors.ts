@@ -1,27 +1,24 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https:
- */
+export const themes = ["dark", "light", "nollningPostReveal"] as const;
+export type Theme = (typeof themes)[number];
 
-const tintColorLight = '#FF69B4'; 
-const tintColorDark = '#FF1493'; 
+const nollningPostRevealTheme = {
+  primary: "#FF79C6",
+  secondary: "#BD93F9",
+  neutral: "#6272A4",
+  accent: "#ffdb77",
+  background: "#460038",
+  "base-100": "#282A36",
+  "base-200": "#44475A",
+  "base-content": "#F8F8F2",
+
+  info: "#3abff8",
+  success: "#33473f",
+  warning: "#fbbd23",
+  error: "#FF88DC",
+};
 
 export const Colors = {
-  light: {
-    text: '#000',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#ccc',
-    tabIconSelected: tintColorLight,
-  },
-  dark: {
-    text: '#fff',
-    background: '#000',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#ccc',
-    tabIconSelected: tintColorDark,
-  },
-  
+  nollningPostReveal: nollningPostRevealTheme,
+  light: { ...nollningPostRevealTheme },
+  dark: { ...nollningPostRevealTheme },
 };

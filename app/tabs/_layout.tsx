@@ -9,11 +9,24 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { user } = useAuth();
 
+  if (!user?.admin) {
+    return (
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: { display: "none" },
+        }}
+      >
+        <Tabs.Screen name="index" />
+      </Tabs>
+    );
+  }
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+        tabBarActiveTintColor: Colors[colorScheme ?? "light"].primary,
       }}
     >
       <Tabs.Screen
@@ -25,20 +38,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="settings"
-        options={{
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name="settings" color={color} />
-          ),
-          tabBarLabel: "Inställningar",
-        }}
-      />
-      <Tabs.Screen
         name="admin"
         options={{
           tabBarIcon: ({ color }) => <TabBarIcon name="people" color={color} />,
           tabBarLabel: "Admin",
-          href: user?.admin ? "/tabs/admin" : null,
         }}
       />
     </Tabs>

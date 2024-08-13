@@ -5,8 +5,8 @@ import {
   Platform,
   View,
   useWindowDimensions,
-  SafeAreaView,
   ImageSourcePropType,
+  SafeAreaView,
 } from "react-native";
 import {
   ref,
@@ -24,13 +24,12 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 import { HelloWave } from "@/components/HelloWave";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
+import { ScrollView } from "react-native-gesture-handler";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import GoogleSignInButton from "@/components/GoogleSignInButton";
+import GoogleSignInButton from "@/components/GoogleSignInButton"; // eslint-disable-line @typescript-eslint/no-unused-vars
 import HomeSlider from "@/components/HomeSlider";
 import TakeUnitButton from "@/components/TakeUnitButton";
-import PromilleMeter from "@/components/PromilleMeter";
 
 import { DrinkEntry } from "../../firebaseConfig";
 import { useAuth } from "@/hooks/useAuth";
@@ -44,11 +43,9 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const [units, setUnits] = useState<number>(0);
   const [drinks, setDrinks] = useState<DrinkEntry[]>([]);
-  const [estimatedBAC, setEstimatedBAC] = useState<number>(0);
+  const [_, setEstimatedBAC] = useState<number>(0);
   const { width: SCREEN_WIDTH } = useWindowDimensions();
   const BUTTON_WIDTH = SCREEN_WIDTH * 0.9;
-  const [lastNotificationTimestamp, setLastNotificationTimestamp] =
-    useState<number>(0);
 
   useEffect(() => {
     if (user) {
@@ -69,14 +66,6 @@ export default function HomeScreen() {
             setDrinks(drinkEntries);
             const promille = calculateBAC(drinkEntries);
             setEstimatedBAC(promille);
-
-            if (promille >= PROMILLE_WARNING_THRESHOLD) {
-              console.log("Sending warning notification...");
-              sendWarningNotification(
-                { uid: user.userId, firstName: user.firstName },
-                promille
-              );
-            }
           } else {
             setDrinks([]);
             setEstimatedBAC(0);
@@ -132,7 +121,7 @@ export default function HomeScreen() {
       const firstName = user.displayName?.split(" ")[0] || "User";
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: "⚠️ STUPFULL NOLLA ⚠️",
+          title: `⚠️ FYLLEVARNING PÅ ${firstName} ⚠️`,
           body: `${firstName} har ${promille.toFixed(
             2
           )} promille alkohol i blodet`,
@@ -171,23 +160,18 @@ export default function HomeScreen() {
         const updatedDrinks = [...drinks, newDrink];
         const newPromille = calculateBAC(updatedDrinks);
 
-        const currentTime = Date.now();
-        if (
-          newPromille >= PROMILLE_WARNING_THRESHOLD &&
-          currentTime - lastNotificationTimestamp > 5 * 60 * 1000
-        ) {
+        if (newPromille >= PROMILLE_WARNING_THRESHOLD) {
           console.log("Sending warning notification...");
           await sendWarningNotification(
             { uid: user.userId, firstName: user.firstName },
             newPromille
           );
-          setLastNotificationTimestamp(currentTime);
         }
       } catch (error) {
         console.error("Error taking unit:", error);
       }
     }
-  }, [user, units, drinks, lastNotificationTimestamp]);
+  }, [user, units, drinks]);
 
   const arrivedHomeSafely = async () => {
     if (Platform.OS !== "web") {
@@ -203,59 +187,29 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={styles.safeArea}>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <ParallaxScrollView
-          headerBackgroundColor={{ light: "#FFFFFF", dark: "#1D3D47" }}
-          headerImage={
-            <View style={styles.logoContainer}>
-              <Image
-                source={KarateKidcLogoTyped}
-                style={styles.logo}
-                resizeMode="contain"
-              />
-            </View>
-          }
-        >
+        <ScrollView>
           <ThemedView style={styles.contentContainer}>
-            <ThemedView style={styles.titleContainer}>
-              <ThemedText type="title">
-                {user ? `Konnichiwa, ${user.firstName}` : "Konnichiwa"}
+            <ThemedView style={styles.headerContainer}>
+              <ThemedView style={styles.titleContainer}>
+                <ThemedText style={styles.titleText}>
+                  {user ? `Konnichiwa, ${user.firstName}` : "Konnichiwa"}
+                </ThemedText>
+                <HelloWave />
+              </ThemedView>
+              <ThemedText style={styles.welcomeText}>
+                Välkommen till dojon!
               </ThemedText>
-              <HelloWave />
+              <Image source={KarateKidcLogoTyped} style={styles.logo} />
             </ThemedView>
-            <ThemedView style={styles.stepContainer}>
-              {user ? (
-                <>
-                  <ThemedText type="default" style={styles.welcomeText}>
-                    Välkommen till dojon!
-                  </ThemedText>
-                  <View style={styles.buttonContainer}>
-                    <TakeUnitButton
-                      onPress={takeUnit}
-                      units={units}
-                      width={BUTTON_WIDTH}
-                    />
-                    <PromilleMeter
-                      promille={estimatedBAC}
-                      width={BUTTON_WIDTH}
-                    />
-                  </View>
-                </>
-              ) : (
-                <>
-                  <ThemedText type="default" style={styles.welcomeText}>
-                    Välkommen till dojon! Var vänlig och logga in för att komma
-                    igng.
-                  </ThemedText>
-                  <View style={styles.googleSignInContainer}>
-                    <GoogleSignInButton />
-                  </View>
-                </>
-              )}
-            </ThemedView>
+            {user && (
+              <View style={styles.takeUnitButtonContainer}>
+                <TakeUnitButton onPress={takeUnit} units={units} size={250} />
+              </View>
+            )}
           </ThemedView>
-        </ParallaxScrollView>
+        </ScrollView>
         {user && (
           <View style={styles.arrivalButtonContainer}>
             <HomeSlider
@@ -271,48 +225,61 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#460038",
+  },
+  container: {
+    flex: 1,
+  },
+  contentContainer: {
+    padding: 25,
+    gap: 10,
+  },
+  headerContainer: {
+    flexDirection: "column",
+    alignItems: "flex-start",
+    marginBottom: 20,
+  },
   titleContainer: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  logoContainer: {
-    backgroundColor: "#ff00bb",
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  logo: {
-    width: "90%",
-    height: "90%",
+  titleText: {
+    fontSize: 36,
+    fontWeight: "bold",
+    color: "white",
   },
   welcomeText: {
     fontWeight: "bold",
     fontSize: 20,
-    marginBottom: 25,
-    color: "#ffa9e8",
+    color: "#ffb4e4",
+    marginBottom: -25,
+    marginTop: 8,
   },
-  contentContainer: {
-    gap: 1,
+  logo: {
+    width: 140,
+    height: 140,
+    resizeMode: "cover",
+    position: "absolute",
+    top: 50,
+    left: 210,
+  },
+  stepContainer: {
+    gap: 8,
   },
   googleSignInContainer: {
     alignItems: "center",
-    marginTop: 20,
-    marginBottom: 20,
   },
   buttonContainer: {
     alignItems: "center",
     gap: 20,
   },
-  bacText: {
+  unitsText: {
     fontSize: 18,
     fontWeight: "bold",
-    marginTop: 10,
-    color: "#ffa9e8",
+    color: "white",
   },
   arrivalButtonContainer: {
     position: "absolute",
@@ -320,5 +287,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: "center",
+  },
+  takeUnitButtonContainer: {
+    position: "absolute",
+    top: 125,
+    left: 20,
   },
 });
