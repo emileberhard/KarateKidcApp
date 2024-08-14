@@ -157,6 +157,7 @@ const styles = StyleSheet.create({
   },
   beerCanIcon: {
     height: "75%",
+    width: "100%",
     marginLeft: 9,
     resizeMode: "contain",
   },

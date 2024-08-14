@@ -27,7 +27,7 @@ import { HelloWave } from "@/components/HelloWave";
 import { ScrollView } from "react-native-gesture-handler";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import GoogleSignInButton from "@/components/GoogleSignInButton"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 import HomeSlider from "@/components/HomeSlider";
 import TakeUnitButton from "@/components/TakeUnitButton";
 
@@ -118,14 +118,15 @@ export default function HomeScreen() {
         }),
       });
 
-      const firstName = user.displayName?.split(" ")[0] || "User";
+      const firstName = user.firstName || "User";
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: `⚠️ FYLLEVARNING PÅ ${firstName} ⚠️`,
+          title: `⚠️ FYLLEVARNING PÅ ${firstName.toUpperCase()} ⚠️`,
           body: `${firstName} har ${promille.toFixed(
             2
           )} promille alkohol i blodet`,
           data: { userId: user.uid, promille: promille.toString() },
+          sound: "notification.wav", // Add this line to specify the custom sound
         },
         trigger: null,
       });
@@ -203,9 +204,13 @@ export default function HomeScreen() {
               </ThemedText>
               <Image source={KarateKidcLogoTyped} style={styles.logo} />
             </ThemedView>
-            {user && (
+            {user ? (
               <View style={styles.takeUnitButtonContainer}>
                 <TakeUnitButton onPress={takeUnit} units={units} size={250} />
+              </View>
+            ) : (
+              <View style={styles.googleSignInContainer}>
+                <GoogleSignInButton />
               </View>
             )}
           </ThemedView>
@@ -271,6 +276,7 @@ const styles = StyleSheet.create({
   },
   googleSignInContainer: {
     alignItems: "center",
+    marginTop: 20,
   },
   buttonContainer: {
     alignItems: "center",

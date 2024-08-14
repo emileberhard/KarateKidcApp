@@ -5,7 +5,7 @@ export default ({ config }) => ({
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
-  scheme: "myapp",
+  scheme: "karatekidcapp",
   userInterfaceStyle: "automatic",
   splash: {
     image: "./assets/images/splash.png",
@@ -16,13 +16,19 @@ export default ({ config }) => ({
     supportsTablet: true,
     bundleIdentifier: "com.emileberhard.karatekidc",
     googleServicesFile: process.env.GOOGLE_SERVICE_INFO,
+    infoPlist: {
+      UIBackgroundModes: ["remote-notification"],
+      NSMicrophoneUsageDescription:
+        "This app needs access to the microphone to record voice messages.",
+    },
   },
   android: {
     adaptiveIcon: {
       foregroundImage: "./assets/images/adaptive-icon.png",
-      backgroundColor: "#ffffff",
+      backgroundColor: "#770808",
     },
     package: "com.emileberhard.karatekidc",
+    permissions: ["RECORD_AUDIO"],
   },
   web: {
     bundler: "metro",
@@ -35,7 +41,8 @@ export default ({ config }) => ({
       {
         icon: "./assets/images/notification-icon.png",
         color: "#ffffff",
-        sounds: ["./assets/sounds/notification-sound.wav"],
+        sounds: ["./assets/sounds/notification.wav"],
+        playSoundOnNotification: true,
       },
     ],
     "expo-router",
@@ -50,12 +57,5 @@ export default ({ config }) => ({
     eas: {
       projectId: "06df8d9a-ac9e-460a-a314-10f4ac2bfa4b",
     },
-  },
-  owner: "emileberhard",
-  runtimeVersion: {
-    policy: "appVersion",
-  },
-  updates: {
-    url: "https://u.expo.dev/06df8d9a-ac9e-460a-a314-10f4ac2bfa4b",
   },
 });
