@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "341175787162",
+    "firebase_url": "https://karatekidc-e1f0b-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "karatekidc-e1f0b",
+    "storage_bucket": "karatekidc-e1f0b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:341175787162:android:8f1c327b748f5f6a0ec923",
+        "android_client_info": {
+          "package_name": "com.emileberhard.karatekidc"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "341175787162-34emlae8g18b2cm8i08gf7ei1dq97anl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAAM0shMVxcRPfy2TCGAWs_GIGvz4QOHzM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "341175787162-34emlae8g18b2cm8i08gf7ei1dq97anl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "341175787162-la0pll3lp5ei9oshjshhodgdm0re77iq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.emileberhard.karatekidc"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
-  Image,
   StyleSheet,
   Platform,
   View,
   useWindowDimensions,
-  ImageSourcePropType,
   SafeAreaView,
 } from "react-native";
 import {
@@ -30,12 +28,13 @@ import { ThemedView } from "@/components/ThemedView";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import HomeSlider from "@/components/HomeSlider";
 import TakeUnitButton from "@/components/TakeUnitButton";
+import { Image } from "react-native";
+import kkLogo from "@/assets/images/kk_logo.png";
+import { TouchableOpacity } from "react-native";
+import { getAuth, signOut } from "firebase/auth";
 
 import { DrinkEntry } from "../../firebaseConfig";
 import { useAuth } from "@/hooks/useAuth";
-import KarateKidcLogo from "@/assets/images/karatekidc_logo.png";
-
-const KarateKidcLogoTyped = KarateKidcLogo as ImageSourcePropType;
 
 const PROMILLE_WARNING_THRESHOLD = 2.0;
 
@@ -121,7 +120,7 @@ export default function HomeScreen() {
       const firstName = user.firstName || "User";
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: `⚠️ FYLLEVARNING PÅ ${firstName.toUpperCase()} ⚠️`,
+          title: `️ FYLLEVARNING PÅ ${firstName.toUpperCase()} ️`,
           body: `${firstName} har ${promille.toFixed(
             2
           )} promille alkohol i blodet`,
@@ -187,27 +186,54 @@ export default function HomeScreen() {
     }
   };
 
+  const handleLogout = async () => {
+    const auth = getAuth();
+    try {
+      await signOut(auth);
+      // The useAuth hook will automatically update the user state
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <ScrollView>
+        <ScrollView contentContainerStyle={styles.scrollViewContent}>
           <ThemedView style={styles.contentContainer}>
             <ThemedView style={styles.headerContainer}>
               <ThemedView style={styles.titleContainer}>
                 <ThemedText style={styles.titleText}>
-                  {user ? `Konnichiwa, ${user.firstName}` : "Konnichiwa"}
+                  {user ? `Osu, ${user.firstName}` : "Osu"}
                 </ThemedText>
                 <HelloWave />
               </ThemedView>
               <ThemedText style={styles.welcomeText}>
                 Välkommen till dojon!
               </ThemedText>
-              <Image source={KarateKidcLogoTyped} style={styles.logo} />
+              <Image
+                source={kkLogo}
+                style={[styles.logo, { width: 140, height: 140 }]}
+                resizeMode="contain"
+              />
             </ThemedView>
             {user ? (
-              <View style={styles.takeUnitButtonContainer}>
-                <TakeUnitButton onPress={takeUnit} units={units} size={250} />
-              </View>
+              <>
+                <View style={styles.takeUnitButtonContainer}>
+                  <TakeUnitButton onPress={takeUnit} units={units} size={250} />
+                </View>
+                <View style={styles.spacer} />
+                <View style={styles.logoutButtonContainer}>
+                  <TouchableOpacity
+                    style={styles.logoutButton}
+                    onPress={handleLogout}
+                  >
+                    <ThemedText style={styles.logoutButtonText}>
+                      LOGGA UT
+                    </ThemedText>
+                  </TouchableOpacity>
+                </View>
+              </>
             ) : (
               <View style={styles.googleSignInContainer}>
                 <GoogleSignInButton />
@@ -240,6 +266,8 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 25,
     gap: 10,
+    minHeight: "100%", // Ensure the content container takes up at least the full screen height
+    justifyContent: "space-between", // Distribute space between elements
   },
   headerContainer: {
     flexDirection: "column",
@@ -264,9 +292,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   logo: {
-    width: 140,
-    height: 140,
-    resizeMode: "cover",
     position: "absolute",
     top: 50,
     left: 210,
@@ -276,7 +301,7 @@ const styles = StyleSheet.create({
   },
   googleSignInContainer: {
     alignItems: "center",
-    marginTop: 20,
+    paddingVertical: 200,
   },
   buttonContainer: {
     alignItems: "center",
@@ -298,5 +323,36 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 125,
     left: 20,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+  },
+  spacer: {
+    flex: 1, // This will push the logout button to the bottom
+  },
+  logoutButtonContainer: {
+    width: "100%",
+    alignItems: "center",
+    marginTop: 20,
+    marginBottom: 100, // Add some margin at the bottom for better scrolling
+  },
+  logoutButton: {
+    backgroundColor: "#FF3B30",
+    paddingVertical: 20,
+    paddingHorizontal: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    width: "100%",
+  },
+  logoutButtonText: {
+    color: "#FFFFFF",
+    fontSize: 24,
+    fontWeight: "bold",
   },
 });

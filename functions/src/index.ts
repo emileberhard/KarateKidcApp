@@ -3,4 +3,6 @@ import * as admin from "firebase-admin";
 admin.initializeApp();
 
 export { getCompletion } from './getCompletion';
-export { resetUnitsDaily } from './resetUnitsDaily';
+export { resetUnitsDaily, resetSafeArrivalDaily } from './resetUnitsDaily';
+export { checkAlcoholLevelsAndNotify } from './bacNotifications';
+export { notifyAdminsOnSafeArrival } from './safeArrivalNotification';

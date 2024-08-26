@@ -1,61 +1,90 @@
-export default ({ config }) => ({
-  ...config,
-  name: "KarateKidcApp",
-  slug: "KarateKidcApp",
-  version: "1.0.0",
-  orientation: "portrait",
-  icon: "./assets/images/icon.png",
-  scheme: "karatekidcapp",
-  userInterfaceStyle: "automatic",
-  splash: {
-    image: "./assets/images/splash.png",
-    resizeMode: "contain",
-    backgroundColor: "#ffffff",
-  },
-  ios: {
-    supportsTablet: true,
-    bundleIdentifier: "com.emileberhard.karatekidc",
-    googleServicesFile: process.env.GOOGLE_SERVICE_INFO,
-    infoPlist: {
-      UIBackgroundModes: ["remote-notification"],
-      NSMicrophoneUsageDescription:
-        "This app needs access to the microphone to record voice messages.",
+const getVariantSpecificConfig = (variant) => {
+  switch (variant) {
+    case "development":
+      return {
+        name: "KarateKidcApp (Dev)",
+        ios: { bundleIdentifier: "com.emileberhard.karatekidc.dev" },
+        android: { package: "com.emileberhard.karatekidc.dev" },
+      };
+    case "preview":
+      return {
+        name: "KarateKidcApp (Preview)",
+        ios: { bundleIdentifier: "com.emileberhard.karatekidc.preview" },
+        android: { package: "com.emileberhard.karatekidc.preview" },
+      };
+    default:
+      return {
+        name: "KarateKidcApp",
+        ios: { bundleIdentifier: "com.emileberhard.karatekidc" },
+        android: { package: "com.emileberhard.karatekidc" },
+      };
+  }
+};
+
+export default ({ config }) => {
+  const variant = process.env.APP_VARIANT || "production";
+  const variantConfig = getVariantSpecificConfig(variant);
+
+  return {
+    ...config,
+    ...variantConfig,
+    slug: "KarateKidcApp",
+    version: "1.0.0",
+    orientation: "portrait",
+    icon: "./assets/images/icon.png",
+    scheme: "karatekidcapp",
+    userInterfaceStyle: "automatic",
+    splash: {
+      image: "./assets/images/splash.png",
+      resizeMode: "contain",
+      backgroundColor: "#ffffff",
     },
-  },
-  android: {
-    adaptiveIcon: {
-      foregroundImage: "./assets/images/adaptive-icon.png",
-      backgroundColor: "#770808",
-    },
-    package: "com.emileberhard.karatekidc",
-    permissions: ["RECORD_AUDIO"],
-  },
-  web: {
-    bundler: "metro",
-    output: "static",
-    favicon: "./assets/images/favicon.png",
-  },
-  plugins: [
-    [
-      "expo-notifications",
-      {
-        icon: "./assets/images/notification-icon.png",
-        color: "#ffffff",
-        sounds: ["./assets/sounds/notification.wav"],
-        playSoundOnNotification: true,
+    ios: {
+      ...variantConfig.ios,
+      supportsTablet: true,
+      googleServicesFile: process.env.GOOGLE_SERVICE_INFO,
+      infoPlist: {
+        UIBackgroundModes: ["remote-notification"],
+        NSMicrophoneUsageDescription:
+          "This app needs access to the microphone to record voice messages.",
       },
+    },
+    android: {
+      ...variantConfig.android,
+      adaptiveIcon: {
+        foregroundImage: "./assets/images/adaptive-icon.png",
+        backgroundColor: "#770808",
+      },
+      permissions: ["RECORD_AUDIO"],
+      googleServicesFile: process.env.GOOGLE_SERVICE_JSON,
+    },
+    web: {
+      bundler: "metro",
+      output: "static",
+      favicon: "./assets/images/favicon.png",
+    },
+    plugins: [
+      [
+        "expo-notifications",
+        {
+          icon: "./assets/images/notification-icon.png",
+          color: "#ffffff",
+          sounds: ["./assets/sounds/notification.wav"],
+          playSoundOnNotification: true,
+        },
+      ],
+      "expo-router",
     ],
-    "expo-router",
-  ],
-  experiments: {
-    typedRoutes: true,
-  },
-  extra: {
-    router: {
-      origin: false,
+    experiments: {
+      typedRoutes: true,
     },
-    eas: {
-      projectId: "06df8d9a-ac9e-460a-a314-10f4ac2bfa4b",
+    extra: {
+      router: {
+        origin: false,
+      },
+      eas: {
+        projectId: "06df8d9a-ac9e-460a-a314-10f4ac2bfa4b",
+      },
     },
-  },
-});
+  };
+};

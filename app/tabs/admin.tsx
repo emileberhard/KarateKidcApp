@@ -15,8 +15,6 @@ import { AntDesign } from "@expo/vector-icons";
 import { useAuth } from "@/hooks/useAuth";
 import * as Notifications from "expo-notifications";
 
-const DEBUG_MODE = process.env.EXPO_PUBLIC_DEBUG_MODE === "true";
-
 interface User {
   firstName: string;
   userId: string;
@@ -184,14 +182,12 @@ export default function AdminScreen() {
                 <AntDesign name="doubleright" size={16} color="white" />
               </TouchableOpacity>
             </ThemedView>
-            {DEBUG_MODE && (
-              <TouchableOpacity
-                onPress={() => resetUserUnits(item.firstName)}
-                style={styles.resetButton}
-              >
-                <ThemedText style={styles.resetButtonText}>RESET</ThemedText>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity
+              onPress={() => resetUserUnits(item.firstName)}
+              style={styles.resetButton}
+            >
+              <ThemedText style={styles.resetButtonText}>RESET</ThemedText>
+            </TouchableOpacity>
           </ThemedView>
         )}
       </View>

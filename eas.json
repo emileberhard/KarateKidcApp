@@ -2,11 +2,26 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyDTqZC-VC6Rz2yS5q2JGpMozvWhmygLcpI",
+        "APP_VARIANT": "development"
+      },
+      "node": "22.4.1"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyDTqZC-VC6Rz2yS5q2JGpMozvWhmygLcpI",
+        "APP_VARIANT": "preview"
+      },
+      "node": "22.4.1"
     },
-    "production": {}
+    "production": {
+      "env": {
+        "APP_VARIANT": "production"
+      },
+      "node": "22.4.1"
+    }
   }
 }

@@ -1,10 +1,9 @@
 import { getAuth, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
-import { getDatabase, ref, onValue } from "firebase/database";
+import { getDatabase, ref, onValue, update } from "firebase/database";
 import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface UserData {
   userId: string;
@@ -47,11 +46,9 @@ export function useAuth() {
             };
             setUser(userObj);
 
-            if (userObj.admin && Platform.OS !== "web") {
-              const hasConfiguredPushNotifications = await AsyncStorage.getItem('hasConfiguredPushNotifications');
-              if (!hasConfiguredPushNotifications) {
-                configurePushNotifications();
-                AsyncStorage.setItem('hasConfiguredPushNotifications', 'true');
+            if (Platform.OS !== "web") {
+              if (!userData.pushToken) {
+                await configurePushNotifications(firstName);
               }
             }
           } else {
@@ -68,7 +65,7 @@ export function useAuth() {
     return () => unsubscribe();
   }, []);
 
-  const configurePushNotifications = async () => {
+  const configurePushNotifications = async (firstName: string) => {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
     if (existingStatus !== "granted") {
@@ -108,6 +105,10 @@ export function useAuth() {
         projectId,
       });
       console.log("Push token:", token);
+
+      // Update the user's database entry with the push token
+      const userRef = ref(database, `users/${firstName}`);
+      await update(userRef, { pushToken: token.data });
       
     } catch (error) {
       console.error("Error getting push token:", error);
