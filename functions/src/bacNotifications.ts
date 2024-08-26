@@ -1,11 +1,24 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { Expo } from 'expo-server-sdk';
+import * as apn from 'apn';
 
 const PROMILLE_WARNING_THRESHOLD = 2.0;
 
-// Create a new Expo SDK client
-const expo = new Expo();
+
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
+
+const apnProvider = new apn.Provider({
+  token: {
+    key: process.env.APN_KEY_PATH || './ApnsKey.p8',
+    keyId: process.env.APN_KEY_ID || 'F59KT9N498',
+    teamId: process.env.APN_TEAM_ID || 'NNP2B278S6',
+  },
+  production: false,
+});
+
 
 export const checkAlcoholLevelsAndNotify = functions.database
   .ref('/users/{userId}/unitTakenTimestamps/{timestamp}')
@@ -13,69 +26,135 @@ export const checkAlcoholLevelsAndNotify = functions.database
     const userId = context.params.userId;
     console.log(`Function triggered for user: ${userId}`);
 
-    const userRef = admin.database().ref(`users/${userId}`);
-    
-    const userSnapshot = await userRef.once('value');
-    const user = userSnapshot.val();
+    try {
+      const userRef = admin.database().ref(`users/${userId}`);
+      
+      const userSnapshot = await userRef.once('value');
+      const user = userSnapshot.val();
 
-    if (!user) {
-      console.log(`User not found for userId: ${userId}`);
-      return;
-    }
+      if (!user) {
+        console.log(`User not found for userId: ${userId}`);
+        return;
+      }
 
-    const unitTakenTimestamps = user.unitTakenTimestamps || {};
-    const promille = calculateBAC(unitTakenTimestamps);
-    console.log(`Calculated promille for ${user.firstName}: ${promille.toFixed(2)}`);
+      console.log(`User data:`, JSON.stringify(user, null, 2));
 
-    if (promille >= PROMILLE_WARNING_THRESHOLD) {
-      console.log(`Promille threshold exceeded for ${user.firstName}. Notifying admins.`);
-      const adminUsersSnapshot = await admin.database().ref('users').orderByChild('admin').equalTo(true).once('value');
-      const adminUsers = adminUsersSnapshot.val();
+      const unitTakenTimestamps = user.unitTakenTimestamps || {};
+      console.log(`Unit taken timestamps:`, JSON.stringify(unitTakenTimestamps, null, 2));
 
-      if (adminUsers) {
-        const messages = [];
-        for (const adminUserId of Object.keys(adminUsers)) {
-          const adminUser = adminUsers[adminUserId];
-          if (adminUser.pushToken) {
-            // Check that the push token is valid
-            if (!Expo.isExpoPushToken(adminUser.pushToken)) {
-              console.error(`Invalid Expo push token ${adminUser.pushToken} for admin ${adminUserId}`);
-              continue;
+      const promille = calculateBAC(unitTakenTimestamps);
+      console.log(`Calculated promille for ${user.firstName}: ${promille.toFixed(2)}`);
+
+      if (promille >= PROMILLE_WARNING_THRESHOLD) {
+        console.log(`Promille threshold exceeded for ${user.firstName}. Notifying admins.`);
+        const adminUsersSnapshot = await admin.database().ref('users').orderByChild('admin').equalTo(true).once('value');
+        const adminUsers = adminUsersSnapshot.val();
+
+        console.log(`Admin users:`, JSON.stringify(adminUsers, null, 2));
+
+        if (adminUsers) {
+          const fcmMessages: admin.messaging.Message[] = [];
+          const apnsMessages: apn.Notification[] = [];
+
+          for (const adminUserId of Object.keys(adminUsers)) {
+            const adminUser = adminUsers[adminUserId];
+            console.log(`Processing admin user: ${adminUserId}`, JSON.stringify(adminUser, null, 2));
+
+            if (adminUser.pushToken && adminUser.platform) {
+              const message = {
+                title: `⚠️ FYLLEVARNING PÅ ${user.firstName.toUpperCase()} ⚠️`,
+                body: `${user.firstName} har ${promille.toFixed(2)} promille alkohol i blodet`,
+                data: { userId: userId, promille: promille.toString() }
+              };
+
+              if (adminUser.platform === 'android') {
+                console.log(`Creating FCM message for admin: ${adminUserId}`);
+                fcmMessages.push({
+                  token: adminUser.pushToken,
+                  notification: {
+                    title: message.title,
+                    body: message.body,
+                  },
+                  data: message.data,
+                  android: {
+                    notification: {
+                      sound: 'notification',
+                      priority: 'high',
+                    },
+                  },
+                });
+              } else if (adminUser.platform === 'ios') {
+                console.log(`Creating APNS message for admin: ${adminUserId}`);
+                const notification = new apn.Notification();
+                notification.alert = {
+                  title: message.title,
+                  body: message.body
+                };
+                notification.payload = message.data;
+                notification.topic = process.env.FUNCTIONS_CONFIG_APN_BUNDLE_ID || 'com.emileberhard.karatekidc';
+                notification.sound = 'notification.wav';
+                apnsMessages.push(notification);  // Add this line to store the notification
+              }
+            } else {
+              console.log(`Admin ${adminUserId} has no push token or platform`);
             }
-
-            console.log(`Preparing notification for admin: ${adminUserId} with token: ${adminUser.pushToken}`);
-            messages.push({
-              to: adminUser.pushToken,
-              title: `⚠️ FYLLEVARNING PÅ ${user.firstName.toUpperCase()} ⚠️`,
-              body: `${user.firstName} har ${promille.toFixed(2)} promille alkohol i blodet`,
-              data: { userId: userId, promille: promille.toString() },
-            });
-          } else {
-            console.log(`Admin ${adminUserId} has no push token`);
           }
-        }
 
-        // Send the messages
-        const chunks = expo.chunkPushNotifications(messages);
-        for (const chunk of chunks) {
-          try {
-            const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
-            console.log('Notifications sent:', ticketChunk);
-          } catch (error) {
-            console.error('Error sending notifications:', error);
+          console.log(`FCM messages to send:`, JSON.stringify(fcmMessages, null, 2));
+          console.log(`APNS messages to send:`, JSON.stringify(apnsMessages.map(n => ({
+            alert: n.alert,
+            payload: n.payload,
+            topic: n.topic,
+            sound: n.sound
+          })), null, 2));
+
+          if (fcmMessages.length > 0) {
+            try {
+              const response = await admin.messaging().sendAll(fcmMessages);
+              console.log('FCM Notifications sent:', JSON.stringify(response, null, 2));
+            } catch (error) {
+              console.error('Error sending FCM notifications:', error);
+            }
           }
+
+          const apnsToken = adminUsers[Object.keys(adminUsers)[0]].pushToken;
+          console.log(`APNS token: ${apnsToken}\nMessage: ${JSON.stringify(apnsMessages[0], null, 2)}`);
+
+          const apnsPromises = apnsMessages.map((notification) => 
+            apnProvider.send(notification, apnsToken)
+          );
+
+          if (apnsPromises.length > 0) {
+            try {
+              const results = await Promise.all(apnsPromises);
+              console.log('APNS Notifications sent:', JSON.stringify(results, null, 2));
+              
+              // Add more detailed logging for each result
+              results.forEach((result, index) => {
+                if (result.failed.length > 0) {
+                  console.error(`APNS Notification ${index + 1} failed:`, JSON.stringify(result.failed[0], null, 2));
+                } else {
+                  console.log(`APNS Notification ${index + 1} sent successfully`);
+                }
+              });
+            } catch (error) {
+              console.error('Error sending APNS notifications:', error);
+            }
+          }
+        } else {
+          console.log('No admin users found');
         }
       } else {
-        console.log('No admin users found');
+        console.log(`Promille threshold not exceeded for ${user.firstName}. No notification sent.`);
       }
-    } else {
-      console.log(`Promille threshold not exceeded for ${user.firstName}. No notification sent.`);
+    } catch (error) {
+      console.error('Error in checkAlcoholLevelsAndNotify:', error);
     }
   });
 
 function calculateBAC(unitTakenTimestamps: Record<string, number>): number {
-  const weight = 70; // Default weight in kg
-  const gender = 'male'; // Default gender
+  const weight = 70; 
+  const gender = 'male'; 
   const metabolismRate = gender === 'male' ? 0.015 : 0.017;
   const bodyWaterConstant = gender === 'male' ? 0.68 : 0.55;
 
@@ -92,5 +171,10 @@ function calculateBAC(unitTakenTimestamps: Record<string, number>): number {
   });
 
   const bac = (totalAlcohol / (weight * 1000 * bodyWaterConstant)) * 100;
-  return Math.max(0, bac) * 10; // Convert to promille
+  return Math.max(0, bac) * 10; 
 }
+
+
+process.on('exit', () => {
+  apnProvider.shutdown();
+});

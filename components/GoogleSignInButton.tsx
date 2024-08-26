@@ -1,5 +1,5 @@
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet } from "react-native";
+import { TouchableOpacity, Text, StyleSheet, Platform } from "react-native";
 import {
   GoogleSignin,
   statusCodes,
@@ -11,12 +11,19 @@ import { ref, set } from "firebase/database";
 GoogleSignin.configure({
   webClientId:
     "341175787162-34emlae8g18b2cm8i08gf7ei1dq97anl.apps.googleusercontent.com",
+  // Add this line for Android
+  offlineAccess: true,
+  forceCodeForRefreshToken: true,
+  accountName: "", // Add this line
+  scopes: ["profile", "email"], // Add this line
 });
 
 const GoogleSignInButton = () => {
   const handleGoogleSignIn = async () => {
     try {
-      await GoogleSignin.hasPlayServices();
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
       const { idToken, user } = await GoogleSignin.signIn();
       const credential = GoogleAuthProvider.credential(idToken);
       const result = await signInWithCredential(auth, credential);
@@ -42,6 +49,14 @@ const GoogleSignInButton = () => {
         console.log("Play services not available");
       } else {
         console.error("Error signing in with Google:", error);
+      }
+      if (Platform.OS === "android") {
+        console.error(
+          "Detailed error on Android:",
+          JSON.stringify(error, null, 2)
+        );
+        console.error("Error code:", errorCode);
+        console.error("Error message:", (error as Error).message);
       }
     }
   };

@@ -4,13 +4,13 @@ const getVariantSpecificConfig = (variant) => {
       return {
         name: "KarateKidcApp (Dev)",
         ios: { bundleIdentifier: "com.emileberhard.karatekidc.dev" },
-        android: { package: "com.emileberhard.karatekidc.dev" },
+        android: { package: "com.emileberhard.karatekidc" },
       };
     case "preview":
       return {
         name: "KarateKidcApp (Preview)",
         ios: { bundleIdentifier: "com.emileberhard.karatekidc.preview" },
-        android: { package: "com.emileberhard.karatekidc.preview" },
+        android: { package: "com.emileberhard.karatekidc" },
       };
     default:
       return {
@@ -67,7 +67,6 @@ export default ({ config }) => {
       [
         "expo-notifications",
         {
-          icon: "./assets/images/notification-icon.png",
           color: "#ffffff",
           sounds: ["./assets/sounds/notification.wav"],
           playSoundOnNotification: true,

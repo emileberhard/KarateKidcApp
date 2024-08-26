@@ -10,7 +10,7 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { app } from "../firebaseConfig"; // Import the Firebase app
+import { app } from "../firebaseConfig";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -23,7 +23,6 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    // Check if Firebase app is initialized
     if (app) {
       setIsFirebaseReady(true);
     } else {

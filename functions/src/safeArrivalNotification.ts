@@ -1,9 +1,19 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { Expo } from 'expo-server-sdk';
+import * as apn from 'apn';
 
-// Create a new Expo SDK client
-const expo = new Expo();
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
+const apnProvider = new apn.Provider({
+  token: {
+    key: process.env.APN_KEY_PATH || './ApnsKey.p8',
+    keyId: process.env.APN_KEY_ID || 'F59KT9N498',
+    teamId: process.env.APN_TEAM_ID || 'NNP2B278S6',
+  },
+  production: false,
+});
 
 export const notifyAdminsOnSafeArrival = functions.database
   .ref('/users/{userId}/safeArrival')
@@ -11,7 +21,6 @@ export const notifyAdminsOnSafeArrival = functions.database
     const userId = context.params.userId;
     const newValue = change.after.val();
 
-    // Only proceed if safeArrival is set to true
     if (!newValue) {
       console.log(`Safe arrival not set for user: ${userId}`);
       return null;
@@ -31,40 +40,97 @@ export const notifyAdminsOnSafeArrival = functions.database
         return null;
       }
 
-      // Fetch admin users
       const adminUsersSnapshot = await db.ref('users').orderByChild('admin').equalTo(true).once('value');
       const adminUsers = adminUsersSnapshot.val();
 
+      console.log(`Admin users:`, JSON.stringify(adminUsers, null, 2));
+
       if (adminUsers) {
-        const messages = [];
+        const fcmMessages: admin.messaging.Message[] = [];
+        const apnsMessages: apn.Notification[] = [];
+
         for (const adminUserId of Object.keys(adminUsers)) {
           const adminUser = adminUsers[adminUserId];
-          if (adminUser.pushToken) {
-            if (!Expo.isExpoPushToken(adminUser.pushToken)) {
-              console.error(`Invalid Expo push token ${adminUser.pushToken} for admin ${adminUserId}`);
-              continue;
-            }
+          console.log(`Processing admin user: ${adminUserId}`, JSON.stringify(adminUser, null, 2));
 
-            console.log(`Preparing notification for admin: ${adminUserId} with token: ${adminUser.pushToken}`);
-            messages.push({
-              to: adminUser.pushToken,
+          if (adminUser.pushToken && adminUser.platform) {
+            const message = {
               title: `Nolla har kommit hem säkert 🏠`,
               body: `${user.firstName} har markerat sig själv som hemkommen`,
-              data: { userId: userId, safeArrival: true },
-            });
+              data: { userId: userId, safeArrival: 'true' }
+            };
+
+            if (adminUser.platform === 'android') {
+              console.log(`Creating FCM message for admin: ${adminUserId}`);
+              fcmMessages.push({
+                token: adminUser.pushToken,
+                notification: {
+                  title: message.title,
+                  body: message.body,
+                },
+                data: message.data,
+                android: {
+                  notification: {
+                    sound: 'notification',
+                    priority: 'high',
+                  },
+                },
+              });
+            } else if (adminUser.platform === 'ios') {
+              console.log(`Creating APNS message for admin: ${adminUserId}`);
+              const notification = new apn.Notification();
+              notification.alert = {
+                title: message.title,
+                body: message.body
+              };
+              notification.payload = message.data;
+              notification.topic = process.env.FUNCTIONS_CONFIG_APN_BUNDLE_ID || 'com.emileberhard.karatekidc';
+              notification.sound = 'notification.wav';
+              apnsMessages.push(notification);
+            }
           } else {
-            console.log(`Admin ${adminUserId} has no push token`);
+            console.log(`Admin ${adminUserId} has no push token or platform`);
           }
         }
 
-        // Send the messages
-        const chunks = expo.chunkPushNotifications(messages);
-        for (const chunk of chunks) {
+        console.log(`FCM messages to send:`, JSON.stringify(fcmMessages, null, 2));
+        console.log(`APNS messages to send:`, JSON.stringify(apnsMessages.map(n => ({
+          alert: n.alert,
+          payload: n.payload,
+          topic: n.topic,
+          sound: n.sound
+        })), null, 2));
+
+        if (fcmMessages.length > 0) {
           try {
-            const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
-            console.log('Notifications sent:', ticketChunk);
+            const response = await admin.messaging().sendAll(fcmMessages);
+            console.log('FCM Notifications sent:', JSON.stringify(response, null, 2));
           } catch (error) {
-            console.error('Error sending notifications:', error);
+            console.error('Error sending FCM notifications:', error);
+          }
+        }
+
+        const apnsToken = adminUsers[Object.keys(adminUsers)[0]].pushToken;
+        console.log(`APNS token: ${apnsToken}\nMessage: ${JSON.stringify(apnsMessages[0], null, 2)}`);
+
+        const apnsPromises = apnsMessages.map((notification) => 
+          apnProvider.send(notification, apnsToken)
+        );
+
+        if (apnsPromises.length > 0) {
+          try {
+            const results = await Promise.all(apnsPromises);
+            console.log('APNS Notifications sent:', JSON.stringify(results, null, 2));
+            
+            results.forEach((result, index) => {
+              if (result.failed.length > 0) {
+                console.error(`APNS Notification ${index + 1} failed:`, JSON.stringify(result.failed[0], null, 2));
+              } else {
+                console.log(`APNS Notification ${index + 1} sent successfully`);
+              }
+            });
+          } catch (error) {
+            console.error('Error sending APNS notifications:', error);
           }
         }
       } else {
@@ -77,3 +143,7 @@ export const notifyAdminsOnSafeArrival = functions.database
       return null;
     }
   });
+
+process.on('exit', () => {
+  apnProvider.shutdown();
+});

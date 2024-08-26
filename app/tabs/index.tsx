@@ -5,6 +5,7 @@ import {
   View,
   useWindowDimensions,
   SafeAreaView,
+  StatusBar,
 } from "react-native";
 import {
   ref,
@@ -13,14 +14,11 @@ import {
   serverTimestamp,
   increment,
   set,
-  getDatabase,
-  get,
   child,
 } from "firebase/database";
 import { database } from "../../firebaseConfig";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as Haptics from "expo-haptics";
-import * as Notifications from "expo-notifications";
 import { HelloWave } from "@/components/HelloWave";
 import { ScrollView } from "react-native-gesture-handler";
 import { ThemedText } from "@/components/ThemedText";
@@ -30,13 +28,11 @@ import HomeSlider from "@/components/HomeSlider";
 import TakeUnitButton from "@/components/TakeUnitButton";
 import { Image } from "react-native";
 import kkLogo from "@/assets/images/kk_logo.png";
-import { TouchableOpacity } from "react-native";
-import { getAuth, signOut } from "firebase/auth";
+import SettingsMenu from "@/components/SettingsMenu";
+import UnitPurchaseButton from "@/components/UnitPurchaseButton";
 
 import { DrinkEntry } from "../../firebaseConfig";
 import { useAuth } from "@/hooks/useAuth";
-
-const PROMILLE_WARNING_THRESHOLD = 2.0;
 
 export default function HomeScreen() {
   const { user } = useAuth();
@@ -45,6 +41,7 @@ export default function HomeScreen() {
   const [_, setEstimatedBAC] = useState<number>(0);
   const { width: SCREEN_WIDTH } = useWindowDimensions();
   const BUTTON_WIDTH = SCREEN_WIDTH * 0.9;
+  const LOGO_SIZE = SCREEN_WIDTH * 0.37; // 30% of screen width
 
   useEffect(() => {
     if (user) {
@@ -104,46 +101,6 @@ export default function HomeScreen() {
     return promille;
   };
 
-  const sendWarningNotification = async (
-    user: { uid: string; firstName: string; displayName?: string },
-    promille: number
-  ) => {
-    try {
-      Notifications.setNotificationHandler({
-        handleNotification: async () => ({
-          shouldShowAlert: true,
-          shouldPlaySound: true,
-          shouldSetBadge: false,
-        }),
-      });
-
-      const firstName = user.firstName || "User";
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: `️ FYLLEVARNING PÅ ${firstName.toUpperCase()} ️`,
-          body: `${firstName} har ${promille.toFixed(
-            2
-          )} promille alkohol i blodet`,
-          data: { userId: user.uid, promille: promille.toString() },
-          sound: "notification.wav", // Add this line to specify the custom sound
-        },
-        trigger: null,
-      });
-
-      const db = getDatabase();
-      const notificationsRef = ref(db, "notifications/highPromille");
-      const newNotificationRef = push(notificationsRef);
-      await set(newNotificationRef, {
-        userId: user.uid,
-        firstName,
-        promille,
-        timestamp: serverTimestamp(),
-      });
-    } catch (error) {
-      console.error("Error sending warning notification:", error);
-    }
-  };
-
   const takeUnit = useCallback(async () => {
     if (user && user.firstName && units > 0) {
       try {
@@ -153,20 +110,6 @@ export default function HomeScreen() {
 
         const newDrinkRef = push(child(userRef, "unitTakenTimestamps"));
         await set(newDrinkRef, serverTimestamp());
-
-        const newDrinkSnapshot = await get(newDrinkRef);
-        const newDrink = { timestamp: newDrinkSnapshot.val(), units: 1 };
-
-        const updatedDrinks = [...drinks, newDrink];
-        const newPromille = calculateBAC(updatedDrinks);
-
-        if (newPromille >= PROMILLE_WARNING_THRESHOLD) {
-          console.log("Sending warning notification...");
-          await sendWarningNotification(
-            { uid: user.userId, firstName: user.firstName },
-            newPromille
-          );
-        }
       } catch (error) {
         console.error("Error taking unit:", error);
       }
@@ -186,21 +129,13 @@ export default function HomeScreen() {
     }
   };
 
-  const handleLogout = async () => {
-    const auth = getAuth();
-    try {
-      await signOut(auth);
-      // The useAuth hook will automatically update the user state
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
-
   return (
     <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor="#460038" />
       <GestureHandlerRootView style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scrollViewContent}>
           <ThemedView style={styles.contentContainer}>
+            <SettingsMenu />
             <ThemedView style={styles.headerContainer}>
               <ThemedView style={styles.titleContainer}>
                 <ThemedText style={styles.titleText}>
@@ -213,7 +148,7 @@ export default function HomeScreen() {
               </ThemedText>
               <Image
                 source={kkLogo}
-                style={[styles.logo, { width: 140, height: 140 }]}
+                style={[styles.logo, { width: LOGO_SIZE, height: LOGO_SIZE }]}
                 resizeMode="contain"
               />
             </ThemedView>
@@ -222,17 +157,10 @@ export default function HomeScreen() {
                 <View style={styles.takeUnitButtonContainer}>
                   <TakeUnitButton onPress={takeUnit} units={units} size={250} />
                 </View>
-                <View style={styles.spacer} />
-                <View style={styles.logoutButtonContainer}>
-                  <TouchableOpacity
-                    style={styles.logoutButton}
-                    onPress={handleLogout}
-                  >
-                    <ThemedText style={styles.logoutButtonText}>
-                      LOGGA UT
-                    </ThemedText>
-                  </TouchableOpacity>
+                <View style={styles.unitPurchaseButtonContainer}>
+                  <UnitPurchaseButton />
                 </View>
+                <View style={styles.spacer} />
               </>
             ) : (
               <View style={styles.googleSignInContainer}>
@@ -259,6 +187,7 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#460038",
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   container: {
     flex: 1,
@@ -266,13 +195,15 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 25,
     gap: 10,
-    minHeight: "100%", // Ensure the content container takes up at least the full screen height
-    justifyContent: "space-between", // Distribute space between elements
+    minHeight: "100%",
+    justifyContent: "space-between",
+    marginTop: -10,
   },
   headerContainer: {
     flexDirection: "column",
     alignItems: "flex-start",
     marginBottom: 20,
+    marginTop: -10,
   },
   titleContainer: {
     flexDirection: "row",
@@ -286,15 +217,14 @@ const styles = StyleSheet.create({
   },
   welcomeText: {
     fontWeight: "bold",
-    fontSize: 20,
+    fontSize: 19,
     color: "#ffb4e4",
     marginBottom: -25,
-    marginTop: 8,
   },
   logo: {
     position: "absolute",
-    top: 50,
-    left: 210,
+    top: 60,
+    right: -10,
   },
   stepContainer: {
     gap: 8,
@@ -321,38 +251,20 @@ const styles = StyleSheet.create({
   },
   takeUnitButtonContainer: {
     position: "absolute",
-    top: 125,
+    bottom: 350,
     left: 20,
+  },
+  unitPurchaseButtonContainer: {
+    position: "absolute",
+    bottom: 302,
+    left: 210,
+    right: 20,
   },
   scrollViewContent: {
     flexGrow: 1,
   },
   spacer: {
-    flex: 1, // This will push the logout button to the bottom
-  },
-  logoutButtonContainer: {
-    width: "100%",
-    alignItems: "center",
-    marginTop: 20,
-    marginBottom: 100, // Add some margin at the bottom for better scrolling
-  },
-  logoutButton: {
-    backgroundColor: "#FF3B30",
-    paddingVertical: 20,
-    paddingHorizontal: 40,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    width: "100%",
-  },
-  logoutButtonText: {
-    color: "#FFFFFF",
-    fontSize: 24,
-    fontWeight: "bold",
+    flex: 1,
+    zIndex: -15,
   },
 });

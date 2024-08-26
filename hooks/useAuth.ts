@@ -101,14 +101,12 @@ export function useAuth() {
       if (!projectId) {
         throw new Error("Project ID not found");
       }
-      const token = await Notifications.getExpoPushTokenAsync({
-        projectId,
-      });
+      const token = (await Notifications.getDevicePushTokenAsync());
       console.log("Push token:", token);
 
-      // Update the user's database entry with the push token
+      
       const userRef = ref(database, `users/${firstName}`);
-      await update(userRef, { pushToken: token.data });
+      await update(userRef, { pushToken: token.data, platform: Platform.OS });
       
     } catch (error) {
       console.error("Error getting push token:", error);

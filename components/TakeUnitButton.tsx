@@ -1,5 +1,5 @@
 import React, { useCallback, useRef } from "react";
-import { StyleSheet, Image, Text, ViewStyle } from "react-native";
+import { StyleSheet, Image, Text } from "react-native";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import Animated, {
@@ -121,6 +121,7 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
     opacity: units > 0 ? 1 : 0.5,
+    zIndex: 1000,
   }));
 
   return (
@@ -154,6 +155,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 2,
+    marginHorizontal: 10,
   },
   beerCanIcon: {
     height: "75%",
