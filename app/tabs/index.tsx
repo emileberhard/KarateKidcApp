@@ -132,7 +132,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor="#460038" />
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      <GestureHandlerRootView style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollViewContent}>
           <ThemedView style={styles.contentContainer}>
             <SettingsMenu />
@@ -153,15 +153,12 @@ export default function HomeScreen() {
               />
             </ThemedView>
             {user ? (
-              <>
-                <View style={styles.takeUnitButtonContainer}>
+              <View style={styles.userContentContainer}>
+                <View style={styles.unifiedButtonContainer}>
                   <TakeUnitButton onPress={takeUnit} units={units} size={250} />
-                </View>
-                <View style={styles.unitPurchaseButtonContainer}>
                   <UnitPurchaseButton />
                 </View>
-                <View style={styles.spacer} />
-              </>
+              </View>
             ) : (
               <View style={styles.googleSignInContainer}>
                 <GoogleSignInButton />
@@ -193,17 +190,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
+    flex: 1,
     padding: 25,
     gap: 10,
-    minHeight: "100%",
-    justifyContent: "space-between",
-    marginTop: -10,
   },
   headerContainer: {
     flexDirection: "column",
     alignItems: "flex-start",
-    marginBottom: 20,
-    marginTop: -10,
   },
   titleContainer: {
     flexDirection: "row",
@@ -219,28 +212,25 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 19,
     color: "#ffb4e4",
-    marginBottom: -25,
+    marginBottom: 10,
   },
   logo: {
-    position: "absolute",
-    top: 60,
-    right: -10,
+    alignSelf: "flex-end",
+    marginTop: -40,
   },
-  stepContainer: {
-    gap: 8,
+  userContentContainer: {
+    flex: 1,
+    justifyContent: "flex-start",
+  },
+  unifiedButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    marginBottom: 20,
   },
   googleSignInContainer: {
     alignItems: "center",
-    paddingVertical: 200,
-  },
-  buttonContainer: {
-    alignItems: "center",
-    gap: 20,
-  },
-  unitsText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "white",
+    marginTop: 50,
   },
   arrivalButtonContainer: {
     position: "absolute",
@@ -249,22 +239,7 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: "center",
   },
-  takeUnitButtonContainer: {
-    position: "absolute",
-    bottom: 350,
-    left: 20,
-  },
-  unitPurchaseButtonContainer: {
-    position: "absolute",
-    bottom: 302,
-    left: 210,
-    right: 20,
-  },
   scrollViewContent: {
     flexGrow: 1,
-  },
-  spacer: {
-    flex: 1,
-    zIndex: -15,
   },
 });
