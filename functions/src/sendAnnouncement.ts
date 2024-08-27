@@ -45,7 +45,7 @@ export const sendAnnouncement = onCall(
     }
 
     await sendNotifications(dbUsers, {
-      title: "⚠️📢 KK-ANNOUNCEMENT 📢⚠️",
+      title: "KK-MEDDELANDE ⚠️🥷",
       body: message,
       data: { type: "announcement" },
     });

@@ -6,9 +6,9 @@ import {
   TouchableOpacity,
   View,
   TextInput,
-  Alert,
   Keyboard,
   TouchableWithoutFeedback,
+  ActivityIndicator,
 } from "react-native";
 import { ImageSourcePropType } from "react-native";
 import cuteNinjaImage from "@/assets/images/cute_ninja.png";
@@ -21,6 +21,7 @@ import * as Notifications from "expo-notifications";
 import { cloudFunctions } from "@/firebaseConfig";
 import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome5 } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 
 interface User {
   firstName: string;
@@ -37,6 +38,8 @@ export default function AdminScreen() {
   const { user } = useAuth();
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState("");
+  const [sendingAnnouncement, setSendingAnnouncement] = useState(false);
+  const [announcementSent, setAnnouncementSent] = useState(false);
 
   const notificationListener = useRef<Notifications.Subscription>();
   const responseListener = useRef<Notifications.Subscription>();
@@ -138,20 +141,30 @@ export default function AdminScreen() {
 
   const sendAnnouncement = async () => {
     if (!announcement.trim()) {
-      Alert.alert("Error", "Vad vill du meddela?");
       return;
     }
 
+    setSendingAnnouncement(true);
     try {
       const result = await cloudFunctions.sendAnnouncement({
         message: announcement.trim(),
       });
       console.log("Announcement sent:", result);
-      Alert.alert("Success", "Announcement sent successfully!");
       setAnnouncement("");
+      setAnnouncementSent(true);
+      setTimeout(() => {
+        setAnnouncementSent(false);
+      }, 2000);
     } catch (error) {
       console.error("Error sending announcement:", error);
-      Alert.alert("Error", "Failed to send announcement. Please try again.");
+    } finally {
+      setSendingAnnouncement(false);
+    }
+  };
+
+  const handleAnnouncementSubmit = () => {
+    if (announcement.trim()) {
+      sendAnnouncement();
     }
   };
 
@@ -294,13 +307,24 @@ export default function AdminScreen() {
                 placeholderTextColor="#666"
                 value={announcement}
                 onChangeText={setAnnouncement}
-                multiline
+                onSubmitEditing={handleAnnouncementSubmit}
+                blurOnSubmit={false}
               />
               <TouchableOpacity
-                style={styles.sendButton}
+                style={[
+                  styles.sendButton,
+                  announcementSent && styles.sentButton,
+                ]}
                 onPress={sendAnnouncement}
+                disabled={sendingAnnouncement || announcementSent}
               >
-                <Ionicons name="send" size={24} color="#48002f" />
+                {sendingAnnouncement ? (
+                  <ActivityIndicator color="white" size="small" />
+                ) : announcementSent ? (
+                  <MaterialIcons name="check" size={30} color="white" />
+                ) : (
+                  <Ionicons name="send" size={30} color="white" />
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -439,7 +463,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "white",
     borderRadius: 5,
-    paddingRight: 5,
+    paddingRight: 10,
   },
   announcementInput: {
     flex: 1,
@@ -447,7 +471,17 @@ const styles = StyleSheet.create({
     color: "black",
   },
   sendButton: {
-    padding: 5,
+    padding: 10,
+    marginVertical: 10,
+    width: 50,
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 25,
+    backgroundColor: "#b40075",
+  },
+  sentButton: {
+    backgroundColor: "green",
   },
   sectionHeader: {
     fontSize: 20,

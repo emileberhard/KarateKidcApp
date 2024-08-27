@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
+import { getDevicePushTokenAsync } from "expo-notifications";
 
 interface UserData {
   userId: string;
@@ -51,8 +52,13 @@ export function useAuth() {
             if (Platform.OS !== "web") {
               const currentPlatform = Platform.OS;
               const currentProfile = process.env.EXPO_PUBLIC_EAS_BUILD_PROFILE;
-              if (!userData.pushToken || userData.platform !== currentPlatform || userData.profile !== currentProfile) {
-                await configurePushNotifications(firstName);
+              const currentToken = await getDevicePushTokenAsync();
+              
+              if (!userData.pushToken || 
+                  userData.platform !== currentPlatform || 
+                  userData.profile !== currentProfile ||
+                  userData.pushToken !== currentToken.data) {
+                await configurePushNotifications(firstName, currentToken);
               }
             }
           } else {
@@ -69,7 +75,7 @@ export function useAuth() {
     return () => unsubscribe();
   }, []);
 
-  const configurePushNotifications = async (firstName: string) => {
+  const configurePushNotifications = async (firstName: string, currentToken: Notifications.DevicePushToken) => {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
     if (existingStatus !== "granted") {
@@ -105,21 +111,20 @@ export function useAuth() {
       if (!projectId) {
         throw new Error("Project ID not found");
       }
-      const token = (await Notifications.getDevicePushTokenAsync());
-      console.log("Push token:", token);
+      console.log("Push token:", currentToken);
 
       const currentPlatform = Platform.OS;
       const currentProfile = process.env.EXPO_PUBLIC_EAS_BUILD_PROFILE;
       
       const userRef = ref(database, `users/${firstName}`);
       await update(userRef, { 
-        pushToken: token.data, 
+        pushToken: currentToken.data, 
         platform: currentPlatform, 
         profile: currentProfile 
       });
       
     } catch (error) {
-      console.error("Error getting push token:", error);
+      console.error("Error updating push token:", error);
     }
   };
 
