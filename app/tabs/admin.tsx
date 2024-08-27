@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   View,
   TextInput,
-  Button,
   Alert,
 } from "react-native";
 import { ImageSourcePropType } from "react-native";

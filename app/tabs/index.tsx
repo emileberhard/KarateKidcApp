@@ -42,7 +42,7 @@ export default function HomeScreen() {
   const [safeArrival, setSafeArrival] = useState<string | null>(null);
   const { width: SCREEN_WIDTH } = useWindowDimensions();
   const BUTTON_WIDTH = SCREEN_WIDTH * 0.9;
-  const LOGO_SIZE = SCREEN_WIDTH * 0.37; // 30% of screen width
+  const LOGO_SIZE = SCREEN_WIDTH * 0.4;
 
   useEffect(() => {
     if (user) {
@@ -231,9 +231,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   logo: {
-    alignSelf: "center",
     marginBottom: 20,
     marginTop: -30,
+    marginLeft: 10,
   },
   userContentContainer: {
     flex: 1,
@@ -241,9 +241,8 @@ const styles = StyleSheet.create({
   },
   unifiedButtonContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "flex-end",
-    gap: 10,
+    gap: 5,
   },
   logoAndPurchaseContainer: {
     flexDirection: "column",

@@ -13,6 +13,14 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onResetSlider }) => {
   const [isOpen, setIsOpen] = useState(false);
   const secondaryColor = useThemeColor("primary");
 
+  const secondaryColorWithOpacity = `rgba(${parseInt(
+    secondaryColor.slice(1, 3),
+    16
+  )}, ${parseInt(secondaryColor.slice(3, 5), 16)}, ${parseInt(
+    secondaryColor.slice(5, 7),
+    16
+  )}, 0.8)`;
+
   const handleLogout = async () => {
     const auth = getAuth();
     try {
@@ -36,11 +44,22 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onResetSlider }) => {
         <Ionicons name="settings-outline" size={44} color={secondaryColor} />
       </TouchableOpacity>
       {isOpen && (
-        <View style={[styles.dropdown, { backgroundColor: secondaryColor }]}>
-          <TouchableOpacity onPress={handleLogout} style={styles.option}>
+        <View
+          style={[
+            styles.dropdown,
+            { backgroundColor: secondaryColorWithOpacity },
+          ]}
+        >
+          <TouchableOpacity
+            onPress={handleLogout}
+            style={[styles.option, { backgroundColor: secondaryColor }]}
+          >
             <ThemedText style={styles.optionText}>Logga ut</ThemedText>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleResetSlider} style={styles.option}>
+          <TouchableOpacity
+            onPress={handleResetSlider}
+            style={[styles.option, { backgroundColor: secondaryColor }]}
+          >
             <ThemedText style={styles.optionText}>
               Återställ hemkomst
             </ThemedText>
@@ -66,8 +85,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 55,
     right: 5,
-    borderRadius: 8,
-    padding: 10,
+    borderRadius: 10,
+    padding: 5,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
@@ -75,8 +94,11 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   option: {
-    paddingVertical: 5,
+    paddingVertical: 15,
     paddingHorizontal: 20,
+    borderWidth: 1,
+    borderRadius: 10,
+    marginBottom: 5,
   },
   optionText: {
     color: "white",
