@@ -15,7 +15,7 @@ const getVariantSpecificConfig = (variant) => {
     default:
       return {
         name: "KarateKidcApp",
-        ios: { bundleIdentifier: "com.emileberhard.karatekidc" },
+        ios: { bundleIdentifier: "com.emileberhard.karatekidc.production" },
         android: { package: "com.emileberhard.karatekidc" },
       };
   }
