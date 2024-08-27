@@ -7,6 +7,8 @@ import {
   View,
   TextInput,
   Alert,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { ImageSourcePropType } from "react-native";
 import cuteNinjaImage from "@/assets/images/cute_ninja.png";
@@ -17,6 +19,7 @@ import { AntDesign } from "@expo/vector-icons";
 import { useAuth } from "@/hooks/useAuth";
 import * as Notifications from "expo-notifications";
 import { cloudFunctions } from "@/firebaseConfig";
+import { Ionicons } from "@expo/vector-icons"; // Add this import
 
 interface User {
   firstName: string;
@@ -147,6 +150,10 @@ export default function AdminScreen() {
     }
   };
 
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
+
   const renderUser = ({ item }: { item: User }) => {
     const promille = calculateBAC(item.unitTakenTimestamps);
 
@@ -218,33 +225,37 @@ export default function AdminScreen() {
   };
 
   return (
-    <FlatList
-      style={styles.container}
-      data={users}
-      renderItem={renderUser}
-      keyExtractor={(item) => item.userId}
-      ListHeaderComponent={
-        <View style={styles.announcementContainer}>
-          <ThemedText style={styles.announcementHeader}>
-            Skicka meddelande till nollor
-          </ThemedText>
-          <TextInput
-            style={styles.announcementInput}
-            placeholder="Skriv meddelande"
-            placeholderTextColor="#666"
-            value={announcement}
-            onChangeText={setAnnouncement}
-            multiline
-          />
-          <TouchableOpacity
-            style={styles.sendButton}
-            onPress={sendAnnouncement}
-          >
-            <ThemedText style={styles.sendButtonText}>Skicka</ThemedText>
-          </TouchableOpacity>
-        </View>
-      }
-    />
+    <TouchableWithoutFeedback onPress={dismissKeyboard}>
+      <FlatList
+        style={styles.container}
+        data={users}
+        renderItem={renderUser}
+        keyExtractor={(item) => item.userId}
+        ListHeaderComponent={
+          <View style={styles.announcementContainer}>
+            <ThemedText style={styles.announcementHeader}>
+              Skicka meddelande till nollor
+            </ThemedText>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.announcementInput}
+                placeholder="Skriv meddelande"
+                placeholderTextColor="#666"
+                value={announcement}
+                onChangeText={setAnnouncement}
+                multiline
+              />
+              <TouchableOpacity
+                style={styles.sendButton}
+                onPress={sendAnnouncement}
+              >
+                <Ionicons name="send" size={24} color="#48002f" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        }
+      />
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -358,23 +369,19 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: "center",
   },
-  announcementInput: {
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "white",
     borderRadius: 5,
+    paddingRight: 5,
+  },
+  announcementInput: {
+    flex: 1,
     padding: 10,
-    marginBottom: 10,
     color: "black",
   },
   sendButton: {
-    backgroundColor: "#007AFF",
-    borderRadius: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    alignSelf: "center",
-  },
-  sendButtonText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
+    padding: 5,
   },
 });

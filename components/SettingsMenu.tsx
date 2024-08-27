@@ -13,13 +13,14 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onResetSlider }) => {
   const [isOpen, setIsOpen] = useState(false);
   const secondaryColor = useThemeColor("primary");
 
-  const secondaryColorWithOpacity = `rgba(${parseInt(
-    secondaryColor.slice(1, 3),
-    16
-  )}, ${parseInt(secondaryColor.slice(3, 5), 16)}, ${parseInt(
-    secondaryColor.slice(5, 7),
-    16
-  )}, 0.8)`;
+  const darkenColor = (color: string, factor: number): string => {
+    const r = Math.max(0, parseInt(color.slice(1, 3), 16) * (1 - factor));
+    const g = Math.max(0, parseInt(color.slice(3, 5), 16) * (1 - factor));
+    const b = Math.max(0, parseInt(color.slice(5, 7), 16) * (1 - factor));
+    return `rgba(${r}, ${g}, ${b}, 0.95)`;
+  };
+
+  const darkerSecondaryColor = darkenColor(secondaryColor, 0.3); // Darken by 30%
 
   const handleLogout = async () => {
     const auth = getAuth();
@@ -35,21 +36,23 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onResetSlider }) => {
     setIsOpen(false); // Close the menu after resetting
   };
 
+  const iconColor = useThemeColor("accent"); // Use accent color for the icon
+
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        onPress={() => setIsOpen(!isOpen)}
-        style={styles.menuButton}
-      >
-        <Ionicons name="settings-outline" size={44} color={secondaryColor} />
-      </TouchableOpacity>
-      {isOpen && (
+      {isOpen ? (
         <View
-          style={[
-            styles.dropdown,
-            { backgroundColor: secondaryColorWithOpacity },
-          ]}
+          style={[styles.dropdown, { backgroundColor: darkerSecondaryColor }]}
         >
+          <View style={styles.headerContainer}>
+            <ThemedText style={styles.headerText}>Inställningar</ThemedText>
+            <TouchableOpacity
+              onPress={() => setIsOpen(!isOpen)}
+              style={styles.menuButton}
+            >
+              <Ionicons name="close" size={44} color="white" />
+            </TouchableOpacity>
+          </View>
           <TouchableOpacity
             onPress={handleLogout}
             style={[styles.option, { backgroundColor: secondaryColor }]}
@@ -65,6 +68,13 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onResetSlider }) => {
             </ThemedText>
           </TouchableOpacity>
         </View>
+      ) : (
+        <TouchableOpacity
+          onPress={() => setIsOpen(!isOpen)}
+          style={styles.menuButton}
+        >
+          <Ionicons name="settings-outline" size={44} color={iconColor} />
+        </TouchableOpacity>
       )}
     </View>
   );
@@ -73,18 +83,14 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onResetSlider }) => {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    top: 0,
     right: 0,
     zIndex: 1000,
   },
   menuButton: {
-    padding: 10,
+    alignSelf: "flex-end",
   },
   dropdown: {
     width: 200,
-    position: "absolute",
-    top: 55,
-    right: 5,
     borderRadius: 10,
     padding: 5,
     shadowColor: "#000",
@@ -103,6 +109,19 @@ const styles = StyleSheet.create({
   optionText: {
     color: "white",
     fontSize: 16,
+  },
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+    borderBottomWidth: 1,
+  },
+  headerText: {
+    color: "white",
+    fontSize: 20,
+    marginLeft: 10,
+    fontWeight: "bold",
   },
 });
 

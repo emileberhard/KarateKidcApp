@@ -29,7 +29,7 @@ export default ({ config }) => {
     ...config,
     ...variantConfig,
     slug: "KarateKidcApp",
-    version: "1.1.2",
+    version: "1.1.3",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     scheme: "karatekidcapp",
@@ -41,7 +41,7 @@ export default ({ config }) => {
     },
     ios: {
       ...variantConfig.ios,
-      supportsTablet: true,
+      supportsTablet: false,
       googleServicesFile: process.env.GOOGLE_SERVICE_INFO,
       infoPlist: {
         UIBackgroundModes: ["remote-notification"],

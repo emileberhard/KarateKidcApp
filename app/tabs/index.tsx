@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: "column",
     alignItems: "flex-start",
-    marginBottom: 25,
+    marginBottom: 10,
   },
   titleContainer: {
     flexDirection: "row",
