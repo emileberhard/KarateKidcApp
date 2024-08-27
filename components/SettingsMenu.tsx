@@ -5,7 +5,11 @@ import { getAuth, signOut } from "firebase/auth";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
-const SettingsMenu = () => {
+interface SettingsMenuProps {
+  onResetSlider: () => void;
+}
+
+const SettingsMenu: React.FC<SettingsMenuProps> = ({ onResetSlider }) => {
   const [isOpen, setIsOpen] = useState(false);
   const secondaryColor = useThemeColor("primary");
 
@@ -16,6 +20,11 @@ const SettingsMenu = () => {
     } catch (error) {
       console.error("Error signing out:", error);
     }
+  };
+
+  const handleResetSlider = () => {
+    onResetSlider();
+    setIsOpen(false); // Close the menu after resetting
   };
 
   return (
@@ -31,7 +40,11 @@ const SettingsMenu = () => {
           <TouchableOpacity onPress={handleLogout} style={styles.option}>
             <ThemedText style={styles.optionText}>Logga ut</ThemedText>
           </TouchableOpacity>
-          {/* Add more options here as needed */}
+          <TouchableOpacity onPress={handleResetSlider} style={styles.option}>
+            <ThemedText style={styles.optionText}>
+              Återställ hemkomst
+            </ThemedText>
+          </TouchableOpacity>
         </View>
       )}
     </View>
@@ -41,8 +54,8 @@ const SettingsMenu = () => {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    top: 10,
-    right: 10,
+    top: 0,
+    right: 0,
     zIndex: 1000,
   },
   menuButton: {

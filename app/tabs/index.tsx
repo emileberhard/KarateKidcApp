@@ -39,6 +39,7 @@ export default function HomeScreen() {
   const [units, setUnits] = useState<number>(0);
   const [drinks, setDrinks] = useState<DrinkEntry[]>([]);
   const [_, setEstimatedBAC] = useState<number>(0);
+  const [safeArrival, setSafeArrival] = useState<string | null>(null);
   const { width: SCREEN_WIDTH } = useWindowDimensions();
   const BUTTON_WIDTH = SCREEN_WIDTH * 0.9;
   const LOGO_SIZE = SCREEN_WIDTH * 0.37; // 30% of screen width
@@ -66,6 +67,7 @@ export default function HomeScreen() {
             setDrinks([]);
             setEstimatedBAC(0);
           }
+          setSafeArrival(userData.safeArrival || null);
         }
       });
 
@@ -129,13 +131,23 @@ export default function HomeScreen() {
     }
   };
 
+  const resetSlider = useCallback(() => {
+    if (user && user.firstName) {
+      const safeArrivalRef = ref(
+        database,
+        `users/${user.firstName}/safeArrival`
+      );
+      set(safeArrivalRef, null);
+    }
+  }, [user]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor="#460038" />
       <GestureHandlerRootView style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollViewContent}>
-          <ThemedView style={styles.contentContainer}>
-            <SettingsMenu />
+          <ThemedView>
+            <SettingsMenu onResetSlider={resetSlider} />
             <ThemedView style={styles.headerContainer}>
               <ThemedView style={styles.titleContainer}>
                 <ThemedText style={styles.titleText}>
@@ -146,17 +158,22 @@ export default function HomeScreen() {
               <ThemedText style={styles.welcomeText}>
                 Välkommen till dojon!
               </ThemedText>
-              <Image
-                source={kkLogo}
-                style={[styles.logo, { width: LOGO_SIZE, height: LOGO_SIZE }]}
-                resizeMode="contain"
-              />
             </ThemedView>
             {user ? (
               <View style={styles.userContentContainer}>
                 <View style={styles.unifiedButtonContainer}>
                   <TakeUnitButton onPress={takeUnit} units={units} size={250} />
-                  <UnitPurchaseButton />
+                  <View style={styles.logoAndPurchaseContainer}>
+                    <Image
+                      source={kkLogo}
+                      style={[
+                        styles.logo,
+                        { width: LOGO_SIZE, height: LOGO_SIZE },
+                      ]}
+                      resizeMode="contain"
+                    />
+                    <UnitPurchaseButton />
+                  </View>
                 </View>
               </View>
             ) : (
@@ -172,6 +189,7 @@ export default function HomeScreen() {
               onSlideComplete={arrivedHomeSafely}
               text="Bekräfta Hemkomst"
               width={BUTTON_WIDTH}
+              isActive={!!safeArrival}
             />
           </View>
         )}
@@ -188,20 +206,18 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-  },
-  contentContainer: {
-    flex: 1,
-    padding: 25,
-    gap: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 5,
   },
   headerContainer: {
     flexDirection: "column",
     alignItems: "flex-start",
+    marginBottom: 25,
   },
   titleContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
   titleText: {
     fontSize: 36,
@@ -215,8 +231,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   logo: {
-    alignSelf: "flex-end",
-    marginTop: -40,
+    alignSelf: "center",
+    marginBottom: 20,
+    marginTop: -30,
   },
   userContentContainer: {
     flex: 1,
@@ -226,7 +243,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    marginBottom: 20,
+    gap: 10,
+  },
+  logoAndPurchaseContainer: {
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "flex-end",
   },
   googleSignInContainer: {
     alignItems: "center",

@@ -155,7 +155,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 2,
-    marginHorizontal: 10,
   },
   beerCanIcon: {
     height: "75%",

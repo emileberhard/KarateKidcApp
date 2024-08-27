@@ -13,6 +13,7 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
 }) => {
   const [units, setUnits] = useState(initialUnits);
   const color = useThemeColor("primary");
+  const borderColor = useThemeColor("accent");
 
   const incrementUnits = useCallback(() => {
     setUnits((prevUnits) => prevUnits + 1);
@@ -34,20 +35,29 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
         <View style={styles.adjustUnitsContainer}>
           <TouchableOpacity
             onPress={decrementUnits}
-            style={[styles.button, { backgroundColor: color }]}
+            style={[
+              styles.button,
+              { backgroundColor: color, borderColor: borderColor },
+            ]}
           >
             <Ionicons name="remove" size={24} color="white" />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={incrementUnits}
-            style={[styles.button, { backgroundColor: color }]}
+            style={[
+              styles.button,
+              { backgroundColor: color, borderColor: borderColor },
+            ]}
           >
             <Ionicons name="add" size={24} color="white" />
           </TouchableOpacity>
         </View>
         <TouchableOpacity
           onPress={handleBuy}
-          style={[styles.buyButton, { backgroundColor: color }]}
+          style={[
+            styles.buyButton,
+            { backgroundColor: color, borderColor: borderColor },
+          ]}
         >
           <ThemedText style={styles.buyButtonText}>
             Köp {units}st ({units * 10}kr)
@@ -62,7 +72,8 @@ const styles = StyleSheet.create({
   container: {
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 5,
+    width: 130,
+    marginBottom: 2,
   },
   unitsContainer: {
     alignItems: "center",
@@ -71,8 +82,8 @@ const styles = StyleSheet.create({
   adjustUnitsContainer: {
     flexDirection: "row",
     marginBottom: 10,
-    width: "100%",
     gap: 10,
+    width: "100%",
   },
   button: {
     flex: 1,
@@ -80,11 +91,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 2,
   },
   buyButton: {
     paddingVertical: 15,
     paddingHorizontal: 20,
     borderRadius: 10,
+    borderWidth: 2,
     width: "100%",
   },
   buyButtonText: {

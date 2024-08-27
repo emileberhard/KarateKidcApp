@@ -19,7 +19,8 @@
     },
     "production": {
       "env": {
-        "APP_VARIANT": "production"
+        "APP_VARIANT": "production",
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyDTqZC-VC6Rz2yS5q2JGpMozvWhmygLcpI"
       },
       "node": "22.4.1"
     }
