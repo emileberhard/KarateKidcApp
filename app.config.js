@@ -2,13 +2,13 @@ const getVariantSpecificConfig = (variant) => {
   switch (variant) {
     case "development":
       return {
-        name: "KK (Dev)",
+        name: "KarateKids",
         ios: { bundleIdentifier: "com.emileberhard.karatekidc.dev" },
         android: { package: "com.emileberhard.karatekidc" },
       };
     case "preview":
       return {
-        name: "KK (Preview)",
+        name: "KarateKids",
         ios: { bundleIdentifier: "com.emileberhard.karatekidc.preview" },
         android: { package: "com.emileberhard.karatekidc" },
       };
@@ -29,7 +29,7 @@ export default ({ config }) => {
     ...config,
     ...variantConfig,
     slug: "KarateKidcApp",
-    version: "1.1.3",
+    version: "1.1.4",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     scheme: "karatekidcapp",
