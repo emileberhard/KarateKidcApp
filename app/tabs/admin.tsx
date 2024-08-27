@@ -131,7 +131,7 @@ export default function AdminScreen() {
 
   const sendAnnouncement = async () => {
     if (!announcement.trim()) {
-      Alert.alert("Error", "Please enter an announcement message.");
+      Alert.alert("Error", "Vad vill du meddela?");
       return;
     }
 
@@ -226,14 +226,23 @@ export default function AdminScreen() {
       keyExtractor={(item) => item.userId}
       ListHeaderComponent={
         <View style={styles.announcementContainer}>
+          <ThemedText style={styles.announcementHeader}>
+            Skicka meddelande till nollor
+          </ThemedText>
           <TextInput
             style={styles.announcementInput}
-            placeholder="Enter announcement message"
+            placeholder="Skriv meddelande"
+            placeholderTextColor="#666"
             value={announcement}
             onChangeText={setAnnouncement}
             multiline
           />
-          <Button title="Send Announcement" onPress={sendAnnouncement} />
+          <TouchableOpacity
+            style={styles.sendButton}
+            onPress={sendAnnouncement}
+          >
+            <ThemedText style={styles.sendButtonText}>Skicka</ThemedText>
+          </TouchableOpacity>
         </View>
       }
     />
@@ -343,11 +352,30 @@ const styles = StyleSheet.create({
     backgroundColor: "#48002f",
     borderRadius: 10,
   },
+  announcementHeader: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "white",
+    marginBottom: 10,
+    textAlign: "center",
+  },
   announcementInput: {
     backgroundColor: "white",
     borderRadius: 5,
     padding: 10,
     marginBottom: 10,
     color: "black",
+  },
+  sendButton: {
+    backgroundColor: "#007AFF",
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    alignSelf: "center",
+  },
+  sendButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });
