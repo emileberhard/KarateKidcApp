@@ -53,12 +53,6 @@ function createFCMMessage(token: string, notificationData: NotificationData): ad
       body: notificationData.body,
     },
     data: notificationData.data,
-    android: {
-      notification: {
-        sound: "notification",
-        priority: "high",
-      },
-    },
   };
 }
 

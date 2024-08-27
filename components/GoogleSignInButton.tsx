@@ -6,7 +6,7 @@ import {
 } from "@react-native-google-signin/google-signin";
 import { auth, database } from "../firebaseConfig";
 import { GoogleAuthProvider, signInWithCredential } from "firebase/auth";
-import { ref, set } from "firebase/database";
+import { ref, set, get, query, orderByChild, equalTo } from "firebase/database";
 
 GoogleSignin.configure({
   webClientId:
@@ -28,15 +28,28 @@ const GoogleSignInButton = () => {
       const credential = GoogleAuthProvider.credential(idToken);
       const result = await signInWithCredential(auth, credential);
 
-      const userRef = ref(database, `users/${user.givenName}`);
-      await set(userRef, {
-        userId: result.user.uid,
-        firstName: user.givenName,
-        lastName: user.familyName,
-        email: user.email,
-        admin: false,
-        units: 0,
-      });
+      const usersRef = ref(database, "users");
+      const userQuery = query(
+        usersRef,
+        orderByChild("firstName"),
+        equalTo(user.givenName)
+      );
+      const userSnapshot = await get(userQuery);
+
+      if (userSnapshot.exists()) {
+        console.log("User already exists in the database");
+      } else {
+        const newUserRef = ref(database, `users/${user.givenName}`);
+        await set(newUserRef, {
+          userId: result.user.uid,
+          firstName: user.givenName,
+          lastName: user.familyName,
+          email: user.email,
+          admin: false,
+          units: 0,
+        });
+        console.log("New user created in the database");
+      }
 
       console.log("Google Sign-In Successful");
     } catch (error) {
