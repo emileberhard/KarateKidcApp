@@ -47,7 +47,7 @@ const functions = getFunctions(app, 'europe-west1');
 const cloudFunctions = {
   getCompletion: httpsCallable(functions, 'getCompletion'),
   sendAdminNotification: httpsCallable(functions, 'sendAdminNotification'),
-  sendAnnouncement: httpsCallable(functions, 'sendAnnouncement'), // Add this line
+  sendAnnouncement: httpsCallable(functions, 'sendAnnouncement'), 
 }
 
 let auth: Auth;

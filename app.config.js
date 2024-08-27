@@ -51,10 +51,6 @@ export default ({ config }) => {
     },
     android: {
       ...variantConfig.android,
-      adaptiveIcon: {
-        foregroundImage: "./assets/images/adaptive-icon.png",
-        backgroundColor: "#770808",
-      },
       permissions: ["RECORD_AUDIO"],
       googleServicesFile: process.env.GOOGLE_SERVICE_JSON,
     },

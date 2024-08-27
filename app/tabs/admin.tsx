@@ -20,15 +20,17 @@ import { useAuth } from "@/hooks/useAuth";
 import * as Notifications from "expo-notifications";
 import { cloudFunctions } from "@/firebaseConfig";
 import { Ionicons } from "@expo/vector-icons";
-import { FontAwesome5 } from "@expo/vector-icons"; // Add this import
+import { FontAwesome5 } from "@expo/vector-icons";
 
 interface User {
   firstName: string;
   userId: string;
   units: number;
   unitTakenTimestamps?: Record<string, number>;
-  safeArrival?: string | null; // Add this field
+  safeArrival?: string | null;
 }
+
+type ListItem = User | { type: "header"; title: string };
 
 export default function AdminScreen() {
   const [users, setUsers] = useState<User[]>([]);
@@ -53,7 +55,7 @@ export default function AdminScreen() {
           unitTakenTimestamps: userData.unitTakenTimestamps as
             | Record<string, number>
             | undefined,
-          safeArrival: userData.safeArrival as string | null | undefined, // Add this line
+          safeArrival: userData.safeArrival as string | null | undefined,
         })
       );
       setUsers(userList);
@@ -157,13 +159,29 @@ export default function AdminScreen() {
     Keyboard.dismiss();
   };
 
+  const renderItem = ({ item }: { item: ListItem }) => {
+    if ("type" in item && item.type === "header") {
+      return <ThemedText style={styles.sectionHeader}>{item.title}</ThemedText>;
+    }
+    return renderUser({ item: item as User });
+  };
+
   const renderUser = ({ item }: { item: User }) => {
     const promille = calculateBAC(item.unitTakenTimestamps);
+    const isHome = !!item.safeArrival;
 
     return (
-      <View style={styles.userContainer}>
+      <View
+        style={[
+          styles.userContainer,
+          isHome ? styles.homeUserContainer : styles.notHomeUserContainer,
+        ]}
+      >
         <TouchableOpacity
-          style={styles.userItem}
+          style={[
+            styles.userItem,
+            isHome ? styles.homeUserItem : styles.notHomeUserItem,
+          ]}
           onPress={() => toggleExpandUser(item.userId)}
         >
           <Image
@@ -185,7 +203,14 @@ export default function AdminScreen() {
           />
         </TouchableOpacity>
         {expandedUser === item.userId && (
-          <ThemedView style={styles.expandedContent}>
+          <ThemedView
+            style={[
+              styles.expandedContent,
+              isHome
+                ? styles.homeExpandedContent
+                : styles.notHomeExpandedContent,
+            ]}
+          >
             <ThemedView style={styles.buttonContainer}>
               <TouchableOpacity
                 onPress={() => updateUnits(item.firstName, -10)}
@@ -229,7 +254,10 @@ export default function AdminScreen() {
               />
               <ThemedText style={styles.safeArrivalText}>
                 {item.safeArrival
-                  ? `Hemma ${new Date(item.safeArrival).toLocaleTimeString()}`
+                  ? `Hemma ${new Date(item.safeArrival).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}`
                   : "Inte hemma än"}
               </ThemedText>
             </ThemedView>
@@ -239,13 +267,21 @@ export default function AdminScreen() {
     );
   };
 
+  const homeUsers = users.filter((user) => !!user.safeArrival);
+  const notHomeUsers = users.filter((user) => !user.safeArrival);
+
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <FlatList
         style={styles.container}
-        data={users}
-        renderItem={renderUser}
-        keyExtractor={(item) => item.userId}
+        data={[
+          { type: "header", title: "Kvar på event" } as ListItem,
+          ...notHomeUsers,
+          { type: "header", title: "Hemma" } as ListItem,
+          ...homeUsers,
+        ]}
+        renderItem={renderItem}
+        keyExtractor={(item) => ("type" in item ? item.title : item.userId)}
         ListHeaderComponent={
           <View style={styles.announcementContainer}>
             <ThemedText style={styles.announcementHeader}>
@@ -284,18 +320,40 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 10,
     overflow: "hidden",
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: "rgba(255, 255, 255, 0.1)",
     backgroundColor: "#b40075",
   },
+  homeUserContainer: {
+    borderRadius: 10,
+    borderColor: "rgba(0, 255, 0, 0.3)",
+    backgroundColor: "#b40075",
+  },
+  notHomeUserContainer: {},
   userItem: {
     flexDirection: "row",
-    borderRadius: 10,
+    borderRadius: 2,
     justifyContent: "space-between",
     alignItems: "center",
     padding: 10,
     backgroundColor: "#48002f",
   },
+  homeUserItem: {
+    backgroundColor: "rgba(0, 100, 0, 0.8)",
+  },
+  notHomeUserItem: {},
+  expandedContent: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderTopWidth: 3,
+    borderTopColor: "rgba(255, 255, 255, 0.1)",
+    gap: 5,
+    backgroundColor: "#1A0011",
+  },
+  homeExpandedContent: {
+    backgroundColor: "rgba(0, 100, 0, 0.6)",
+  },
+  notHomeExpandedContent: {},
   userIcon: {
     width: 30,
     height: 30,
@@ -318,14 +376,6 @@ const styles = StyleSheet.create({
   userDetails: {
     fontSize: 15,
     color: "rgba(255, 255, 255, 0.7)",
-  },
-  expandedContent: {
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.1)",
-    gap: 5,
-    backgroundColor: "#1A0011",
   },
   buttonContainer: {
     flexDirection: "row",
@@ -398,5 +448,13 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     padding: 5,
+  },
+  sectionHeader: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "white",
+    marginTop: 20,
+    marginBottom: 10,
+    textAlign: "left",
   },
 });
