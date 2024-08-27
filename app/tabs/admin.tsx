@@ -5,6 +5,9 @@ import {
   Image,
   TouchableOpacity,
   View,
+  TextInput,
+  Button,
+  Alert,
 } from "react-native";
 import { ImageSourcePropType } from "react-native";
 import cuteNinjaImage from "@/assets/images/cute_ninja.png";
@@ -14,6 +17,7 @@ import { getDatabase, ref, onValue, set, remove } from "firebase/database";
 import { AntDesign } from "@expo/vector-icons";
 import { useAuth } from "@/hooks/useAuth";
 import * as Notifications from "expo-notifications";
+import { cloudFunctions } from "@/firebaseConfig";
 
 interface User {
   firstName: string;
@@ -26,6 +30,7 @@ export default function AdminScreen() {
   const [users, setUsers] = useState<User[]>([]);
   const { user } = useAuth();
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState("");
 
   const notificationListener = useRef<Notifications.Subscription>();
   const responseListener = useRef<Notifications.Subscription>();
@@ -124,6 +129,25 @@ export default function AdminScreen() {
     setExpandedUser(expandedUser === userId ? null : userId);
   };
 
+  const sendAnnouncement = async () => {
+    if (!announcement.trim()) {
+      Alert.alert("Error", "Please enter an announcement message.");
+      return;
+    }
+
+    try {
+      const result = await cloudFunctions.sendAnnouncement({
+        message: announcement.trim(),
+      });
+      console.log("Announcement sent:", result);
+      Alert.alert("Success", "Announcement sent successfully!");
+      setAnnouncement("");
+    } catch (error) {
+      console.error("Error sending announcement:", error);
+      Alert.alert("Error", "Failed to send announcement. Please try again.");
+    }
+  };
+
   const renderUser = ({ item }: { item: User }) => {
     const promille = calculateBAC(item.unitTakenTimestamps);
 
@@ -200,6 +224,18 @@ export default function AdminScreen() {
       data={users}
       renderItem={renderUser}
       keyExtractor={(item) => item.userId}
+      ListHeaderComponent={
+        <View style={styles.announcementContainer}>
+          <TextInput
+            style={styles.announcementInput}
+            placeholder="Enter announcement message"
+            value={announcement}
+            onChangeText={setAnnouncement}
+            multiline
+          />
+          <Button title="Send Announcement" onPress={sendAnnouncement} />
+        </View>
+      }
     />
   );
 }
@@ -300,5 +336,18 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
     fontSize: 14,
+  },
+  announcementContainer: {
+    marginBottom: 20,
+    padding: 10,
+    backgroundColor: "#48002f",
+    borderRadius: 10,
+  },
+  announcementInput: {
+    backgroundColor: "white",
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+    color: "black",
   },
 });

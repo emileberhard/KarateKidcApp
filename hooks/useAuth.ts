@@ -106,7 +106,7 @@ export function useAuth() {
 
       
       const userRef = ref(database, `users/${firstName}`);
-      await update(userRef, { pushToken: token.data, platform: Platform.OS });
+      await update(userRef, { pushToken: token.data, platform: Platform.OS, profile: process.env.EXPO_PUBLIC_EAS_BUILD_PROFILE });
       
     } catch (error) {
       console.error("Error getting push token:", error);
