@@ -15,6 +15,8 @@ interface UserData {
   pushToken?: string;
   firstName: string;
   email: string;
+  platform?: string;
+  profile?: string;
 }
 
 export function useAuth() {
@@ -47,7 +49,9 @@ export function useAuth() {
             setUser(userObj);
 
             if (Platform.OS !== "web") {
-              if (!userData.pushToken) {
+              const currentPlatform = Platform.OS;
+              const currentProfile = process.env.EXPO_PUBLIC_EAS_BUILD_PROFILE;
+              if (!userData.pushToken || userData.platform !== currentPlatform || userData.profile !== currentProfile) {
                 await configurePushNotifications(firstName);
               }
             }
@@ -104,9 +108,15 @@ export function useAuth() {
       const token = (await Notifications.getDevicePushTokenAsync());
       console.log("Push token:", token);
 
+      const currentPlatform = Platform.OS;
+      const currentProfile = process.env.EXPO_PUBLIC_EAS_BUILD_PROFILE;
       
       const userRef = ref(database, `users/${firstName}`);
-      await update(userRef, { pushToken: token.data, platform: Platform.OS, profile: process.env.EXPO_PUBLIC_EAS_BUILD_PROFILE });
+      await update(userRef, { 
+        pushToken: token.data, 
+        platform: currentPlatform, 
+        profile: currentProfile 
+      });
       
     } catch (error) {
       console.error("Error getting push token:", error);

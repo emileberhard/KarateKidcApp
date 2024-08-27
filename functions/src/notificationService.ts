@@ -1,8 +1,8 @@
 import * as admin from "firebase-admin";
 import * as apn from "apn";
 
-let apnProvider: apn.Provider;
-let isProduction: boolean = false;
+let apnProviders: Record<string, apn.Provider> = {};
+
 
 interface NotificationData {
   title: string;
@@ -11,21 +11,24 @@ interface NotificationData {
 }
 
 export async function initializeNotificationService(users: Record<string, any>) {
-  isProduction = Object.values(users).some(user => user.profile === "production");
-
-  apnProvider = new apn.Provider({
-    token: {
-      key: process.env.APN_KEY_PATH || "./ApnsKey.p8",
-      keyId: process.env.APN_KEY_ID || "F59KT9N498",
-      teamId: process.env.APN_TEAM_ID || "NNP2B278S6",
-    },
-    production: isProduction,
-  });
+  for (const userId in users) {
+    const user = users[userId];
+    if (user.platform === "ios") {
+      apnProviders[userId] = new apn.Provider({
+        token: {
+          key: process.env.APN_KEY_PATH || "./ApnsKey.p8",
+          keyId: process.env.APN_KEY_ID || "F59KT9N498",
+          teamId: process.env.APN_TEAM_ID || "NNP2B278S6",
+        },
+        production: user.profile === "production",
+      });
+    }
+  }
 }
 
 export async function sendNotifications(users: Record<string, any>, notificationData: NotificationData) {
   const fcmMessages: admin.messaging.Message[] = [];
-  const apnsMessages: apn.Notification[] = [];
+  const apnsMessages: NotificationData[] = [];
 
   for (const userId in users) {
     const user = users[userId];
@@ -33,7 +36,7 @@ export async function sendNotifications(users: Record<string, any>, notification
       if (user.platform === "android") {
         fcmMessages.push(createFCMMessage(user.pushToken, notificationData));
       } else if (user.platform === "ios") {
-        apnsMessages.push(createAPNSMessage(notificationData));
+        apnsMessages.push(notificationData);
       }
     }
   }
@@ -82,19 +85,21 @@ async function sendFCMNotifications(fcmMessages: admin.messaging.Message[]) {
   }
 }
 
-async function sendAPNSNotifications(apnsMessages: apn.Notification[], users: Record<string, any>) {
+async function sendAPNSNotifications(apnsMessages: NotificationData[], users: Record<string, any>) {
   if (apnsMessages.length > 0) {
     try {
-      // Find the first non-muted iOS user's token
-      const apnsToken = Object.values(users).find(user => user.platform === "ios" && !user.muted)?.pushToken;
-      if (!apnsToken) {
-        console.log("No valid APNS token found for non-muted iOS users");
-        return;
-      }
       const results = await Promise.all(
-        apnsMessages.map((notification) => apnProvider.send(notification, apnsToken))
+        Object.entries(users).map(([userId, user]) => {
+          if (user.platform === "ios" && !user.muted && user.pushToken) {
+            const provider = apnProviders[userId];
+            if (provider) {
+              return provider.send(createAPNSMessage(apnsMessages[0]), user.pushToken);
+            }
+          }
+          return Promise.resolve(null);
+        })
       );
-      console.log("APNS Notifications sent:", JSON.stringify(results, null, 2));
+      console.log("APNS Notifications sent:", JSON.stringify(results.filter(Boolean), null, 2));
     } catch (error) {
       console.error("Error sending APNS notifications:", error);
     }
@@ -102,7 +107,8 @@ async function sendAPNSNotifications(apnsMessages: apn.Notification[], users: Re
 }
 
 export function shutdownNotificationService() {
-  if (apnProvider) {
-    apnProvider.shutdown();
+  for (const provider of Object.values(apnProviders)) {
+    provider.shutdown();
   }
+  apnProviders = {};
 }
