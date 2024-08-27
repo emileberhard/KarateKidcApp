@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   logo: {
     marginBottom: 20,
     marginTop: -30,
-    marginLeft: 10,
+    marginLeft: 20,
   },
   userContentContainer: {
     flex: 1,

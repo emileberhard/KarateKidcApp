@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "bold",
     color: "#ff8c00",
-    right: 10, // Add this to position the text on the right side of the slider
+    right: 10,
   },
 });
 

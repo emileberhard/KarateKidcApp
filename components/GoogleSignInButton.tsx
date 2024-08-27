@@ -11,11 +11,11 @@ import { ref, set } from "firebase/database";
 GoogleSignin.configure({
   webClientId:
     "341175787162-34emlae8g18b2cm8i08gf7ei1dq97anl.apps.googleusercontent.com",
-  // Add this line for Android
+
   offlineAccess: true,
   forceCodeForRefreshToken: true,
-  accountName: "", // Add this line
-  scopes: ["profile", "email"], // Add this line
+  accountName: "",
+  scopes: ["profile", "email"],
 });
 
 const GoogleSignInButton = () => {

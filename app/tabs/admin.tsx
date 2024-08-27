@@ -19,13 +19,15 @@ import { AntDesign } from "@expo/vector-icons";
 import { useAuth } from "@/hooks/useAuth";
 import * as Notifications from "expo-notifications";
 import { cloudFunctions } from "@/firebaseConfig";
-import { Ionicons } from "@expo/vector-icons"; // Add this import
+import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome5 } from "@expo/vector-icons"; // Add this import
 
 interface User {
   firstName: string;
   userId: string;
   units: number;
   unitTakenTimestamps?: Record<string, number>;
+  safeArrival?: string | null; // Add this field
 }
 
 export default function AdminScreen() {
@@ -51,6 +53,7 @@ export default function AdminScreen() {
           unitTakenTimestamps: userData.unitTakenTimestamps as
             | Record<string, number>
             | undefined,
+          safeArrival: userData.safeArrival as string | null | undefined, // Add this line
         })
       );
       setUsers(userList);
@@ -186,7 +189,7 @@ export default function AdminScreen() {
             <ThemedView style={styles.buttonContainer}>
               <TouchableOpacity
                 onPress={() => updateUnits(item.firstName, -10)}
-                style={[styles.unitButton, styles.largeUnitButton]}
+                style={styles.unitButton}
               >
                 <AntDesign name="doubleleft" size={16} color="white" />
               </TouchableOpacity>
@@ -207,17 +210,29 @@ export default function AdminScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => updateUnits(item.firstName, 10)}
-                style={[styles.unitButton, styles.largeUnitButton]}
+                style={styles.unitButton}
               >
                 <AntDesign name="doubleright" size={16} color="white" />
               </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => resetUserUnits(item.firstName)}
+                style={[styles.unitButton, styles.resetButton]}
+              >
+                <Ionicons name="refresh" size={16} color="white" />
+              </TouchableOpacity>
             </ThemedView>
-            <TouchableOpacity
-              onPress={() => resetUserUnits(item.firstName)}
-              style={styles.resetButton}
-            >
-              <ThemedText style={styles.resetButtonText}>RESET</ThemedText>
-            </TouchableOpacity>
+            <ThemedView style={styles.safeArrivalContainer}>
+              <FontAwesome5
+                name={item.safeArrival ? "home" : "walking"}
+                size={20}
+                color={item.safeArrival ? "green" : "orange"}
+              />
+              <ThemedText style={styles.safeArrivalText}>
+                {item.safeArrival
+                  ? `Hemma ${new Date(item.safeArrival).toLocaleTimeString()}`
+                  : "Inte hemma än"}
+              </ThemedText>
+            </ThemedView>
           </ThemedView>
         )}
       </View>
@@ -269,12 +284,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 10,
     overflow: "hidden",
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: "rgba(255, 255, 255, 0.1)",
     backgroundColor: "#b40075",
   },
   userItem: {
     flexDirection: "row",
+    borderRadius: 10,
     justifyContent: "space-between",
     alignItems: "center",
     padding: 10,
@@ -319,15 +335,13 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   unitButton: {
-    width: 36,
+    flex: 1,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#007AFF",
-  },
-  largeUnitButton: {
-    width: 44,
+    marginHorizontal: 3,
   },
   unitTextContainer: {
     width: 50,
@@ -342,25 +356,26 @@ const styles = StyleSheet.create({
     color: "white",
   },
   resetButton: {
-    backgroundColor: "#FF3B30",
-    width: 180,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: "center",
-    alignItems: "center",
-    alignSelf: "center",
-    marginTop: 5,
+    backgroundColor: "red",
   },
-  resetButtonText: {
-    color: "white",
-    fontWeight: "bold",
+  safeArrivalContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 10,
+    backgroundColor: "transparent",
+  },
+  safeArrivalText: {
+    marginLeft: 10,
     fontSize: 14,
+    color: "white",
   },
   announcementContainer: {
     marginBottom: 20,
     padding: 10,
     backgroundColor: "#48002f",
     borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "#b40075",
   },
   announcementHeader: {
     fontSize: 18,

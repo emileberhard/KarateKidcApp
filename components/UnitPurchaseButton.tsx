@@ -87,14 +87,14 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    aspectRatio: 1,
+    aspectRatio: 1.25,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
   },
   buyButton: {
-    paddingVertical: 15,
+    paddingVertical: 5,
     paddingHorizontal: 20,
     borderRadius: 10,
     borderWidth: 2,

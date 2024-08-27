@@ -1,9 +1,16 @@
 import React, { useState } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  Modal,
+  TouchableWithoutFeedback,
+} from "react-native";
 import { ThemedText } from "./ThemedText";
 import { getAuth, signOut } from "firebase/auth";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import * as Haptics from "expo-haptics";
 
 interface SettingsMenuProps {
   onResetSlider: () => void;
@@ -20,7 +27,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onResetSlider }) => {
     return `rgba(${r}, ${g}, ${b}, 0.95)`;
   };
 
-  const darkerSecondaryColor = darkenColor(secondaryColor, 0.3); // Darken by 30%
+  const darkerSecondaryColor = darkenColor(secondaryColor, 0.3);
 
   const handleLogout = async () => {
     const auth = getAuth();
@@ -33,49 +40,84 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onResetSlider }) => {
 
   const handleResetSlider = () => {
     onResetSlider();
-    setIsOpen(false); // Close the menu after resetting
+    setIsOpen(false);
   };
 
-  const iconColor = useThemeColor("accent"); // Use accent color for the icon
+  const iconColor = useThemeColor("accent");
+
+  const closeMenu = () => {
+    setIsOpen(false);
+  };
+
+  const handleOpenMenu = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setIsOpen(true);
+  };
+
+  const logoutButtonColor = "#FF3B30";
 
   return (
     <View style={styles.container}>
-      {isOpen ? (
-        <View
-          style={[styles.dropdown, { backgroundColor: darkerSecondaryColor }]}
-        >
-          <View style={styles.headerContainer}>
-            <ThemedText style={styles.headerText}>Inställningar</ThemedText>
-            <TouchableOpacity
-              onPress={() => setIsOpen(!isOpen)}
-              style={styles.menuButton}
-            >
-              <Ionicons name="close" size={44} color="white" />
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity
-            onPress={handleLogout}
-            style={[styles.option, { backgroundColor: secondaryColor }]}
-          >
-            <ThemedText style={styles.optionText}>Logga ut</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleResetSlider}
-            style={[styles.option, { backgroundColor: secondaryColor }]}
-          >
-            <ThemedText style={styles.optionText}>
-              Återställ hemkomst
-            </ThemedText>
-          </TouchableOpacity>
+      <TouchableOpacity onPress={handleOpenMenu} style={styles.menuButton}>
+        <View style={styles.iconContainer}>
+          <Ionicons name="settings-outline" size={50} color={iconColor} />
         </View>
-      ) : (
-        <TouchableOpacity
-          onPress={() => setIsOpen(!isOpen)}
-          style={styles.menuButton}
-        >
-          <Ionicons name="settings-outline" size={44} color={iconColor} />
-        </TouchableOpacity>
-      )}
+      </TouchableOpacity>
+      <Modal
+        transparent={true}
+        visible={isOpen}
+        onRequestClose={closeMenu}
+        animationType="fade"
+      >
+        <TouchableWithoutFeedback onPress={closeMenu}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <View
+                style={[
+                  styles.dropdown,
+                  { backgroundColor: darkerSecondaryColor },
+                ]}
+              >
+                <View style={styles.headerContainer}>
+                  <ThemedText style={styles.headerText}>
+                    Inställningar
+                  </ThemedText>
+                  <TouchableOpacity
+                    onPress={closeMenu}
+                    style={styles.menuButton}
+                  >
+                    <Ionicons name="close" size={44} color="white" />
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity
+                  onPress={handleResetSlider}
+                  style={[
+                    styles.option,
+                    { backgroundColor: secondaryColor, borderColor: iconColor },
+                  ]}
+                >
+                  <ThemedText style={styles.optionText}>
+                    Återställ hemkomst
+                  </ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleLogout}
+                  style={[
+                    styles.option,
+                    {
+                      backgroundColor: logoutButtonColor,
+                      borderColor: iconColor,
+                    },
+                  ]}
+                >
+                  <ThemedText style={styles.optionText}>Logga ut</ThemedText>
+                </TouchableOpacity>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 };
@@ -83,14 +125,14 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onResetSlider }) => {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    right: 0,
+    right: -50,
     zIndex: 1000,
   },
   menuButton: {
     alignSelf: "flex-end",
   },
   dropdown: {
-    width: 200,
+    width: 250,
     borderRadius: 10,
     padding: 5,
     shadowColor: "#000",
@@ -98,17 +140,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+    marginTop: 50,
+    marginRight: 10,
   },
   option: {
-    paddingVertical: 15,
+    paddingVertical: 20,
     paddingHorizontal: 20,
-    borderWidth: 1,
+    borderWidth: 2,
     borderRadius: 10,
     marginBottom: 5,
   },
   optionText: {
     color: "white",
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: "bold",
   },
   headerContainer: {
     flexDirection: "row",
@@ -119,9 +164,20 @@ const styles = StyleSheet.create({
   },
   headerText: {
     color: "white",
-    fontSize: 20,
+    fontSize: 22,
     marginLeft: 10,
     fontWeight: "bold",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-start",
+    alignItems: "flex-end",
+  },
+  iconContainer: {
+    position: "relative",
+    right: 40,
+    bottom: 5,
   },
 });
 

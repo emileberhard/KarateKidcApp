@@ -29,7 +29,7 @@ export async function sendNotifications(users: Record<string, any>, notification
 
   for (const userId in users) {
     const user = users[userId];
-    if (user.pushToken && user.platform) {
+    if (!user.muted && user.pushToken && user.platform) {
       if (user.platform === "android") {
         fcmMessages.push(createFCMMessage(user.pushToken, notificationData));
       } else if (user.platform === "ios") {
@@ -85,7 +85,12 @@ async function sendFCMNotifications(fcmMessages: admin.messaging.Message[]) {
 async function sendAPNSNotifications(apnsMessages: apn.Notification[], users: Record<string, any>) {
   if (apnsMessages.length > 0) {
     try {
-      const apnsToken = users[Object.keys(users)[0]].pushToken;
+      // Find the first non-muted iOS user's token
+      const apnsToken = Object.values(users).find(user => user.platform === "ios" && !user.muted)?.pushToken;
+      if (!apnsToken) {
+        console.log("No valid APNS token found for non-muted iOS users");
+        return;
+      }
       const results = await Promise.all(
         apnsMessages.map((notification) => apnProvider.send(notification, apnsToken))
       );

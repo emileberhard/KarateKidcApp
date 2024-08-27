@@ -28,7 +28,7 @@ export const sendAnnouncement = onCall(
       await initializeNotificationService(dbUsers);
     }
 
-    // Check if the caller is an admin
+    
     if (!request.auth || !(await isUserAdmin(request.auth.uid))) {
       throw new HttpsError(
         "permission-denied",
