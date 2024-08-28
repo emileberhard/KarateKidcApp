@@ -9,6 +9,8 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { ImageSourcePropType } from "react-native";
 import cuteNinjaImage from "@/assets/images/cute_ninja.png";
@@ -51,9 +53,9 @@ export default function AdminScreen() {
     const unsubscribe = onValue(usersRef, (snapshot) => {
       const data = snapshot.val();
       const userList: User[] = Object.entries(data).map(
-        ([firstName, userData]: [string, Record<string, unknown>]) => ({
-          firstName,
-          userId: userData.userId as string,
+        ([userId, userData]: [string, Record<string, unknown>]) => ({
+          firstName: userData.firstName as string,
+          userId: userId,
           units: Number(userData.units),
           unitTakenTimestamps: userData.unitTakenTimestamps as
             | Record<string, number>
@@ -114,22 +116,22 @@ export default function AdminScreen() {
     return promille;
   };
 
-  const updateUnits = (firstName: string, change: number) => {
+  const updateUnits = (userId: string, change: number) => {
     const db = getDatabase();
-    const userRef = ref(db, `users/${firstName}/units`);
+    const userRef = ref(db, `users/${userId}/units`);
     const newUnits = Math.max(
       0,
-      users.find((u) => u.firstName === firstName)!.units + change
+      users.find((u) => u.userId === userId)!.units + change
     );
     set(userRef, newUnits);
   };
 
-  const resetUserUnits = (firstName: string) => {
+  const resetUserUnits = (userId: string) => {
     const db = getDatabase();
-    const userRef = ref(db, `users/${firstName}/units`);
+    const userRef = ref(db, `users/${userId}/units`);
     const unitTakenTimestampsRef = ref(
       db,
-      `users/${firstName}/unitTakenTimestamps`
+      `users/${userId}/unitTakenTimestamps`
     );
     set(userRef, 0);
     remove(unitTakenTimestampsRef);
@@ -226,13 +228,13 @@ export default function AdminScreen() {
           >
             <ThemedView style={styles.buttonContainer}>
               <TouchableOpacity
-                onPress={() => updateUnits(item.firstName, -10)}
+                onPress={() => updateUnits(item.userId, -10)}
                 style={styles.unitButton}
               >
                 <AntDesign name="doubleleft" size={16} color="white" />
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => updateUnits(item.firstName, -1)}
+                onPress={() => updateUnits(item.userId, -1)}
                 style={styles.unitButton}
               >
                 <AntDesign name="minus" size={16} color="white" />
@@ -241,19 +243,19 @@ export default function AdminScreen() {
                 <ThemedText style={styles.unitText}>{item.units}</ThemedText>
               </View>
               <TouchableOpacity
-                onPress={() => updateUnits(item.firstName, 1)}
+                onPress={() => updateUnits(item.userId, 1)}
                 style={styles.unitButton}
               >
                 <AntDesign name="plus" size={16} color="white" />
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => updateUnits(item.firstName, 10)}
+                onPress={() => updateUnits(item.userId, 10)}
                 style={styles.unitButton}
               >
                 <AntDesign name="doubleright" size={16} color="white" />
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => resetUserUnits(item.firstName)}
+                onPress={() => resetUserUnits(item.userId)}
                 style={[styles.unitButton, styles.resetButton]}
               >
                 <Ionicons name="refresh" size={16} color="white" />
@@ -284,61 +286,70 @@ export default function AdminScreen() {
   const notHomeUsers = users.filter((user) => !user.safeArrival);
 
   return (
-    <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <FlatList
-        style={styles.container}
-        data={[
-          { type: "header", title: "Kvar på event" } as ListItem,
-          ...notHomeUsers,
-          { type: "header", title: "Hemma" } as ListItem,
-          ...homeUsers,
-        ]}
-        renderItem={renderItem}
-        keyExtractor={(item) => ("type" in item ? item.title : item.userId)}
-        ListHeaderComponent={
-          <View style={styles.announcementContainer}>
-            <ThemedText style={styles.announcementHeader}>
-              Skicka meddelande till nollor
-            </ThemedText>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.announcementInput}
-                placeholder="Skriv meddelande"
-                placeholderTextColor="#666"
-                value={announcement}
-                onChangeText={setAnnouncement}
-                onSubmitEditing={handleAnnouncementSubmit}
-                blurOnSubmit={false}
-              />
-              <TouchableOpacity
-                style={[
-                  styles.sendButton,
-                  announcementSent && styles.sentButton,
-                ]}
-                onPress={sendAnnouncement}
-                disabled={sendingAnnouncement || announcementSent}
-              >
-                {sendingAnnouncement ? (
-                  <ActivityIndicator color="white" size="small" />
-                ) : announcementSent ? (
-                  <MaterialIcons name="check" size={30} color="white" />
-                ) : (
-                  <Ionicons name="send" size={30} color="white" />
-                )}
-              </TouchableOpacity>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
+      <TouchableWithoutFeedback onPress={dismissKeyboard}>
+        <FlatList
+          style={styles.container}
+          contentContainerStyle={styles.contentContainer}
+          data={[
+            { type: "header", title: "Kvar på event" } as ListItem,
+            ...notHomeUsers,
+            { type: "header", title: "Hemma" } as ListItem,
+            ...homeUsers,
+          ]}
+          renderItem={renderItem}
+          keyExtractor={(item) => ("type" in item ? item.title : item.userId)}
+          ListHeaderComponent={
+            <View style={styles.announcementContainer}>
+              <ThemedText style={styles.announcementHeader}>
+                Skicka meddelande till nollor
+              </ThemedText>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.announcementInput}
+                  placeholder="Skriv meddelande"
+                  placeholderTextColor="#666"
+                  value={announcement}
+                  onChangeText={setAnnouncement}
+                  onSubmitEditing={handleAnnouncementSubmit}
+                  blurOnSubmit={false}
+                />
+                <TouchableOpacity
+                  style={[
+                    styles.sendButton,
+                    announcementSent && styles.sentButton,
+                  ]}
+                  onPress={sendAnnouncement}
+                  disabled={sendingAnnouncement || announcementSent}
+                >
+                  {sendingAnnouncement ? (
+                    <ActivityIndicator color="white" size="small" />
+                  ) : announcementSent ? (
+                    <MaterialIcons name="check" size={30} color="white" />
+                  ) : (
+                    <Ionicons name="send" size={30} color="white" />
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        }
-      />
-    </TouchableWithoutFeedback>
+          }
+        />
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  contentContainer: {
     paddingTop: 60,
     paddingHorizontal: 20,
+    paddingBottom: 20,
   },
   userContainer: {
     marginBottom: 10,

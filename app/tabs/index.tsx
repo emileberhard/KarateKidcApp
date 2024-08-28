@@ -40,18 +40,20 @@ export default function HomeScreen() {
   const [drinks, setDrinks] = useState<DrinkEntry[]>([]);
   const [_, setEstimatedBAC] = useState<number>(0);
   const [safeArrival, setSafeArrival] = useState<string | null>(null);
+  const [firstName, setFirstName] = useState<string>("");
   const { width: SCREEN_WIDTH } = useWindowDimensions();
   const BUTTON_WIDTH = SCREEN_WIDTH * 0.9;
   const LOGO_SIZE = SCREEN_WIDTH * 0.4;
 
   useEffect(() => {
     if (user) {
-      const userRef = ref(database, `users/${user.firstName}`);
+      const userRef = ref(database, `users/${user.userId}`);
 
       const unsubscribe = onValue(userRef, (snapshot) => {
         const userData = snapshot.val();
         if (userData) {
           setUnits(userData.units || 0);
+          setFirstName(userData.firstName || "");
 
           if (userData.unitTakenTimestamps) {
             const drinkEntries: DrinkEntry[] = Object.entries(
@@ -104,9 +106,9 @@ export default function HomeScreen() {
   };
 
   const takeUnit = useCallback(async () => {
-    if (user && user.firstName && units > 0) {
+    if (user && user.userId && units > 0) {
       try {
-        const userRef = ref(database, `users/${user.firstName}`);
+        const userRef = ref(database, `users/${user.userId}`);
 
         await set(child(userRef, "units"), increment(-1));
 
@@ -122,20 +124,20 @@ export default function HomeScreen() {
     if (Platform.OS !== "web") {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
-    if (user && user.firstName) {
+    if (user && user.userId) {
       const safeArrivalRef = ref(
         database,
-        `users/${user.firstName}/safeArrival`
+        `users/${user.userId}/safeArrival`
       );
       set(safeArrivalRef, new Date().toISOString());
     }
   };
 
   const resetSlider = useCallback(() => {
-    if (user && user.firstName) {
+    if (user && user.userId) {
       const safeArrivalRef = ref(
         database,
-        `users/${user.firstName}/safeArrival`
+        `users/${user.userId}/safeArrival`
       );
       set(safeArrivalRef, null);
     }
@@ -150,7 +152,7 @@ export default function HomeScreen() {
           <ThemedView style={styles.headerContainer}>
             <ThemedView style={styles.titleContainer}>
               <ThemedText style={styles.titleText}>
-                {user ? `Osu, ${user.firstName}` : "Osu"}
+                {user ? `Osu, ${firstName}` : "Osu"}
               </ThemedText>
               <HelloWave />
             </ThemedView>

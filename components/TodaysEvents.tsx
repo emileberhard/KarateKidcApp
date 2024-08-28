@@ -11,6 +11,7 @@ interface Event {
   summary: string;
   start: Date;
   end: Date;
+  description: string; // Add this line
 }
 
 export function TodaysEvents() {
@@ -35,10 +36,31 @@ export function TodaysEvents() {
       const todaysEvents = vevents
         .map((vevent) => {
           const event = new ICAL.Event(vevent);
+          const eventDate = event.startDate.toJSDate();
+          eventDate.setHours(0, 0, 0, 0);
+
+          if (eventDate.getTime() === today.getTime()) {
+            // Log only today's events
+            console.log('Today\'s event details:', {
+              summary: event.summary,
+              description: event.description,
+              start: event.startDate.toJSDate(),
+              end: event.endDate.toJSDate(),
+              location: event.location,
+              organizer: event.organizer,
+              attendees: event.attendees,
+              categories: event.categories,
+              status: event.status,
+              uid: event.uid,
+              recurrenceId: event.recurrenceId,
+            });
+          }
+
           return {
             summary: event.summary,
             start: event.startDate.toJSDate(),
             end: event.endDate.toJSDate(),
+            description: event.description || 'No description available',
           };
         })
         .filter((event) => {
@@ -83,6 +105,9 @@ export function TodaysEvents() {
                     minute: "2-digit",
                   })}`}
                 </ThemedText>
+                <ThemedText style={[styles.eventDescription, { color: "white" }]}>
+                  {event.description}
+                </ThemedText>
               </View>
             ))
           )}
@@ -114,7 +139,8 @@ const styles = StyleSheet.create({
   },
   eventTitle: {
     fontWeight: "bold",
-    fontSize: 30,
+    fontSize: 27,
+    marginBottom: 5,
   },
   column: {
     flexDirection: "column",
@@ -126,5 +152,9 @@ const styles = StyleSheet.create({
     height: "100%",
     backgroundColor: "white",
     marginHorizontal: 10,
+  },
+  eventDescription: {
+    fontSize: 14,
+    marginTop: 5,
   },
 });
