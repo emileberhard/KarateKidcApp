@@ -40,7 +40,7 @@ export const notifyAdminsOnSafeArrival = onValueWritten({
     if (adminUsers) {
       await initializeNotificationService(adminUsers);
       await sendNotifications(adminUsers, {
-        title: `Nolla har kommit hem säkert 🏠`,
+        title: `${user.firstName} har gått hem 🏠`,
         body: `${user.firstName} har markerat sig själv som hemkommen`,
         data: { userId: userId, safeArrival: 'true' }
       });
