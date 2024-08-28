@@ -24,7 +24,7 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
   }, []);
 
   const handleBuy = useCallback(() => {
-    const amount = units * 15;
+    const amount = units * 10;
     const url = `https://app.swish.nu/1/p/sw/?sw=0729718923&amt=${amount}&cur=SEK&msg=${units}%20enheter&src=qr`;
     Linking.openURL(url);
   }, [units]);
@@ -60,7 +60,7 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
           ]}
         >
           <ThemedText style={styles.buyButtonText}>
-            Köp {units}st ({units * 15}kr)
+            Köp {units}st ({units * 10}kr)
           </ThemedText>
         </TouchableOpacity>
       </View>
