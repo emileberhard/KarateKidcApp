@@ -11,12 +11,14 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ScrollView,
 } from "react-native";
 import { ImageSourcePropType } from "react-native";
 import cuteNinjaImage from "@/assets/images/cute_ninja.png";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
-import { getDatabase, ref, onValue, set, remove } from "firebase/database";
+import { getDatabase, ref, onValue, set, remove, push } from "firebase/database";
 import { AntDesign } from "@expo/vector-icons";
 import { useAuth } from "@/hooks/useAuth";
 import * as Notifications from "expo-notifications";
@@ -24,9 +26,11 @@ import { cloudFunctions } from "@/firebaseConfig";
 import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface User {
   firstName: string;
+  lastName: string;
   userId: string;
   units: number;
   unitTakenTimestamps?: Record<string, number>;
@@ -36,6 +40,19 @@ interface User {
 
 type ListItem = User | { type: "header"; title: string };
 
+interface UnitLogEvent {
+  userId: string;
+  oldUnits: number;
+  newUnits: number;
+  change: number;
+  timestamp: number;
+}
+
+const getUserFullName = (userId: string, users: User[]): string => {
+  const user = users.find(u => u.userId === userId);
+  return user ? `${user.firstName} ${user.lastName}` : 'Unknown User';
+};
+
 export default function AdminScreen() {
   const [users, setUsers] = useState<User[]>([]);
   const { user } = useAuth();
@@ -43,6 +60,7 @@ export default function AdminScreen() {
   const [announcement, setAnnouncement] = useState("");
   const [sendingAnnouncement, setSendingAnnouncement] = useState(false);
   const [announcementSent, setAnnouncementSent] = useState(false);
+  const [unitLogEvents, setUnitLogEvents] = useState<UnitLogEvent[]>([]);
 
   const notificationListener = useRef<Notifications.Subscription>();
   const responseListener = useRef<Notifications.Subscription>();
@@ -56,6 +74,7 @@ export default function AdminScreen() {
       const userList: User[] = Object.entries(data).map(
         ([userId, userData]: [string, Record<string, unknown>]) => ({
           firstName: userData.firstName as string,
+          lastName: userData.lastName as string,
           userId: userId,
           units: Number(userData.units),
           unitTakenTimestamps: userData.unitTakenTimestamps as
@@ -91,6 +110,20 @@ export default function AdminScreen() {
     };
   }, [user]);
 
+  useEffect(() => {
+    const db = getDatabase();
+    const logRef = ref(db, 'unit_log');
+    const unsubscribe = onValue(logRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const events = Object.values(data) as UnitLogEvent[];
+        setUnitLogEvents(events.sort((a, b) => b.timestamp - a.timestamp).slice(0, 10));
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   const calculateBAC = (
     unitTakenTimestamps: Record<string, number> | undefined
   ): number => {
@@ -118,25 +151,62 @@ export default function AdminScreen() {
     return promille;
   };
 
+  const logUnitChange = (userId: string, oldUnits: number, newUnits: number) => {
+    const db = getDatabase();
+    const logRef = ref(db, 'unit_log');
+    const change = newUnits - oldUnits;
+    const event = {
+      userId,
+      oldUnits,
+      newUnits,
+      change,
+      timestamp: Date.now()
+    };
+    push(logRef, event);
+  };
+
   const updateUnits = (userId: string, change: number) => {
     const db = getDatabase();
     const userRef = ref(db, `users/${userId}/units`);
-    const newUnits = Math.max(
-      0,
-      users.find((u) => u.userId === userId)!.units + change
-    );
-    set(userRef, newUnits);
+    const user = users.find((u) => u.userId === userId);
+    if (user) {
+      const oldUnits = user.units;
+      const newUnits = Math.max(0, oldUnits + change);
+      set(userRef, newUnits);
+      logUnitChange(userId, oldUnits, newUnits);
+    }
   };
 
   const resetUserUnits = (userId: string) => {
-    const db = getDatabase();
-    const userRef = ref(db, `users/${userId}/units`);
-    const unitTakenTimestampsRef = ref(
-      db,
-      `users/${userId}/unitTakenTimestamps`
+    Alert.alert(
+      "Återställ enheter",
+      "Är du säker på att du vill återställa användarens enheter till 0?",
+      [
+        {
+          text: "Avbryt",
+          style: "cancel"
+        },
+        {
+          text: "Återställ",
+          onPress: () => {
+            const db = getDatabase();
+            const userRef = ref(db, `users/${userId}/units`);
+            const unitTakenTimestampsRef = ref(
+              db,
+              `users/${userId}/unitTakenTimestamps`
+            );
+            const user = users.find((u) => u.userId === userId);
+            if (user) {
+              const oldUnits = user.units;
+              set(userRef, 0);
+              remove(unitTakenTimestampsRef);
+              logUnitChange(userId, oldUnits, 0);
+            }
+          },
+          style: "destructive"
+        }
+      ]
     );
-    set(userRef, 0);
-    remove(unitTakenTimestampsRef);
   };
 
   const toggleExpandUser = (userId: string) => {
@@ -176,28 +246,36 @@ export default function AdminScreen() {
     Keyboard.dismiss();
   };
 
+  const isDisplayTime = () => {
+    const now = new Date();
+    const hours = now.getHours();
+    return hours >= 8 && hours < 15;
+  };
+
   const renderItem = ({ item }: { item: ListItem }) => {
     if ("type" in item && item.type === "header") {
-      return <ThemedText style={styles.sectionHeader}>{item.title}</ThemedText>;
+      return isDisplayTime() ? null : (
+        <ThemedText style={styles.sectionHeader}>{item.title}</ThemedText>
+      );
     }
     return renderUser({ item: item as User });
   };
 
   const renderUser = ({ item }: { item: User }) => {
-    const promille = calculateBAC(item.unitTakenTimestamps);
+    const displayTime = isDisplayTime();
     const isHome = !!item.safeArrival;
 
     return (
       <View
         style={[
           styles.userContainer,
-          isHome ? styles.homeUserContainer : styles.notHomeUserContainer,
+          displayTime ? styles.notHomeUserContainer : (isHome ? styles.homeUserContainer : styles.notHomeUserContainer),
         ]}
       >
         <TouchableOpacity
           style={[
             styles.userItem,
-            isHome ? styles.homeUserItem : styles.notHomeUserItem,
+            displayTime ? styles.notHomeUserItem : (isHome ? styles.homeUserItem : styles.notHomeUserItem),
           ]}
           onPress={() => toggleExpandUser(item.userId)}
         >
@@ -219,7 +297,8 @@ export default function AdminScreen() {
                 </View>
               </View>
               <ThemedText style={styles.userDetails}>
-                {item.units} units • BAC: {promille.toFixed(2)}
+                {item.units} enheter
+                {!displayTime && ` • BAC: ${calculateBAC(item.unitTakenTimestamps).toFixed(2)}`}
               </ThemedText>
             </View>
           </ThemedView>
@@ -233,9 +312,7 @@ export default function AdminScreen() {
           <ThemedView
             style={[
               styles.expandedContent,
-              isHome
-                ? styles.homeExpandedContent
-                : styles.notHomeExpandedContent,
+              displayTime ? styles.notHomeExpandedContent : (isHome ? styles.homeExpandedContent : styles.notHomeExpandedContent),
             ]}
           >
             <ThemedView style={styles.buttonContainer}>
@@ -273,38 +350,82 @@ export default function AdminScreen() {
                 <Ionicons name="refresh" size={16} color="white" />
               </TouchableOpacity>
             </ThemedView>
-            <ThemedView style={styles.safeArrivalContainer}>
-              <FontAwesome5
-                name={item.safeArrival ? "home" : "walking"}
-                size={20}
-                color={item.safeArrival ? "green" : "orange"}
-              />
-              <ThemedText style={styles.safeArrivalText}>
-                {item.safeArrival
-                  ? `Hemma ${new Date(item.safeArrival).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}`
-                  : "Inte hemma än"}
-              </ThemedText>
-            </ThemedView>
+            {!displayTime && (
+              <>
+                <View style={styles.divider} />
+                <ThemedView style={styles.safeArrivalContainer}>
+                  <FontAwesome5
+                    name={isHome ? "home" : "walking"}
+                    size={20}
+                    color={isHome ? "green" : "orange"}
+                  />
+                  <ThemedText style={styles.safeArrivalText}>
+                    {isHome
+                      ? `Hemma ${new Date(item.safeArrival!).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}`
+                      : "Inte hemma än"}
+                  </ThemedText>
+                </ThemedView>
+                <View style={styles.divider} />
+                <View style={styles.bacMeterContainer}>
+                  <ThemedText style={styles.bacMeterLabel}>Promillemätare (grov uppskattning):</ThemedText>
+                  <View style={styles.bacMeterBackground}>
+                    <LinearGradient
+                      colors={['#4CAF50', '#FFEB3B', '#FF5252']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={[
+                        styles.bacMeterFill,
+                        { width: `${calculateBAC(item.unitTakenTimestamps) / 1.5 * 100}%` },
+                      ]}
+                    />
+                  </View>
+                  <ThemedText style={styles.bacMeterValue}>
+                    {calculateBAC(item.unitTakenTimestamps).toFixed(2)} promille = {getBACLabelAndEmoji(calculateBAC(item.unitTakenTimestamps)).label} {getBACLabelAndEmoji(calculateBAC(item.unitTakenTimestamps)).emoji}
+                  </ThemedText>
+                </View>
+              </>
+            )}
           </ThemedView>
         )}
       </View>
     );
   };
 
+  const getBACLabelAndEmoji = (bac: number) => {
+    if (bac < 0.2) return { label: 'Nykter', emoji: '😊' };
+    if (bac < 0.6) return { label: 'Salongsberusad', emoji: '🍷' };
+    if (bac < 1.2) return { label: 'PARTYMODE!', emoji: '🕺💃🍻' };
+    return { label: 'Pukemode', emoji: '🤢' };
+  };
+
   const sortUsers = (users: User[]) => {
     return users.sort((a, b) => {
-      if (a.admin === b.admin) {
-        return a.firstName.localeCompare(b.firstName);
+      if (a.admin !== b.admin) {
+        return a.admin ? 1 : -1;
       }
-      return a.admin ? 1 : -1;
+      return b.units - a.units; // Sort by units in descending order
     });
   };
 
-  const homeUsers = sortUsers(users.filter((user) => !!user.safeArrival));
-  const notHomeUsers = sortUsers(users.filter((user) => !user.safeArrival));
+  const allUsers = sortUsers(users);
+
+  const renderUnitLogEvents = () => {
+    return (
+      <View style={styles.logContainer}>
+        <ThemedText style={styles.logHeader}>Enhetslogg</ThemedText>
+        <ScrollView style={styles.logScrollView}>
+          {unitLogEvents.map((event, index) => (
+            <ThemedText key={index} style={styles.logEntry}>
+              {`[${new Date(event.timestamp).toLocaleTimeString()}] ${getUserFullName(event.userId, users)}: ${event.oldUnits} -> ${event.newUnits} (${event.change > 0 ? '+' : ''}${event.change})`}
+            </ThemedText>
+          ))}
+        </ScrollView>
+      </View>
+    );
+  };
 
   return (
     <KeyboardAvoidingView 
@@ -316,47 +437,53 @@ export default function AdminScreen() {
           <FlatList
             style={styles.container}
             contentContainerStyle={styles.contentContainer}
-            data={[
-              { type: "header", title: "Kvar på event" } as ListItem,
-              ...notHomeUsers,
-              { type: "header", title: "Hemma" } as ListItem,
-              ...homeUsers,
-            ]}
+            data={isDisplayTime() 
+              ? allUsers
+              : [
+                  { type: "header", title: "Kvar på event" } as ListItem,
+                  ...users.filter((user) => !user.safeArrival),
+                  { type: "header", title: "Hemma" } as ListItem,
+                  ...users.filter((user) => !!user.safeArrival),
+                ]}
             renderItem={renderItem}
             keyExtractor={(item) => ("type" in item ? item.title : item.userId)}
-            ListHeaderComponent={
-              <View style={styles.announcementContainer}>
-                <ThemedText style={styles.announcementHeader}>
-                  Skicka meddelande till nollor
-                </ThemedText>
-                <View style={styles.inputContainer}>
-                  <TextInput
-                    style={styles.announcementInput}
-                    placeholder="Skriv meddelande"
-                    placeholderTextColor="#666"
-                    value={announcement}
-                    onChangeText={setAnnouncement}
-                    onSubmitEditing={handleAnnouncementSubmit}
-                    blurOnSubmit={false}
-                  />
-                  <TouchableOpacity
-                    style={[
-                      styles.sendButton,
-                      announcementSent && styles.sentButton,
-                    ]}
-                    onPress={sendAnnouncement}
-                    disabled={sendingAnnouncement || announcementSent}
-                  >
-                    {sendingAnnouncement ? (
-                      <ActivityIndicator color="white" size="small" />
-                    ) : announcementSent ? (
-                      <MaterialIcons name="check" size={30} color="white" />
-                    ) : (
-                      <Ionicons name="send" size={30} color="white" />
-                    )}
-                  </TouchableOpacity>
+            ListFooterComponent={
+              <>
+                <ThemedText style={styles.sectionHeader}>Verktyg</ThemedText>
+                <View style={styles.announcementContainer}>
+                  <ThemedText style={styles.announcementHeader}>
+                    Skicka notis till nollor
+                  </ThemedText>
+                  <View style={styles.inputContainer}>
+                    <TextInput
+                      style={styles.announcementInput}
+                      placeholder="Skriv meddelande"
+                      placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                      value={announcement}
+                      onChangeText={setAnnouncement}
+                      onSubmitEditing={handleAnnouncementSubmit}
+                      blurOnSubmit={false}
+                    />
+                    <TouchableOpacity
+                      style={[
+                        styles.sendButton,
+                        announcementSent && styles.sentButton,
+                      ]}
+                      onPress={sendAnnouncement}
+                      disabled={sendingAnnouncement || announcementSent}
+                    >
+                      {sendingAnnouncement ? (
+                        <ActivityIndicator color="white" size="small" />
+                      ) : announcementSent ? (
+                        <MaterialIcons name="check" size={30} color="white" />
+                      ) : (
+                        <Ionicons name="send" size={30} color="white" />
+                      )}
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
+                {renderUnitLogEvents()}
+              </>
             }
           />
         </View>
@@ -392,12 +519,6 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255, 255, 255, 0.1)",
     backgroundColor: "#41002A",
   },
-  homeUserContainer: {
-    borderRadius: 10,
-    borderColor: "rgba(0, 255, 0, 0.3)",
-    backgroundColor: "#006400",
-  },
-  notHomeUserContainer: {},
   userItem: {
     flexDirection: "row",
     borderRadius: 2,
@@ -406,10 +527,6 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#48002f",
   },
-  homeUserItem: {
-    backgroundColor: "rgba(0, 100, 0, 0.8)",
-  },
-  notHomeUserItem: {},
   expandedContent: {
     paddingVertical: 10,
     paddingHorizontal: 15,
@@ -418,10 +535,6 @@ const styles = StyleSheet.create({
     gap: 5,
     backgroundColor: "#1A0011",
   },
-  homeExpandedContent: {
-    backgroundColor: "rgb(0 77 0)",
-  },
-  notHomeExpandedContent: {},
   userIcon: {
     width: 30,
     height: 30,
@@ -509,7 +622,6 @@ const styles = StyleSheet.create({
     color: "white",
   },
   announcementContainer: {
-    marginBottom: 20,
     padding: 10,
     backgroundColor: "#48002f",
     borderRadius: 10,
@@ -521,19 +633,21 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "white",
     marginBottom: 10,
-    textAlign: "center",
+    textAlign: "left",
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "white",
+    backgroundColor: "black",
     borderRadius: 5,
     paddingRight: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.5)",
   },
   announcementInput: {
     flex: 1,
     padding: 10,
-    color: "black",
+    color: "white",
   },
   sendButton: {
     padding: 10,
@@ -549,11 +663,84 @@ const styles = StyleSheet.create({
     backgroundColor: "green",
   },
   sectionHeader: {
-    fontSize: 20,
+    fontSize: 33,
     fontWeight: "bold",
     color: "white",
     marginTop: 20,
     marginBottom: 10,
     textAlign: "left",
+  },
+  bacMeterContainer: {
+    marginTop: 10,
+  },
+  bacMeterLabel: {
+    fontSize: 14,
+    color: 'white',
+    marginBottom: 5,
+  },
+  bacMeterBackground: {
+    height: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  bacMeterFill: {
+    height: '100%',
+    borderRadius: 10,
+  },
+  bacMeterValue: {
+    fontSize: 14,
+    color: 'white',
+    marginTop: 5,
+    textAlign: 'center',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    marginTop: 10,
+  },
+  logContainer: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: '#000',
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  logHeader: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#0f0',
+    marginBottom: 5,
+  },
+  logScrollView: {
+    maxHeight: 150,
+  },
+  logEntry: {
+    fontSize: 12,
+    color: '#0f0',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+  },
+  homeUserContainer: {
+    borderRadius: 10,
+    borderColor: "rgba(0, 255, 0, 0.3)",
+    backgroundColor: "#015101",
+  },
+  notHomeUserContainer: {
+    borderRadius: 10,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+    backgroundColor: "#41002A",
+  },
+  homeUserItem: {
+    backgroundColor: "rgba(0, 100, 0, 0.8)",
+  },
+  notHomeUserItem: {
+    backgroundColor: "#48002f",
+  },
+  homeExpandedContent: {
+    backgroundColor: "rgb(0 77 0)",
+  },
+  notHomeExpandedContent: {
+    backgroundColor: "#1A0011",
   },
 });
