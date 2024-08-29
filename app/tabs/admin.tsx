@@ -404,16 +404,9 @@ export default function AdminScreen() {
   const sortUsers = (users: User[]) => {
     return users.sort((a, b) => {
       if (a.admin !== b.admin) {
-        return a.admin ? 1 : -1; // Nollas first, then Phadders
+        return a.admin ? 1 : -1;
       }
-      // During events, sort by BAC level
-      if (!isDisplayTime()) {
-        const bacA = calculateBAC(a.unitTakenTimestamps);
-        const bacB = calculateBAC(b.unitTakenTimestamps);
-        return bacB - bacA; // Sort by BAC in descending order
-      }
-      // During display time, keep the existing sort by units
-      return b.units - a.units;
+      return b.units - a.units; // Sort by units in descending order
     });
   };
 
