@@ -31,6 +31,7 @@ interface User {
   units: number;
   unitTakenTimestamps?: Record<string, number>;
   safeArrival?: string | null;
+  admin: boolean;
 }
 
 type ListItem = User | { type: "header"; title: string };
@@ -61,6 +62,7 @@ export default function AdminScreen() {
             | Record<string, number>
             | undefined,
           safeArrival: userData.safeArrival as string | null | undefined,
+          admin: userData.admin as boolean,
         })
       );
       setUsers(userList);
@@ -205,7 +207,17 @@ export default function AdminScreen() {
           />
           <ThemedView style={styles.userInfo}>
             <View style={styles.userTextContainer}>
-              <ThemedText style={styles.userName}>{item.firstName}</ThemedText>
+              <View style={styles.userNameContainer}>
+                <ThemedText style={styles.userName}>{item.firstName}</ThemedText>
+                <View style={[
+                  styles.roleTag,
+                  item.admin ? styles.adminTag : styles.userTag
+                ]}>
+                  <ThemedText style={styles.roleTagText}>
+                    {item.admin ? 'Phadder' : 'Nolla'}
+                  </ThemedText>
+                </View>
+              </View>
               <ThemedText style={styles.userDetails}>
                 {item.units} units • BAC: {promille.toFixed(2)}
               </ThemedText>
@@ -282,8 +294,17 @@ export default function AdminScreen() {
     );
   };
 
-  const homeUsers = users.filter((user) => !!user.safeArrival);
-  const notHomeUsers = users.filter((user) => !user.safeArrival);
+  const sortUsers = (users: User[]) => {
+    return users.sort((a, b) => {
+      if (a.admin === b.admin) {
+        return a.firstName.localeCompare(b.firstName);
+      }
+      return a.admin ? 1 : -1;
+    });
+  };
+
+  const homeUsers = sortUsers(users.filter((user) => !!user.safeArrival));
+  const notHomeUsers = sortUsers(users.filter((user) => !user.safeArrival));
 
   return (
     <KeyboardAvoidingView 
@@ -369,12 +390,12 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 3,
     borderColor: "rgba(255, 255, 255, 0.1)",
-    backgroundColor: "#b40075",
+    backgroundColor: "#41002A",
   },
   homeUserContainer: {
     borderRadius: 10,
     borderColor: "rgba(0, 255, 0, 0.3)",
-    backgroundColor: "#b40075",
+    backgroundColor: "#006400",
   },
   notHomeUserContainer: {},
   userItem: {
@@ -398,7 +419,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#1A0011",
   },
   homeExpandedContent: {
-    backgroundColor: "rgba(0, 100, 0, 0.6)",
+    backgroundColor: "rgb(0 77 0)",
   },
   notHomeExpandedContent: {},
   userIcon: {
@@ -414,6 +435,27 @@ const styles = StyleSheet.create({
   userTextContainer: {
     flexDirection: "column",
     justifyContent: "center",
+  },
+  userNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  roleTag: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
+    marginLeft: 8,
+  },
+  adminTag: {
+    backgroundColor: '#007AFF',
+  },
+  userTag: {
+    backgroundColor: '#FF1493', 
+  },
+  roleTagText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: 'white',
   },
   userName: {
     fontSize: 25,
