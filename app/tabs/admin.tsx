@@ -10,8 +10,8 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import { ImageSourcePropType } from "react-native";
-import cuteNinjaImage from "@/assets/images/cute_ninja.png";
+import nollaImage from "@/assets/images/nollla.png";
+import phadderImage from "@/assets/images/phadder.png";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { getDatabase, ref, onValue, set, remove, push } from "firebase/database";
@@ -276,7 +276,7 @@ export default function AdminScreen() {
           onPress={() => toggleExpandUser(item.userId)}
         >
           <Image
-            source={cuteNinjaImage as ImageSourcePropType}
+            source={item.admin ? phadderImage : nollaImage}
             style={styles.userIcon}
           />
           <ThemedView style={styles.userInfo}>
@@ -534,8 +534,8 @@ const styles = StyleSheet.create({
   },
   userIcon: {
     width: 30,
-    height: 30,
-    borderRadius: 20,
+    height: 40,
+    borderRadius: 15,
   },
   userInfo: {
     flex: 1,
