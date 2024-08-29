@@ -288,68 +288,80 @@ export default function AdminScreen() {
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1 }}
+      style={styles.mainContainer}
     >
       <TouchableWithoutFeedback onPress={dismissKeyboard}>
-        <FlatList
-          style={styles.container}
-          contentContainerStyle={styles.contentContainer}
-          data={[
-            { type: "header", title: "Kvar på event" } as ListItem,
-            ...notHomeUsers,
-            { type: "header", title: "Hemma" } as ListItem,
-            ...homeUsers,
-          ]}
-          renderItem={renderItem}
-          keyExtractor={(item) => ("type" in item ? item.title : item.userId)}
-          ListHeaderComponent={
-            <View style={styles.announcementContainer}>
-              <ThemedText style={styles.announcementHeader}>
-                Skicka meddelande till nollor
-              </ThemedText>
-              <View style={styles.inputContainer}>
-                <TextInput
-                  style={styles.announcementInput}
-                  placeholder="Skriv meddelande"
-                  placeholderTextColor="#666"
-                  value={announcement}
-                  onChangeText={setAnnouncement}
-                  onSubmitEditing={handleAnnouncementSubmit}
-                  blurOnSubmit={false}
-                />
-                <TouchableOpacity
-                  style={[
-                    styles.sendButton,
-                    announcementSent && styles.sentButton,
-                  ]}
-                  onPress={sendAnnouncement}
-                  disabled={sendingAnnouncement || announcementSent}
-                >
-                  {sendingAnnouncement ? (
-                    <ActivityIndicator color="white" size="small" />
-                  ) : announcementSent ? (
-                    <MaterialIcons name="check" size={30} color="white" />
-                  ) : (
-                    <Ionicons name="send" size={30} color="white" />
-                  )}
-                </TouchableOpacity>
+        <View style={styles.blackBackground}>
+          <FlatList
+            style={styles.container}
+            contentContainerStyle={styles.contentContainer}
+            data={[
+              { type: "header", title: "Kvar på event" } as ListItem,
+              ...notHomeUsers,
+              { type: "header", title: "Hemma" } as ListItem,
+              ...homeUsers,
+            ]}
+            renderItem={renderItem}
+            keyExtractor={(item) => ("type" in item ? item.title : item.userId)}
+            ListHeaderComponent={
+              <View style={styles.announcementContainer}>
+                <ThemedText style={styles.announcementHeader}>
+                  Skicka meddelande till nollor
+                </ThemedText>
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.announcementInput}
+                    placeholder="Skriv meddelande"
+                    placeholderTextColor="#666"
+                    value={announcement}
+                    onChangeText={setAnnouncement}
+                    onSubmitEditing={handleAnnouncementSubmit}
+                    blurOnSubmit={false}
+                  />
+                  <TouchableOpacity
+                    style={[
+                      styles.sendButton,
+                      announcementSent && styles.sentButton,
+                    ]}
+                    onPress={sendAnnouncement}
+                    disabled={sendingAnnouncement || announcementSent}
+                  >
+                    {sendingAnnouncement ? (
+                      <ActivityIndicator color="white" size="small" />
+                    ) : announcementSent ? (
+                      <MaterialIcons name="check" size={30} color="white" />
+                    ) : (
+                      <Ionicons name="send" size={30} color="white" />
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
-          }
-        />
+            }
+          />
+        </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  mainContainer: {
+    flex: 1,
+    backgroundColor: 'black',
+  },
+  blackBackground: {
+    flex: 1,
+    backgroundColor: 'black',
+  },
   container: {
     flex: 1,
+    backgroundColor: 'black',
   },
   contentContainer: {
     paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 20,
+    backgroundColor: 'black',
   },
   userContainer: {
     marginBottom: 10,

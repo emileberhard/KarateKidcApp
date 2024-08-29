@@ -60,7 +60,7 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
           ]}
         >
           <ThemedText style={styles.buyButtonText}>
-            Köp {units}st ({units * 10}kr)
+            {units}st ({units * 10}kr)
           </ThemedText>
         </TouchableOpacity>
       </View>
