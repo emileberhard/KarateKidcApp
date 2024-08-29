@@ -6,13 +6,9 @@ import {
   TouchableOpacity,
   View,
   TextInput,
-  Keyboard,
-  TouchableWithoutFeedback,
   ActivityIndicator,
-  KeyboardAvoidingView,
   Platform,
   Alert,
-  ScrollView,
 } from "react-native";
 import { ImageSourcePropType } from "react-native";
 import cuteNinjaImage from "@/assets/images/cute_ninja.png";
@@ -38,7 +34,7 @@ interface User {
   admin: boolean;
 }
 
-type ListItem = User | { type: "header"; title: string };
+type ListItem = User | { type: "header"; title: string } | { type: "tools" };
 
 interface UnitLogEvent {
   userId: string;
@@ -242,10 +238,6 @@ export default function AdminScreen() {
     }
   };
 
-  const dismissKeyboard = () => {
-    Keyboard.dismiss();
-  };
-
   const isDisplayTime = () => {
     const now = new Date();
     const hours = now.getHours();
@@ -253,10 +245,14 @@ export default function AdminScreen() {
   };
 
   const renderItem = ({ item }: { item: ListItem }) => {
-    if ("type" in item && item.type === "header") {
-      return isDisplayTime() ? null : (
-        <ThemedText style={styles.sectionHeader}>{item.title}</ThemedText>
-      );
+    if ("type" in item) {
+      if (item.type === "header") {
+        return isDisplayTime() ? null : (
+          <ThemedText style={styles.sectionHeader}>{item.title}</ThemedText>
+        );
+      } else if (item.type === "tools") {
+        return renderTools();
+      }
     }
     return renderUser({ item: item as User });
   };
@@ -394,6 +390,54 @@ export default function AdminScreen() {
     );
   };
 
+  const renderTools = () => (
+    <>
+      <ThemedText style={styles.sectionHeader}>Verktyg</ThemedText>
+      <View style={styles.announcementContainer}>
+        <ThemedText style={styles.announcementHeader}>
+          Skicka notis till nollor
+        </ThemedText>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.announcementInput}
+            placeholder="Skriv meddelande"
+            placeholderTextColor="rgba(255, 255, 255, 0.5)"
+            value={announcement}
+            onChangeText={setAnnouncement}
+            onSubmitEditing={handleAnnouncementSubmit}
+            blurOnSubmit={false}
+          />
+          <TouchableOpacity
+            style={[
+              styles.sendButton,
+              announcementSent && styles.sentButton,
+            ]}
+            onPress={sendAnnouncement}
+            disabled={sendingAnnouncement || announcementSent}
+          >
+            {sendingAnnouncement ? (
+              <ActivityIndicator color="white" size="small" />
+            ) : announcementSent ? (
+              <MaterialIcons name="check" size={30} color="white" />
+            ) : (
+              <Ionicons name="send" size={30} color="white" />
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View style={styles.logContainer}>
+        <ThemedText style={styles.logHeader}>Enhetslogg</ThemedText>
+        <View>
+          {unitLogEvents.map((event, index) => (
+            <ThemedText key={index} style={styles.logEntry}>
+              {`[${new Date(event.timestamp).toLocaleTimeString()}] ${getUserFullName(event.userId, users)}: ${event.oldUnits} -> ${event.newUnits} (${event.change > 0 ? '+' : ''}${event.change})`}
+            </ThemedText>
+          ))}
+        </View>
+      </View>
+    </>
+  );
+
   const getBACLabelAndEmoji = (bac: number) => {
     if (bac < 0.2) return { label: 'Nykter', emoji: '😊' };
     if (bac < 0.6) return { label: 'Salongsberusad', emoji: '🍷' };
@@ -410,85 +454,38 @@ export default function AdminScreen() {
     });
   };
 
-  const allUsers = sortUsers(users);
-
-  const renderUnitLogEvents = () => {
-    return (
-      <View style={styles.logContainer}>
-        <ThemedText style={styles.logHeader}>Enhetslogg</ThemedText>
-        <ScrollView style={styles.logScrollView}>
-          {unitLogEvents.map((event, index) => (
-            <ThemedText key={index} style={styles.logEntry}>
-              {`[${new Date(event.timestamp).toLocaleTimeString()}] ${getUserFullName(event.userId, users)}: ${event.oldUnits} -> ${event.newUnits} (${event.change > 0 ? '+' : ''}${event.change})`}
-            </ThemedText>
-          ))}
-        </ScrollView>
-      </View>
-    );
+  const getListData = () => {
+    const allUsers = sortUsers(users);
+    if (isDisplayTime()) {
+      return [...allUsers, { type: "tools" as const }];
+    } else {
+      return [
+        { type: "header" as const, title: "Kvar på event" },
+        ...users.filter((user) => !user.safeArrival),
+        { type: "header" as const, title: "Hemma" },
+        ...users.filter((user) => !!user.safeArrival),
+        { type: "tools" as const },
+      ];
+    }
   };
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.mainContainer}
-    >
-      <TouchableWithoutFeedback onPress={dismissKeyboard}>
+
         <View style={styles.blackBackground}>
           <FlatList
             style={styles.container}
             contentContainerStyle={styles.contentContainer}
-            data={isDisplayTime() 
-              ? allUsers
-              : [
-                  { type: "header", title: "Kvar på event" } as ListItem,
-                  ...users.filter((user) => !user.safeArrival),
-                  { type: "header", title: "Hemma" } as ListItem,
-                  ...users.filter((user) => !!user.safeArrival),
-                ]}
+            data={getListData()}
             renderItem={renderItem}
-            keyExtractor={(item) => ("type" in item ? item.title : item.userId)}
-            ListFooterComponent={
-              <>
-                <ThemedText style={styles.sectionHeader}>Verktyg</ThemedText>
-                <View style={styles.announcementContainer}>
-                  <ThemedText style={styles.announcementHeader}>
-                    Skicka notis till nollor
-                  </ThemedText>
-                  <View style={styles.inputContainer}>
-                    <TextInput
-                      style={styles.announcementInput}
-                      placeholder="Skriv meddelande"
-                      placeholderTextColor="rgba(255, 255, 255, 0.5)"
-                      value={announcement}
-                      onChangeText={setAnnouncement}
-                      onSubmitEditing={handleAnnouncementSubmit}
-                      blurOnSubmit={false}
-                    />
-                    <TouchableOpacity
-                      style={[
-                        styles.sendButton,
-                        announcementSent && styles.sentButton,
-                      ]}
-                      onPress={sendAnnouncement}
-                      disabled={sendingAnnouncement || announcementSent}
-                    >
-                      {sendingAnnouncement ? (
-                        <ActivityIndicator color="white" size="small" />
-                      ) : announcementSent ? (
-                        <MaterialIcons name="check" size={30} color="white" />
-                      ) : (
-                        <Ionicons name="send" size={30} color="white" />
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                </View>
-                {renderUnitLogEvents()}
-              </>
-            }
+            keyExtractor={(item) => {
+              if ("type" in item) {
+                return item.type === "header" ? item.title : "tools";
+              }
+              return item.userId;
+            }}
           />
         </View>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+
   );
 }
 
@@ -713,9 +710,7 @@ const styles = StyleSheet.create({
     color: '#0f0',
     marginBottom: 5,
   },
-  logScrollView: {
-    maxHeight: 150,
-  },
+
   logEntry: {
     fontSize: 12,
     color: '#0f0',
