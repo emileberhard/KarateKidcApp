@@ -1,8 +1,10 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { View, StyleSheet, TouchableOpacity, Linking } from "react-native";
 import { ThemedText } from "./ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Ionicons } from "@expo/vector-icons";
+import { ref, onValue } from "firebase/database";
+import { database } from "../firebaseConfig";
 
 interface UnitPurchaseButtonProps {
   initialUnits?: number;
@@ -12,8 +14,28 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
   initialUnits = 1,
 }) => {
   const [units, setUnits] = useState(initialUnits);
+  const [unitPrice, setUnitPrice] = useState(0);
+  const [swishUrl, setSwishUrl] = useState("");
   const color = useThemeColor("primary");
   const borderColor = useThemeColor("accent");
+
+  useEffect(() => {
+    const unitPriceRef = ref(database, "unit_price");
+    const swishUrlRef = ref(database, "swish_url");
+
+    const unsubscribeUnitPrice = onValue(unitPriceRef, (snapshot) => {
+      setUnitPrice(snapshot.val() || 0);
+    });
+
+    const unsubscribeSwishUrl = onValue(swishUrlRef, (snapshot) => {
+      setSwishUrl(snapshot.val() || "");
+    });
+
+    return () => {
+      unsubscribeUnitPrice();
+      unsubscribeSwishUrl();
+    };
+  }, []);
 
   const incrementUnits = useCallback(() => {
     setUnits((prevUnits) => prevUnits + 1);
@@ -24,10 +46,8 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
   }, []);
 
   const handleBuy = useCallback(() => {
-    const amount = units * 10;
-    const url = `https://app.swish.nu/1/p/sw/?sw=0729718923&amt=${amount}&cur=SEK&msg=${units}%20enheter&src=qr`;
-    Linking.openURL(url);
-  }, [units]);
+    Linking.openURL(swishUrl + `&amt=${units * unitPrice}&cur=SEK&src=qr`);
+  }, [units, unitPrice, swishUrl]);
 
   return (
     <View style={styles.container}>
@@ -60,7 +80,7 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
           ]}
         >
           <ThemedText style={styles.buyButtonText}>
-            {units}st ({units * 10}kr)
+            {units}st ({units * unitPrice}kr)
           </ThemedText>
         </TouchableOpacity>
       </View>
