@@ -32,6 +32,12 @@ export const notifyAdminsOnSafeArrival = onValueWritten({
       return null;
     }
 
+    // Check if the user is an admin
+    if (user.admin) {
+      console.log(`User ${userId} is an admin. Skipping notification.`);
+      return null;
+    }
+
     const adminUsersSnapshot = await db.ref('users').orderByChild('admin').equalTo(true).once('value');
     const adminUsers = adminUsersSnapshot.val();
 

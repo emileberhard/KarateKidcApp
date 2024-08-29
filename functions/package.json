@@ -18,7 +18,7 @@
     "expo-server-sdk": "^3.10.0",
     "firebase-admin": "^12.1.0",
     "firebase-functions": "^5.1.0",
-    "openai": "^4.55.7"
+    "openai": "^4.56.1"
   },
   "devDependencies": {
     "firebase-functions-test": "^3.1.0",
