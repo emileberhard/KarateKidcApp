@@ -23,6 +23,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface User {
   firstName: string;
@@ -34,7 +35,7 @@ interface User {
   admin: boolean;
 }
 
-type ListItem = User | { type: "header"; title: string } | { type: "tools" };
+type ListItem = User | { type: "header"; title: string } | { type: "tools"; title?: string };
 
 interface UnitLogEvent {
   userId: string;
@@ -43,10 +44,14 @@ interface UnitLogEvent {
   change: number;
   timestamp: number;
 }
+ 
 
-const getUserFullName = (userId: string, users: User[]): string => {
+const getUserShortName = (userId: string, users: User[]): string => {
   const user = users.find(u => u.userId === userId);
-  return user ? `${user.firstName} ${user.lastName}` : 'Unknown User';
+  if (user) {
+    return `${user.firstName} ${user.lastName.charAt(0)}`;
+  }
+  return 'Unknown User';
 };
 
 export default function AdminScreen() {
@@ -113,7 +118,7 @@ export default function AdminScreen() {
       const data = snapshot.val();
       if (data) {
         const events = Object.values(data) as UnitLogEvent[];
-        setUnitLogEvents(events.sort((a, b) => b.timestamp - a.timestamp).slice(0, 10));
+        setUnitLogEvents(events.sort((a, b) => b.timestamp - a.timestamp).slice(0, 20));
       }
     });
 
@@ -240,6 +245,16 @@ export default function AdminScreen() {
     return renderUser({ item: item as User });
   };
 
+  const toggleUserHomeState = (userId: string, currentState: boolean) => {
+    const db = getDatabase();
+    const userRef = ref(db, `users/${userId}/safeArrival`);
+    if (currentState) {
+      remove(userRef);
+    } else {
+      set(userRef, new Date().toISOString());
+    }
+  };
+
   const renderUser = ({ item }: { item: User }) => {
     const displayTime = isDisplayTime();
     const isHome = !!item.safeArrival;
@@ -332,20 +347,35 @@ export default function AdminScreen() {
             {!displayTime && (
               <>
                 <View style={styles.divider} />
-                <ThemedView style={styles.safeArrivalContainer}>
-                  <FontAwesome5
-                    name={isHome ? "home" : "walking"}
-                    size={20}
-                    color={isHome ? "green" : "orange"}
-                  />
-                  <ThemedText style={styles.safeArrivalText}>
-                    {isHome
-                      ? `Hemma ${new Date(item.safeArrival!).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}`
-                      : "Inte hemma än"}
-                  </ThemedText>
+                <ThemedView style={styles.safeArrivalRow}>
+                  <ThemedView style={styles.safeArrivalContainer}>
+                    <FontAwesome5
+                      name={isHome ? "home" : "walking"}
+                      size={20}
+                      color={isHome ? "green" : "orange"}
+                    />
+                    <ThemedText style={styles.safeArrivalText}>
+                      {isHome
+                        ? `Hemma ${new Date(item.safeArrival!).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}`
+                        : "Inte hemma än"}
+                    </ThemedText>
+                  </ThemedView>
+                  <TouchableOpacity
+                    style={styles.toggleHomeStateButton}
+                    onPress={() => toggleUserHomeState(item.userId, isHome)}
+                  >
+                    <MaterialCommunityIcons
+                      name={isHome ? "home-remove" : "home-plus"}
+                      size={24}
+                      color="white"
+                    />
+                    <ThemedText style={styles.toggleHomeStateText}>
+                      {isHome ? "Markera som ute" : "Markera som hemma"}
+                    </ThemedText>
+                  </TouchableOpacity>
                 </ThemedView>
                 <View style={styles.divider} />
                 <View style={styles.bacMeterContainer}>
@@ -413,7 +443,11 @@ export default function AdminScreen() {
         <View>
           {unitLogEvents.map((event, index) => (
             <ThemedText key={index} style={styles.logEntry}>
-              {`[${new Date(event.timestamp).toLocaleTimeString()}] ${getUserFullName(event.userId, users)}: ${event.oldUnits} -> ${event.newUnits} (${event.change > 0 ? '+' : ''}${event.change})`}
+              {`[${new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}] ${getUserShortName(event.userId, users)} ${
+                event.change === -1
+                  ? `tog en enhet (${event.oldUnits}->${event.newUnits})`
+                  : `${event.oldUnits}->${event.newUnits} (${event.change > 0 ? '+' : ''}${event.change})`
+              }`}
             </ThemedText>
           ))}
         </View>
@@ -424,7 +458,7 @@ export default function AdminScreen() {
   const getBACLabelAndEmoji = (bac: number) => {
     if (bac < 0.2) return { label: 'Nykter', emoji: '😊' };
     if (bac < 0.6) return { label: 'Salongsberusad', emoji: '🍷' };
-    if (bac < 1.2) return { label: 'PARTYMODE!', emoji: '🕺💃🍻' };
+    if (bac < 1.2) return { label: 'PARTYMODE!', emoji: '💃🍻' };
     return { label: 'Pukemode', emoji: '🤢' };
   };
 
@@ -437,18 +471,28 @@ export default function AdminScreen() {
     });
   };
 
-  const getListData = () => {
+  const getListData = (): ListItem[] => {
     const allUsers = sortUsers(users);
     if (isDisplayTime()) {
-      return [...allUsers, { type: "tools" as const }];
+      return [...allUsers, { type: "tools" as const, title: "Verktyg" }];
     } else {
-      return [
+      const usersNotHome = users.filter((user) => !user.safeArrival);
+      const usersHome = users.filter((user) => !!user.safeArrival);
+      
+      const listData: ListItem[] = [
         { type: "header" as const, title: "Kvar på event" },
-        ...users.filter((user) => !user.safeArrival),
-        { type: "header" as const, title: "Hemma" },
-        ...users.filter((user) => !!user.safeArrival),
-        { type: "tools" as const },
+        ...usersNotHome,
       ];
+
+      if (usersHome.length > 0) {
+        listData.push(
+          { type: "header" as const, title: "Hemma" },
+          ...usersHome
+        );
+      }
+
+      listData.push({ type: "tools" as const, title: "Verktyg" });
+      return listData;
     }
   };
 
@@ -460,9 +504,9 @@ export default function AdminScreen() {
             contentContainerStyle={styles.contentContainer}
             data={getListData()}
             renderItem={renderItem}
-            keyExtractor={(item) => {
+            keyExtractor={(item: ListItem) => {
               if ("type" in item) {
-                return item.type === "header" ? item.title : "tools";
+                return item.type === "header" ? `header-${item.title}` : "tools";
               }
               return item.userId;
             }}
@@ -590,16 +634,33 @@ const styles = StyleSheet.create({
   resetButton: {
     backgroundColor: "red",
   },
-  safeArrivalContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+  safeArrivalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginTop: 10,
-    backgroundColor: "transparent",
+    marginBottom: 10,
+  },
+  safeArrivalContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   safeArrivalText: {
     marginLeft: 10,
     fontSize: 14,
-    color: "white",
+    color: 'white',
+  },
+  toggleHomeStateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#007AFF',
+    padding: 8,
+    borderRadius: 5,
+  },
+  toggleHomeStateText: {
+    color: 'white',
+    marginLeft: 5,
+    fontSize: 14,
   },
   announcementContainer: {
     padding: 10,
@@ -643,7 +704,7 @@ const styles = StyleSheet.create({
     backgroundColor: "green",
   },
   sectionHeader: {
-    fontSize: 33,
+    fontSize: 32,
     fontWeight: "bold",
     color: "white",
     marginTop: 20,
@@ -677,26 +738,25 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    marginTop: 10,
+    marginTop: 5,
   },
   logContainer: {
-    marginTop: 10,
+    marginVertical: 20,
     padding: 10,
     backgroundColor: '#000',
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: '#48002f',
   },
   logHeader: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#0f0',
+    color: '#b40075',
     marginBottom: 5,
   },
-
   logEntry: {
-    fontSize: 12,
-    color: '#0f0',
+    fontSize: 13,
+    color: '#b40075',
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   homeUserContainer: {

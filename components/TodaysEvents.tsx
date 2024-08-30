@@ -18,6 +18,7 @@ export function TodaysEvents() {
   const [events, setEvents] = useState<Event[]>([]);
   const [expandedEvents, setExpandedEvents] = useState<{ [key: number]: boolean }>({});
   const primaryColor = useThemeColor("primary");
+  const accentColor = useThemeColor("accent");
 
   useEffect(() => {
     fetchEvents();
@@ -63,7 +64,7 @@ export function TodaysEvents() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: primaryColor }]}>
+    <View style={[styles.container, { backgroundColor: primaryColor, borderColor: accentColor }]}>
       <View style={styles.row}>
         <View style={styles.column}>
           <ThemedText style={[styles.idagText, { color: "white" }]}>
@@ -124,6 +125,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
     padding: 10,
     borderRadius: 10,
+    borderWidth: 2, // Add this line to create a border
   },
   row: {
     flexDirection: "row",
