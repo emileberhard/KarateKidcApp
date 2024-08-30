@@ -38,22 +38,22 @@ const GoogleSignInButton = () => {
 
       if (userSnapshot.exists()) {
         console.log("User already exists in the database");
-        // Check if the user entry is using firstName as the key
+       
         const oldUserRef = ref(database, `users/${user.givenName}`);
         const oldUserSnapshot = await get(oldUserRef);
         
         if (oldUserSnapshot.exists()) {
-          // User entry exists with firstName as key, update the structure
+         
           const oldUserData = oldUserSnapshot.val();
           const newUserRef = ref(database, `users/${result.user.uid}`);
           
-          // Copy the old data to the new location
+         
           await set(newUserRef, {
             ...oldUserData,
             userId: result.user.uid,
           });
           
-          // Remove the old entry
+         
           await remove(oldUserRef);
           
           console.log("User data structure updated");

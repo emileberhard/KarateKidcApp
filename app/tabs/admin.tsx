@@ -14,7 +14,7 @@ import nollaImage from "@/assets/images/nollla.png";
 import phadderImage from "@/assets/images/phadder.png";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
-import { getDatabase, ref, onValue, set, remove, push } from "firebase/database";
+import { getDatabase, ref, onValue, set, remove } from "firebase/database";
 import { AntDesign } from "@expo/vector-icons";
 import { useAuth } from "@/hooks/useAuth";
 import * as Notifications from "expo-notifications";
@@ -147,20 +147,6 @@ export default function AdminScreen() {
     return promille;
   };
 
-  const logUnitChange = (userId: string, oldUnits: number, newUnits: number) => {
-    const db = getDatabase();
-    const logRef = ref(db, 'unit_log');
-    const change = newUnits - oldUnits;
-    const event = {
-      userId,
-      oldUnits,
-      newUnits,
-      change,
-      timestamp: Date.now()
-    };
-    push(logRef, event);
-  };
-
   const updateUnits = (userId: string, change: number) => {
     const db = getDatabase();
     const userRef = ref(db, `users/${userId}/units`);
@@ -169,7 +155,6 @@ export default function AdminScreen() {
       const oldUnits = user.units;
       const newUnits = Math.max(0, oldUnits + change);
       set(userRef, newUnits);
-      logUnitChange(userId, oldUnits, newUnits);
     }
   };
 
@@ -193,10 +178,8 @@ export default function AdminScreen() {
             );
             const user = users.find((u) => u.userId === userId);
             if (user) {
-              const oldUnits = user.units;
               set(userRef, 0);
               remove(unitTakenTimestampsRef);
-              logUnitChange(userId, oldUnits, 0);
             }
           },
           style: "destructive"
@@ -450,7 +433,7 @@ export default function AdminScreen() {
       if (a.admin !== b.admin) {
         return a.admin ? 1 : -1;
       }
-      return b.units - a.units; // Sort by units in descending order
+      return b.units - a.units;
     });
   };
 
@@ -533,8 +516,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#1A0011",
   },
   userIcon: {
-    width: 30,
-    height: 40,
+    width: 35,
+    height: 45,
     borderRadius: 15,
   },
   userInfo: {

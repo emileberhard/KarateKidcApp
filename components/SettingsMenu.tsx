@@ -60,7 +60,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onResetSlider }) => {
     <View style={styles.container}>
       <TouchableOpacity onPress={handleOpenMenu} style={styles.menuButton}>
         <View style={styles.iconContainer}>
-          <Ionicons name="settings-outline" size={50} color={iconColor} />
+          <Ionicons name="settings-outline" size={40} color={iconColor} />
         </View>
       </TouchableOpacity>
       <Modal
@@ -125,7 +125,8 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onResetSlider }) => {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    right: -50,
+    right: -40,
+    top: 5,
     zIndex: 1000,
   },
   menuButton: {

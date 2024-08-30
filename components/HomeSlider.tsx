@@ -18,20 +18,17 @@ import { Text } from "react-native";
 interface SlideButtonProps {
   onSlideComplete: () => void;
   text: string;
-  width?: number;
   isActive: boolean;
 }
 
 const SlideButton: React.FC<SlideButtonProps> = ({
   onSlideComplete,
   text,
-  width,
   isActive,
 }) => {
   const { width: SCREEN_WIDTH } = useWindowDimensions();
-  const BUTTON_WIDTH = width || SCREEN_WIDTH * 0.9;
-  const SLIDER_WIDTH = BUTTON_WIDTH * 0.25;
-  const SLIDE_THRESHOLD = BUTTON_WIDTH * 0.75;
+  const SLIDER_WIDTH = SCREEN_WIDTH * 0.25;
+  const SLIDE_THRESHOLD = SCREEN_WIDTH * 0.75;
 
   const accentColor = useThemeColor("accent");
 
@@ -41,24 +38,24 @@ const SlideButton: React.FC<SlideButtonProps> = ({
     if (!isActive) {
       translateX.value = withTiming(0, { duration: 300 });
     } else {
-      translateX.value = withTiming(BUTTON_WIDTH - SLIDER_WIDTH, {
+      translateX.value = withTiming(SCREEN_WIDTH - SLIDER_WIDTH, {
         duration: 300,
       });
     }
-  }, [isActive, BUTTON_WIDTH, SLIDER_WIDTH]);
+  }, [isActive, SCREEN_WIDTH, SLIDER_WIDTH]);
 
   const panGesture = Gesture.Pan()
     .activeOffsetX([-10, 10])
     .onChange((event) => {
       if (!isActive) {
         let newValue = event.translationX;
-        newValue = Math.max(0, Math.min(newValue, BUTTON_WIDTH - SLIDER_WIDTH));
+        newValue = Math.max(0, Math.min(newValue, SCREEN_WIDTH - SLIDER_WIDTH));
         translateX.value = newValue;
       }
     })
     .onFinalize(() => {
       if (!isActive && translateX.value >= SLIDE_THRESHOLD) {
-        translateX.value = withTiming(BUTTON_WIDTH - SLIDER_WIDTH, {
+        translateX.value = withTiming(SCREEN_WIDTH - SLIDER_WIDTH, {
           duration: 100,
         });
         runOnJS(onSlideComplete)();
@@ -72,17 +69,17 @@ const SlideButton: React.FC<SlideButtonProps> = ({
   }));
 
   const textOpacityStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(translateX.value, [0, BUTTON_WIDTH / 2], [1, 0]),
+    opacity: interpolate(translateX.value, [0, SCREEN_WIDTH / 2], [1, 0]),
   }));
 
   const houseOpacityStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(translateX.value, [0, BUTTON_WIDTH / 2], [1, 0]),
+    opacity: interpolate(translateX.value, [0, SCREEN_WIDTH / 2], [1, 0]),
   }));
 
   const backgroundColorStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(
       translateX.value,
-      [0, BUTTON_WIDTH - SLIDER_WIDTH],
+      [0, SCREEN_WIDTH - SLIDER_WIDTH],
       ["#ff8c00", "#4caf50"]
     ),
   }));
@@ -94,7 +91,7 @@ const SlideButton: React.FC<SlideButtonProps> = ({
   const sliderBackgroundTextStyle = useAnimatedStyle(() => ({
     opacity: interpolate(
       translateX.value,
-      [0, BUTTON_WIDTH / 2, BUTTON_WIDTH - SLIDER_WIDTH],
+      [0, SCREEN_WIDTH / 2, SCREEN_WIDTH - SLIDER_WIDTH],
       [0, 1, 1]
     ),
   }));
@@ -104,7 +101,7 @@ const SlideButton: React.FC<SlideButtonProps> = ({
       style={[
         styles.container,
         backgroundColorStyle,
-        { width: BUTTON_WIDTH, borderColor: accentColor },
+        { borderColor: accentColor },
       ]}
     >
       <Animated.Text style={[styles.text, textOpacityStyle]}>

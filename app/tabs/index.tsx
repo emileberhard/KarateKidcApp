@@ -3,7 +3,6 @@ import {
   StyleSheet,
   Platform,
   View,
-  useWindowDimensions,
   SafeAreaView,
   StatusBar,
 } from "react-native";
@@ -33,6 +32,7 @@ import { TodaysEvents } from "@/components/TodaysEvents";
 
 import { DrinkEntry } from "../../firebaseConfig";
 import { useAuth } from "@/hooks/useAuth";
+import { ScrollView } from "react-native";
 
 export default function HomeScreen() {
   const { user } = useAuth();
@@ -41,9 +41,6 @@ export default function HomeScreen() {
   const [_, setEstimatedBAC] = useState<number>(0);
   const [safeArrival, setSafeArrival] = useState<string | null>(null);
   const [firstName, setFirstName] = useState<string>("");
-  const { width: SCREEN_WIDTH } = useWindowDimensions();
-  const BUTTON_WIDTH = SCREEN_WIDTH * 0.9;
-  const LOGO_SIZE = SCREEN_WIDTH * 0.4;
 
   useEffect(() => {
     if (user) {
@@ -147,53 +144,54 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" backgroundColor="#460038" />
       <GestureHandlerRootView style={styles.container}>
-        <ThemedView style={styles.contentContainer}>
-          <SettingsMenu onResetSlider={resetSlider} />
-          <ThemedView style={styles.headerContainer}>
-            <ThemedView style={styles.titleContainer}>
-              <ThemedText style={styles.titleText}>
-                {user ? `Osu, ${firstName}` : "Osu"}
+        <ScrollView 
+          contentContainerStyle={styles.scrollViewContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <ThemedView style={styles.contentContainer}>
+            <SettingsMenu onResetSlider={resetSlider} />
+            <ThemedView style={styles.headerContainer}>
+              <ThemedView style={styles.titleContainer}>
+                <ThemedText style={styles.titleText}>
+                  {user ? `Osu, ${firstName}` : "Osu"}
+                </ThemedText>
+                <HelloWave />
+              </ThemedView>
+              <ThemedText style={styles.welcomeText}>
+                Välkommen till dojon!
               </ThemedText>
-              <HelloWave />
             </ThemedView>
-            <ThemedText style={styles.welcomeText}>
-              Välkommen till dojon!
-            </ThemedText>
-          </ThemedView>
-          {user ? (
-            <View style={styles.userContentContainer}>
-              <View style={styles.unifiedButtonContainer}>
-                <TakeUnitButton onPress={takeUnit} units={units} size={250} />
-                <View style={styles.logoAndPurchaseContainer}>
-                  <Image
-                    source={kkLogo}
-                    style={[
-                      styles.logo,
-                      { width: LOGO_SIZE, height: LOGO_SIZE },
-                    ]}
-                    resizeMode="contain"
-                  />
-                  <UnitPurchaseButton />
+            {user ? (
+              <View style={styles.userContentContainer}>
+                <View style={styles.unifiedButtonContainer}>
+                  <TakeUnitButton onPress={takeUnit} units={units} size={250} />
+                  <View style={styles.logoAndPurchaseContainer}>
+                    <View style={styles.logoContainer}>
+                      <Image
+                        source={kkLogo}
+                        style={styles.logo}
+                        resizeMode="contain"
+                      />
+                    </View>
+                    <UnitPurchaseButton />
+                  </View>
                 </View>
+                <View style={styles.homeSliderContainer}>
+                  <HomeSlider
+                    onSlideComplete={arrivedHomeSafely}
+                    text="Bekräfta Hemkomst"
+                    isActive={!!safeArrival}
+                  />
+                </View>
+                <TodaysEvents />
               </View>
-              <TodaysEvents />
-            </View>
-          ) : (
-            <View style={styles.googleSignInContainer}>
-              <GoogleSignInButton />
-            </View>
-          )}
-        </ThemedView>
-        {user && (
-          <View style={styles.arrivalButtonContainer}>
-            <HomeSlider
-              onSlideComplete={arrivedHomeSafely}
-              text="Bekräfta Hemkomst"
-              width={BUTTON_WIDTH}
-              isActive={!!safeArrival}
-            />
-          </View>
-        )}
+            ) : (
+              <View style={styles.googleSignInContainer}>
+                <GoogleSignInButton />
+              </View>
+            )}
+          </ThemedView>
+        </ScrollView>
       </GestureHandlerRootView>
     </SafeAreaView>
   );
@@ -208,7 +206,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingVertical: 5,
   },
   headerContainer: {
     flexDirection: "column",
@@ -232,23 +229,33 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   logo: {
-    marginBottom: 20,
-    marginTop: -30,
-    marginLeft: 20,
+    width: '90%',
+    height: '90%',
   },
   userContentContainer: {
     flex: 1,
-    justifyContent: "flex-start",
+    width: "100%",
   },
   unifiedButtonContainer: {
     flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 5,
+    justifyContent: "space-between",
+    marginBottom: 20,
   },
   logoAndPurchaseContainer: {
     flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "flex-end",
+    flex: 1,
+    paddingLeft: 20,
+  },
+  logoContainer: {
+    marginBottom: 30,
+    marginRight: -10,
+    position: 'absolute',
+    top: -150,
+    left: 10,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   googleSignInContainer: {
     alignItems: "center",
@@ -264,4 +271,12 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
   },
+  scrollViewContent: {
+    flexGrow: 1,
+    paddingBottom: 90, 
+  },
+  homeSliderContainer: {
+    marginBottom: 20,
+  },
+
 });

@@ -9,3 +9,5 @@ export { notifyAdminsOnSafeArrival } from './safeArrivalNotification';
 export { sendAnnouncement } from './sendAnnouncement';
 
 export * from './notificationService';
+
+export { logUnitChanges } from './logUnitChanges';

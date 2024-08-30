@@ -2,7 +2,7 @@ export const themes = ["dark", "light", "nollningPostReveal"] as const;
 export type Theme = (typeof themes)[number];
 
 const nollningPostRevealTheme = {
-  primary: "#FF79C6",
+  primary: "#FF5BB8",
   secondary: "#BD93F9",
   neutral: "#6272A4",
   accent: "#ffdb77",

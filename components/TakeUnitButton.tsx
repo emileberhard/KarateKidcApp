@@ -26,7 +26,6 @@ interface TakeUnitButtonProps {
 const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
   onPress,
   units,
-  size = 100,
 }) => {
   const backgroundColor = useThemeColor("primary");
   const borderColor = useThemeColor("accent");
@@ -131,8 +130,8 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
           styles.container,
           animatedStyle,
           {
-            width: size / 1.5,
-            height: size,
+            width: "48%",
+            aspectRatio: 2 / 3,
             backgroundColor,
             borderColor,
           },
@@ -142,7 +141,7 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
           source={beerCanImage as ImageSourcePropType}
           style={styles.beerCanIcon}
         />
-        <Text style={[styles.unitsText, { color: textColor }]}>{units}st</Text>
+        <Text style={[styles.unitsText, { color: textColor }]}>{units} st</Text>
       </Animated.View>
     </GestureDetector>
   );
@@ -152,21 +151,23 @@ const styles = StyleSheet.create({
   container: {
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 2,
+    flex: 1,
   },
   beerCanIcon: {
-    height: "75%",
-    width: "100%",
-    marginLeft: 9,
+    height: "85%",
+    width: "110%",
+    marginLeft: 13,
     resizeMode: "contain",
   },
   unitsText: {
     fontSize: 40,
     fontFamily: "Montserrat-Bold",
     fontWeight: "bold",
-    marginTop: 5,
+    marginTop: -15,
+    marginBottom: 5,
+    marginLeft: 9,
   },
 });
 
