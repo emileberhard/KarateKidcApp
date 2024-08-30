@@ -29,7 +29,7 @@ export default ({ config }) => {
     ...config,
     ...variantConfig,
     slug: "KarateKidcApp",
-    version: "1.2.2",
+    version: "1.3.1",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     scheme: "karatekidcapp",
