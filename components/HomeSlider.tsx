@@ -10,6 +10,7 @@ import Animated, {
   interpolateColor,
 } from "react-native-reanimated";
 import { ImageSourcePropType } from "react-native";
+import { AntDesign } from '@expo/vector-icons';
 import CuteNinja from "../assets/images/cute_ninja.png";
 import NinjaHouse from "@/assets/images/ninja_house.png";
 import { useThemeColor } from "@/hooks/useThemeColor";
@@ -27,7 +28,7 @@ const SlideButton: React.FC<SlideButtonProps> = ({
   isActive,
 }) => {
   const { width: SCREEN_WIDTH } = useWindowDimensions();
-  const SLIDER_WIDTH = SCREEN_WIDTH * 0.25;
+  const SLIDER_WIDTH = SCREEN_WIDTH * 0.2;
   const SLIDE_THRESHOLD = SCREEN_WIDTH * 0.75;
 
   const accentColor = useThemeColor("accent");
@@ -96,6 +97,10 @@ const SlideButton: React.FC<SlideButtonProps> = ({
     ),
   }));
 
+  const arrowOpacityStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(translateX.value, [0, SCREEN_WIDTH / 4], [1, 0]),
+  }));
+
   return (
     <Animated.View
       style={[
@@ -118,7 +123,7 @@ const SlideButton: React.FC<SlideButtonProps> = ({
             styles.slider,
             animatedStyle,
             sliderOpacityStyle,
-            { width: SLIDER_WIDTH },
+            { width: SLIDER_WIDTH, borderColor: accentColor },
           ]}
         >
           <Image
@@ -126,6 +131,9 @@ const SlideButton: React.FC<SlideButtonProps> = ({
             style={styles.icon}
             resizeMode="contain"
           />
+          <Animated.View style={[styles.arrowContainer, arrowOpacityStyle]}>
+            <AntDesign name="arrowright" size={27} color={accentColor} />
+          </Animated.View>
         </Animated.View>
       </GestureDetector>
       <Animated.View style={[styles.houseIconContainer, houseOpacityStyle]}>
@@ -153,9 +161,10 @@ const styles = StyleSheet.create({
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#ffd7f4",
+    backgroundColor: "#FF5BB8",
     borderRadius: 16,
     flexDirection: "row",
+    borderWidth: 2, // Add this line
   },
   text: {
     position: "absolute",
@@ -166,8 +175,9 @@ const styles = StyleSheet.create({
     color: "#ffffff",
   },
   icon: {
-    width: "35%",
-    height: "80%",
+    width: "45%",
+    height: "100%",
+    marginRight: 25,
   },
   arrow: {
     flexDirection: "row",
@@ -177,7 +187,7 @@ const styles = StyleSheet.create({
   arrowLine: {
     width: "20%",
     height: 2,
-    backgroundColor: "#ff8c00",
+    backgroundColor: "#FFFFFF",
   },
   arrowHead: {
     width: 0,
@@ -221,6 +231,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#ff8c00",
     right: 10,
+  },
+  arrowContainer: {
+    position: 'absolute',
+    right: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

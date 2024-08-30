@@ -5,7 +5,7 @@ const nollningPostRevealTheme = {
   primary: "#FF5BB8",
   secondary: "#BD93F9",
   neutral: "#6272A4",
-  accent: "#ffdb77",
+  accent: "#FFCA44",
   background: "#460038",
   "base-100": "#282A36",
   "base-200": "#44475A",
