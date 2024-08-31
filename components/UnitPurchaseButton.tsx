@@ -87,7 +87,7 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
 
    
     setIsVerifying(false);
-    console.error("Transaction verification timed out");
+    console.log("Transaction verification timed out");
   }, [units, unitPrice]);
 
   useEffect(() => {
