@@ -11,3 +11,4 @@ export { sendAnnouncement } from './sendAnnouncement';
 export * from './notificationService';
 
 export { logUnitChanges } from './logUnitChanges';
+export { sendSwishReturnNotification } from './sendSwishReturnNotification';

@@ -62,7 +62,7 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
 
   const startCountdown = useCallback(() => {
     setShowOverlay(true);
-    setCountdown(15); // Changed from 60 to 15
+    setCountdown(15);
     countdownIntervalRef.current = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
@@ -112,7 +112,7 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
   const duration = 250;
   const longPressGesture = Gesture.LongPress()
     .minDuration(duration)
-    .enabled(!showOverlay) // Disable the gesture when overlay is shown
+    .enabled(!showOverlay)
     .onBegin(() => {
       if (units > 0 && !showOverlay) {
         scale.value = withSpring(0.95);

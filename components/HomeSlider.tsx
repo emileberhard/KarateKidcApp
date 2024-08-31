@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FF5BB8",
     borderRadius: 16,
     flexDirection: "row",
-    borderWidth: 2, // Add this line
+    borderWidth: 2,
   },
   text: {
     position: "absolute",

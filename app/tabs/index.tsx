@@ -29,6 +29,7 @@ import kkLogo from "@/assets/images/kk_logo.png";
 import SettingsMenu from "@/components/SettingsMenu";
 import UnitPurchaseButton from "@/components/UnitPurchaseButton";
 import { TodaysEvents } from "@/components/TodaysEvents";
+import { ResponsiblePhaddersPanel } from "@/components/ResponsiblePhaddersPanel";
 
 import { DrinkEntry } from "../../firebaseConfig";
 import { useAuth } from "@/hooks/useAuth";
@@ -183,6 +184,7 @@ export default function HomeScreen() {
                     isActive={!!safeArrival}
                   />
                 </View>
+                <ResponsiblePhaddersPanel />
                 <TodaysEvents />
               </View>
             ) : (

@@ -44,12 +44,11 @@ interface UnitLogEvent {
   change: number;
   timestamp: number;
 }
- 
 
 const getUserShortName = (userId: string, users: User[]): string => {
   const user = users.find(u => u.userId === userId);
   if (user) {
-    return `${user.firstName} ${user.lastName.charAt(0)}`;
+    return `${user.firstName} ${user.lastName?.charAt(0)}`;
   }
   return 'Unknown User';
 };
@@ -497,22 +496,20 @@ export default function AdminScreen() {
   };
 
   return (
-
-        <View style={styles.blackBackground}>
-          <FlatList
-            style={styles.container}
-            contentContainerStyle={styles.contentContainer}
-            data={getListData()}
-            renderItem={renderItem}
-            keyExtractor={(item: ListItem) => {
-              if ("type" in item) {
-                return item.type === "header" ? `header-${item.title}` : "tools";
-              }
-              return item.userId;
-            }}
-          />
-        </View>
-
+    <View style={styles.blackBackground}>
+      <FlatList
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+        data={getListData()}
+        renderItem={renderItem}
+        keyExtractor={(item: ListItem) => {
+          if ("type" in item) {
+            return item.type === "header" ? `header-${item.title}` : "tools";
+          }
+          return item.userId;
+        }}
+      />
+    </View>
   );
 }
 

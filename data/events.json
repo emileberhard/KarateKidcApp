@@ -1,0 +1,382 @@
+[
+  {
+    "summary": "LKG",
+    "start": "2024-08-30T16:00:00+00:00",
+    "end": "2024-08-31T00:00:00+00:00",
+    "description": "Nu när nollan har fått ett smakprov på sektionens Slasque-kultur så ska nollan få levla upp ett steg. Det ska nämligen vara finsittning i Gasquesalen. På finssittningar säger vi hejdå till de smutsiga, men älskvärda ouvvarna och ta på oss kläder passande till [mörk kostym](/nolla/packing). Inte nog med att vi kommer se fina ut, det kommer också bjudas på lyxig mat och fancy drinkar. Så om du har lite posh någonstans i kroppen så måste du gå på den här sittningen!",
+    "location": "Gasquesalen",
+    "Ansvarig": "David Delblanc"
+  },
+  {
+    "summary": "DIVERSE",
+    "start": "2024-09-03T16:00:00+00:00",
+    "end": "2024-09-03T19:00:00+00:00",
+    "description": "AktU välkomnar alla till Stadsparken! Ta på er träningskläderna och ta er till DIVERSE för en kväll fylld av sport. Alla phaddergrupper kommer att vara med och tävla i flera olika sporter. Vinnarna kan med stolthet kalla sig de sportigaste på D-sektionen. Det går även ett rykte om att Staben kommer att vara med och tävla…\n",
+    "location": "Stadsparken",
+    "Ansvarig": "Adam Ermanbriks"
+  },
+  {
+    "summary": "CS2-turnering",
+    "start": "2024-09-08T10:00:00+00:00",
+    "end": "2024-09-08T16:00:00+00:00",
+    "description": "Är du sugen på att spela CS2?\nVill du reppa din phaddergrupp och visa sektionen vilka de sanna mästarna är?\nAktU organiserar en episk turnering av CS2 mellan alla phaddergrupper. Snacka ihop er och registrera, så får vi se vilka som är störst och bäst på Dsek!\n\nTurneringen kommer även att streamas på twitch! Så om du inte är med och spelar se till att kolla och heja på din phaddergrupp.\n",
+    "location": ""
+  },
+  {
+    "summary": "Pepphour",
+    "start": "2024-10-02T17:30:00+00:00",
+    "end": "2024-10-03T00:00:00+00:00",
+    "description": "Nu kanske ni undrar vad är egentligen en Pepphour? Jo, det är helt enkelt ett event där man dricker en shot av valfri dryck per minut i en timme. Detta brukar landa i cirka 7-8 burkar 33cl dryck totalt. Detta drickandet ackompanjeras av en timme av olika feta låtar som byts varje minut.\n\nEventet kommer infinna sig på Lophtet och det finns ett begränsat antal biljetter, men frukta icke, om ni ej får en biljett så kan man såklart ordna sitt egna PeppHour på distans. Vi kommer att dela en video med era phaddrar så att man kan köra exakt samma låtar och filmklipp som visas på Lophtet.\n\nEventet börjar 19:30 och videon kommer att börja 20:00 (..). Efter att Pepphour är över så är samtliga phaddergrupper välkomna att joina festen på Lophtet om man inte har biljett till Sensation Red.",
+    "location": "Lophtet"
+  },
+  {
+    "summary": "Lunchföreläsning med Ericsson",
+    "start": "2024-09-25T10:15:00+00:00",
+    "end": "2024-09-25T11:00:00+00:00",
+    "description": "Självklart bjuds det på gratis mat för de som skaffat en biljett!",
+    "location": "E:A"
+  },
+  {
+    "summary": "LKG förfest",
+    "start": "2024-08-30T15:00:00+00:00",
+    "end": "2024-08-30T16:00:00+00:00",
+    "description": "Hej alla finklädda nollor! Pepparna vill gärna se era fina outfits innan sittningen så vi hostar en liten förfest på GG! Hur kul med en picknick mingel? Vi kommer att ge er en liten picknickkorg och filtar så ni behöver inte ta med något, vi ses där!",
+    "location": "GG"
+  },
+  {
+    "summary": "Lunchföreläsning med Sveriges Ingenjörer",
+    "start": "2024-09-03T10:15:00+00:00",
+    "end": "2024-09-03T11:00:00+00:00",
+    "description": "Självklart bjuds det på gratis mat för de som anmält sig! Inte nog med det, ju fler som kommer desto billigare blir biljetterna till flying **(WHAT?!)**, så se till att dra med alla dina kompisar!",
+    "location": "E:A"
+  },
+  {
+    "summary": "Brunch",
+    "start": "2024-09-28T08:00:00+00:00",
+    "end": "2024-09-28T10:00:00+00:00",
+    "description": "Kom och njut av brunch dagen efter gasque!",
+    "location": "iDét"
+  },
+  {
+    "summary": "Pluggkväll",
+    "start": "2024-09-16T15:15:00+00:00",
+    "end": "2024-09-16T19:00:00+00:00",
+    "description": "Kickstarta veckan med en pluggkväll! Våra eminenta pluggphaddrar finns behjälpliga med allt från matte till programmering till var tusan laddar man ner den?? Kom hit med alla dina frågor så löser vi det tillsammans. Det finns även gratis middag för alla som deltar på pluggkvällen! \n\nSåklart har vi också gratis märken att samla från varje pluggkväll, kan du få dem alla???",
+    "location": ""
+  },
+  {
+    "summary": "Wild Kids Pub",
+    "start": "2024-09-14T16:00:00+00:00",
+    "end": "2024-09-14T21:00:00+00:00",
+    "description": "",
+    "location": "Wåtis && Gallien"
+  },
+  {
+    "summary": "SektionsDAtING",
+    "start": "2024-09-13T19:00:00+00:00",
+    "end": "2024-09-13T23:00:00+00:00",
+    "description": "Wowowow vilken show som nollefredagen bjuder på. Men vad ska man göra när roligheterna på St:Hans är över? Jo, ni ska ta er till efterfesten på MH-gräset såklart! Vi, A-sektionen och ING-sektionen ska ha en gemensam fest här och det kommer att finnas musik och bra vibes. Så kom hit, ni kommer inte ångra er!\n",
+    "location": "MH-grass"
+  },
+  {
+    "summary": "Intis-sittning at Hallands",
+    "start": "2024-09-11T16:00:00+00:00",
+    "end": "2024-09-12T00:00:00+00:00",
+    "description": "Sittning together with international nollor at other guilds at Halland's nation! Get ready for a memorable night! After the sittning you will join the rest of the D-nollor for an after-party at Gasque where we will dance the night away!",
+    "location": "Gasque hall"
+  },
+  {
+    "summary": "The Disaster Of Denmarkia Prime 2077",
+    "start": "2024-08-22T15:15:00+00:00",
+    "end": "2024-08-22T18:00:00+00:00",
+    "description": "I en dystopisk cyber-framtid blir dronningen Margrethe IV mördad. Denmarkias två bästa headhunters JensEn & JensEtt skickas dit för att lösa mordet. Efter 27 år har de fortfarande inte löst mordet. Under eventet kommer du och din grupp få prata med olika karaktärer i Denmarkia Prime, och med olika ledtrådar och berättelser försöka lista ut vem som mördade den älskade dronningen. ",
+    "location": "GG",
+    "Ansvarig": "Moa Gassilevski"
+  },
+  {
+    "summary": "Ä&&P",
+    "start": "2024-09-06T16:00:00+00:00",
+    "end": "2024-09-06T21:00:00+00:00",
+    "description": "Denna kväll bjuds det på sektionens kanske mest ikoniska sittning med många traditioner. Det kommer att vara många gyckle och framträdanden under kvällens gång, så ljudvolymen kan bli hög. Man får ju inte heller glömma den goda ärtsoppan som serveras med punsch. Kom och ta del av kaoset, detta vill ni inte missa. ",
+    "location": "A-huset",
+    "Ansvarig": "Adam Ermanbriks"
+  },
+  {
+    "summary": "Nationssittning",
+    "start": "2024-09-21T16:30:00+00:00",
+    "end": "2024-09-22T00:00:00+00:00",
+    "description": "Nu vankas det Sittning! Men inte på campus den här gången, efter Amafia Race så tar vi oss alla ner till Lunds nation för både sittning och eftersläpp. Nollan ska få testa på vad nationslivet har att erbjuda! Ouvven lämnar ni hemma, istället vill vi se era bästa outfits till temat: *när nollan var liten, vad ville nollan bli när denne blev stor?* Drömde nollan om att bli doktor, happymeal-vikare eller kanske polis? Gräv i minnena och leta fram er bästa outfit i garderoben!\n\n**OBS:** ingen ouvve!",
+    "location": "Lund's nation",
+    "Ansvarig": "Emil Eberhard"
+  },
+  {
+    "summary": "Draggning",
+    "start": "2024-09-04T15:15:00+00:00",
+    "end": "2024-09-04T18:00:00+00:00",
+    "description": "Nu ska n0llan få visa upp D-sektionens kämparglöd och tävla mot de andra sektionerna på LTH. N0llan ska vara först att springa och fylla sin hink med vatten från hinkarna av de andra sektionerna. De andra n0llorna och phaddrar kommer självklart heja på och se till att de tävlande når sin högsta förmåga.",
+    "location": "MH-gräset",
+    "Ansvarig": "Tilda Fredriksson"
+  },
+  {
+    "summary": "StaDsvAndrIngEn",
+    "start": "2024-08-31T10:00:00+00:00",
+    "end": "2024-08-31T14:00:00+00:00",
+    "description": "Det är nu dags för er att lära känna den fina staden som kommer att vara ert hem de kommande åren! Ni kommer få ett flertal uppdrag från oss i Staben som ni ska utföra under dagen på olika platser i Lund där ni också stöter på andra sektioner, hur kul?\n\nUppdragen kommer att släppas prick 12:00 så var redo!",
+    "location": "Lund",
+    "Nykter": ["Moa Gassilewski", "Yazan Al-Aswad"]
+  },
+  {
+    "summary": "Lunchföreläsning med Sectra",
+    "start": "2024-09-10T10:15:00+00:00",
+    "end": "2024-09-10T11:00:00+00:00",
+    "description": "Självklart bjuds det på gratis mat för de som skaffat en biljett!",
+    "location": "E:A"
+  },
+  {
+    "summary": "Märkes-picknick",
+    "start": "2024-09-08T09:00:00+00:00",
+    "end": "2024-09-08T12:00:00+00:00",
+    "description": "Vad är det viktigaste med studentlivet? Är det kompisar? Är det bra betyg? Är det engagemang? NEJ! Det är era ouvvar såklart!!! Men just nu känns de lite väl tomma, så därför säljer alla sektioner sina egna märken på denna Märkespicknik! Så om du känner att just din ouvve behöver lite mer piff eller att din märkeskollektion behöver mer puff så är detta ett event du inte vill missa.",
+    "location": "MH-gräset"
+  },
+  {
+    "summary": "Typhoon Saloon",
+    "start": "2024-09-05T17:00:00+00:00",
+    "end": "2024-09-05T20:30:00+00:00",
+    "description": "Efter bygge blir det hygge! För att avsluta en trevlig kväll fyllt av uppdragsarbete bjuder Staben och Pepparna in alla nollor på uppdragskvällen till Typhoon Saloon för en AW. Det bjuds på gratis mat och i baren säljs båda det ena och det andra.\n",
+    "location": "iDét"
+  },
+  {
+    "summary": "Förfest med E",
+    "start": "2024-09-11T15:00:00+00:00",
+    "end": "2024-09-11T16:00:00+00:00",
+    "description": "Det är dags för sittning med E-sektionen och innan det ska vi hålla en förfest med E-sektionens Förstärkare! Under detta event kan ni förvänta er att lära känna varandra och E-sektionens nollor lite mer inför sittningen, hur kul??!!! ",
+    "location": "GG"
+  },
+  {
+    "summary": "Lunchföreläsning med Q-group",
+    "start": "2024-09-17T10:15:00+00:00",
+    "end": "2024-09-17T11:00:00+00:00",
+    "description": "Självklart bjuds det på gratis mat för de som skaffat en biljett!",
+    "location": "E:A"
+  },
+  {
+    "summary": "UtEDischot förfest",
+    "start": "2024-08-31T17:00:00+00:00",
+    "end": "2024-08-31T19:00:00+00:00",
+    "description": "UteDischot är ett av de största eventen på nollningen där ALLA sektioner är med. För att höja stämningen inför eventet kommer vi i peppet hålla en megastor förfest med massa andra sektioner. Det här är ett perfekt läge att byta sina remsor för att komma ett steg närmre det eftertraktade regnbågsbenet på ouvven. Det är även en chans att få mingla med andra sektioner, något som inte händer varje dag! \n\nOBS! Klipp remsor INNAN! Kommer ej finnas saxar!",
+    "location": "AK-parken",
+    "Nykter": ["Moa Gassilewski", "Yazan Al-Aswad"]
+  },
+  {
+    "summary": "Pluggkväll",
+    "start": "2024-09-02T15:15:00+00:00",
+    "end": "2024-09-02T19:00:00+00:00",
+    "description": "Kickstarta veckan med en pluggkväll! Våra eminenta pluggphaddrar finns behjälpliga med allt från matte till programmering till *hur installerar jag program till Programmingskursen??* Kom hit med alla dina frågor så löser vi det tillsammans. Det finns även **gratis middag** för alla som deltar på pluggkvällen, **klicka på knappen för matanmälan!**\n\nSåklart har vi också **gratis märken** att samla från varje pluggkväll, kan du få dem alla???",
+    "location": "iDét"
+  },
+  {
+    "summary": "Nollefredag",
+    "start": "2024-09-13T15:00:00+00:00",
+    "end": "2024-09-13T19:00:00+00:00",
+    "description": "Två uppdrag. En kväll. St Hans backar. Tio sektioner. Ni hör ju hur bra det här låter. Både Øverphøshinderbanan och Cheer ska utföra sina uppdrag. Med er hjälp ska vår kära Øverphøs Arux försöka snubbla sig igenom hinderbanan som byggts av samtliga sektioner. Lita på oss, det kommer bli tufft och han behöver allt stöd som går. Efter detta ska cheer visa sitt framträdande och det kommer lämna hela publiken med applåder. Så detta är något som ej kan missas. \n\n*Klädkod:* Ouvve",
+    "location": "Bysten/St Hans",
+    "Ansvarig": "Karl Mosen"
+  },
+  {
+    "summary": "iDét-mys",
+    "start": "2024-09-01T11:00:00+00:00",
+    "end": "2024-09-01T15:00:00+00:00",
+    "description": "Styrelsen bjuder in till mys i vår kära källarlokal, avsluta veckan tillsammans och ladda upp för veckan som kommer.",
+    "location": "iDét"
+  },
+  {
+    "summary": "Pluggkväll",
+    "start": "2024-09-23T15:15:00+00:00",
+    "end": "2024-09-23T19:00:00+00:00",
+    "description": "Kickstarta veckan med en pluggkväll! Våra eminenta pluggphaddrar finns behjälpliga med allt från matte till programmering till var tusan laddar man ner den?? Kom hit med alla dina frågor så löser vi det tillsammans. Det finns även gratis middag för alla som deltar på pluggkvällen! \n\nSåklart har vi också gratis märken att samla från varje pluggkväll, kan du få dem alla???",
+    "location": ""
+  },
+  {
+    "summary": "LOL-turnering",
+    "start": "2024-09-22T10:00:00+00:00",
+    "end": "2024-09-22T16:00:00+00:00",
+    "description": "Är du sugen på att spela League of Legends?\nVill du reppa din phaddergrupp och visa sektionen vilka de sanna mästarna är?\nAktU organiserar en episk turnering av League of Legends mellan alla phaddergrupper. Snacka ihop er och registrera, så får vi se vilka som är störst och bäst på D-sek!\n\nTurneringen kommer även att streamas på twitch! Så om du inte är med och spelar se till att kolla och heja på din phaddergrupp.\n",
+    "location": ""
+  },
+  {
+    "summary": "After L.I.G.G.",
+    "start": "2024-08-28T16:30:00+00:00",
+    "end": "2024-08-28T20:00:00+00:00",
+    "description": "Nu ska nollan få lära sig ett av de kanske mest ikoniska momenten i studentkulturen. Sittning! Det kommer vara en stor middag med olika gyckle och studenttraditioner. Så kom och njut av goda drinkar och en riktigt bra stämning.",
+    "location": "E-foajén",
+    "Ansvarig": "Adam Ermanbriks"
+  },
+  {
+    "summary": "Uppdragsceremoni",
+    "start": "2024-08-29T15:15:00+00:00",
+    "end": "2024-08-29T19:00:00+00:00",
+    "description": "Ooooooh spännande! På med ouvven, på med chepsen och samla er i phaddergruppen och invänta instruktioner och en trevlig kväll i uppdragsanda. Gratis mat finns!",
+    "location": "GG"
+  },
+  {
+    "summary": "INGvasion",
+    "start": "2024-09-04T20:15:00+00:00",
+    "end": "2024-09-05T00:00:00+00:00",
+    "description": "Det ryktas att ING-sektionens sexmästeri öppnar upp för eftersläpp i Gasque för alla sektioner! Så fortsätt dansen från DunKaDunK hela vägen in till morgondagen (eller 02:00) och lär känna nya n0llor från alla andra sektionerna. Är inte detta ett perfekt tillfälle för mingel och remsbyte? ",
+    "location": "Gasque",
+    "Ansvarig": "Tilda Fredriksson"
+  },
+  {
+    "summary": "Pluggkväll",
+    "start": "2024-09-30T15:15:00+00:00",
+    "end": "2024-09-30T19:00:00+00:00",
+    "description": "Kickstarta veckan med en pluggkväll! Våra eminenta pluggphaddrar finns behjälpliga med allt från matte till programmering till var tusan laddar man ner den?? Kom hit med alla dina frågor så löser vi det tillsammans. Det finns även gratis middag för alla som deltar på pluggkvällen! \n\nSåklart har vi också gratis märken att samla från varje pluggkväll, kan du få dem alla???",
+    "location": ""
+  },
+  {
+    "summary": "Nollesöndag",
+    "start": "2024-09-15T09:30:00+00:00",
+    "end": "2024-09-15T15:00:00+00:00",
+    "description": "Regattan avslutar Nollehelgens tävlingar. Uppdragsgruppen har satt ihop en farkost som ska färdas på vatten, ett fartyg som ska vara bättre, starkare och äventyrligare än någon någonsin skådat. På Regattadagens morgon går man en stadsparad från parkeringen bakom KC till kunskapsparken, för att vid ankomst tävla sektionerna emellan i den högt vördade grenen Sjøslag. Därefter är det städning som gäller och i år ska vi vara extra noggranna med detta då vi befinner oss i en allmän park. Vinnarna kommer koras och får ta emot det ärofyllda priset - en bildörr.",
+    "location": "KC",
+    "Ansvarig": "Vivian Tram"
+  },
+  {
+    "summary": "Nollelördag",
+    "start": "2024-09-14T08:00:00+00:00",
+    "end": "2024-09-14T12:00:00+00:00",
+    "description": "Efter hårt slit och mycket arbete på era uppdrag ska nollorna få genomföra ytterligare tre av dessa. Denna gången kommer vi befinna oss i Lundagård där det kommer att tävlas om förstaplatsen på Lådbil, Showdown och Balongistapulten. Så kom och stötta era fellow nollor och var med när D-sektionens snabba lådbil swooshar förbi varje hinder, när vi tar första pris i en talangjakt och när Staben blir träffad av vattenballonger från olika katapulter. Här kommer historia skrivas, så vi syns där!",
+    "location": "Lundagård",
+    "Ansvarig": "Axel Rosén-Lidholm"
+  },
+  {
+    "summary": "FlyING",
+    "start": "2024-09-07T11:00:00+00:00",
+    "end": "2024-09-07T23:00:00+00:00",
+    "description": "Vi hoppas ni är brutalt taggade för när ING-sektionen bjuder in HELA LTH till Helsingborg! Det är nämligen så att FlyING-phaddergruppen har byggt en farkost som ska flyga över sundet. Vi tar bussar tillsammans från E-Huset till Helsingborg. Där kommer vi sedan gå i parad till FlyING-området som kommer att vara fyllt med matvagnar och annat kul. Efter det bjuds det på färj-turning fram och tillbaks från Helsingör. \n\nDagen avslutas med klubb i Helsingborg för alla sektioner. Känns som det perfekta tillfället att lära känna alla andra teknologer om ni frågar oss?!? Biljetter till detta släppet säljs separat.",
+    "location": "Helsingborg",
+    "Nykter": ["Yazan Al-Aswad", "Tilda Fredriksson"]
+  },
+  {
+    "summary": "Nollesittning",
+    "start": "2024-09-27T16:00:00+00:00",
+    "end": "2024-09-28T00:00:00+00:00",
+    "description": "Att nollan ska bli etta måste firas, och fira ska vi göra! Var redo på en högtidssittning med många uppträdanden och otrolig stämning. Det kommer serveras god mat och mumsiga drinkar för att avsluta denna fina nollning. Efter sittningen blir det eftersläpp där vi tillsammans ska få släppa loss och dansa hela natten lång. Så var med på den sista sittningen och kolla tillbaka på alla minnen som skapats.",
+    "location": "Gasquesalen"
+  },
+  {
+    "summary": "UtEDischot",
+    "start": "2024-08-31T19:00:00+00:00",
+    "end": "2024-09-01T00:00:00+00:00",
+    "description": "Kom till nollningens fetaste fest! Alla sektioner samlas på E-husets parkering och dansar till De Vet Du. Utöver Det Vet Du så kommer D-seks fantastiska Hov22 vara förband och E-seks fenomenala Umphmeisters kommer att vara DJs. Häng med så har vi LTHs största fest!\n\nDet här är också perfekta tillfället att byta ouvveremsor. Men ni får INTE HA MED SAXAR in på området! Så se till att ha med REDAN KLIPPTA BITAR. Om man har sax med sig till området kommer vi klippa era band och ni kommer därmed inte kunna delta på festen. \n",
+    "location": "E-husets parkering",
+    "Nykter": ["Moa Gassilewski", "Yazan Al-Aswad"]
+  },
+  {
+    "summary": "Back to school fika",
+    "start": "2024-08-30T11:00:00+00:00",
+    "end": "2024-08-30T13:00:00+00:00",
+    "description": "Kom och hämta era kompendier till Grundkurs i Programmering. Styrelsen finns till hjälp och kommer försöka svara på alla frågor du kan tänkas ha inför skolstart. \n\n**Det bjuds även på fika!**",
+    "location": "iDét"
+  },
+  {
+    "summary": "DIMMA",
+    "start": "2024-09-20T16:00:00+00:00",
+    "end": "2024-09-20T20:00:00+00:00",
+    "description": "Välkommen till Datas Ishockeymästerskap! Alltså bordshockey men lika allvarligt tar vi denna turnering. Vem kommer visa sig stark i hockeyringens kyla och med sitt lag koras till vinnare under denna otroliga pub.",
+    "location": "iDét",
+    "Ansvarig": "Tilda Fredriksson"
+  },
+  {
+    "summary": "Grillunch",
+    "start": "2024-09-24T10:15:00+00:00",
+    "end": "2024-09-24T11:00:00+00:00",
+    "description": "Kom och ät lunch med Peppet!",
+    "location": "GG"
+  },
+  {
+    "summary": "Pubrunda",
+    "start": "2024-09-10T16:00:00+00:00",
+    "end": "2024-09-10T21:00:00+00:00",
+    "description": "Efter slaget vid WaDerloo så kommer flera pubar på campus att öppna sina dörrar för en pubrunda! Det kommer säljas mat och dryck på varje lokal och gött häng utlovas. Det ryktas även om att det finns ett unikt märke på varje pub som kan sättas ihop till ett stort mega-märke. Se hur många pubar du kan hinna med och om du är den bästa barhopparen i stan kanske du kan pussla ihop hela märket!\n\n*Pubarna som kommer att vara öppna är:  F-Foajen (F), Edekvata (E), A-Bar (A), iDet(D), Wåtis & Gallien (W&K), MaskinerIet (I), Cornelius (Kåren).*",
+    "location": "Campus",
+    "Ansvarig": "David Delblanc"
+  },
+  {
+    "summary": "UppSTYRT",
+    "start": "2024-09-24T16:00:00+00:00",
+    "end": "2024-09-24T19:00:00+00:00",
+    "description": "Styrelsen bjuder på en helkväll av lek och skoj! Dra med phaddergruppen och lyft denna tråkiga tisdagkväll till nåt jätteroligt!",
+    "location": "AK-parken",
+    "Ansvarig": "Karl Mosén"
+  },
+  {
+    "summary": "Lunchföreläsning med Tetra Pak",
+    "start": "2024-09-23T10:15:00+00:00",
+    "end": "2024-09-23T11:00:00+00:00",
+    "description": "Självklart bjuds det på gratis mat för de som skaffat en biljett!",
+    "location": "E:A"
+  },
+  {
+    "summary": "Sektionspub",
+    "start": "2024-10-04T16:00:00+00:00",
+    "end": "2024-10-04T20:00:00+00:00",
+    "description": "Kom och träffa utskotten på pub och hör allt som finns att göra på sektionen!",
+    "location": "iDét"
+  },
+  {
+    "summary": "SillEfrulle",
+    "start": "2024-09-07T08:00:00+00:00",
+    "end": "2024-09-07T10:00:00+00:00",
+    "description": "Snart är det dags att flyga över sundet hela vägen till Danmark! Men för att flyga behövs det energi. Därför bjuder D-Café in till en fenomenal frukost innan bussarna avgår till Helsingborg. Frukosten kommer vara tillsammans med E-sektionen så perfekt tillfälle att lära känna vår syskon-sektion ännu bättre!",
+    "location": "GG"
+  },
+  {
+    "summary": "NollesiDning",
+    "start": "2024-09-25T16:00:00+00:00",
+    "end": "2024-09-25T21:00:00+00:00",
+    "description": "Sittning, men denna gången ska nollan få hålla den. Jo det är sant, med hjälp av sexmästeriet ska det vara ombytta roller och nollorna ska planera och jobba en sittning för sina mednollor och phaddrar. Det kommer skickas ut ett anmälningsformulär för de som är taggade på att jobba och efter en veckas planering blir det sittning! Detta är ett perfekt tillfälle för nollan att lära sig mer om sektionsengagemang eller bara gå på en otrolig sittning.\n\n*Formulär om att jobba skickas ut via meddelanden närmre inpå.*",
+    "location": "E-Foajén",
+    "Ansvarig": "Adam Ermanbriks"
+  },
+  {
+    "summary": "Pluggkväll",
+    "start": "2024-09-09T15:15:00+00:00",
+    "end": "2024-09-09T19:00:00+00:00",
+    "description": "Kickstarta veckan med en pluggkväll! Våra eminenta pluggphaddrar finns behjälpliga med allt från matte till programmering till var tusan laddar man ner den?? Kom hit med alla dina frågor så löser vi det tillsammans. Det finns även gratis middag för alla som deltar på pluggkvällen! \n\nSåklart har vi också gratis märken att samla från varje pluggkväll, kan du få dem alla???",
+    "location": ""
+  },
+  {
+    "summary": "WaDerloo",
+    "start": "2024-09-10T15:15:00+00:00",
+    "end": "2024-09-10T17:00:00+00:00",
+    "description": "Det är nu dags för nollningen andra uppdrag, Waterloo! Waterloo-gruppen har byggt gaaalna sköldar som ska överleva ett regn av vattenballonger. Kom och kolla på när alla sektioner möts i en stor Capture the flag turnering. Detta vill n0llan inte missa!",
+    "location": "Bysten",
+    "Ansvarig": "David Delblanc"
+  },
+  {
+    "summary": "Amafia Race",
+    "start": "2024-09-21T11:00:00+00:00",
+    "end": "2024-09-21T15:00:00+00:00",
+    "description": "Nu är det dags att visa vad ni går för i ett race där klurighet, kvicktänkthet, samarbete och tagg kommer ta er långt! I era lag kommer ni få ta er till olika platser i närheten av campus för att samla det ni behöver för att lösa uppgiften. Låter det luddigt? Kom dit så får ni se själva!\n\nOBS: Red Bull will be there!",
+    "location": "GG",
+    "Ansvarig": "Emil Eberhard"
+  },
+  {
+    "summary": "Familjemiddag",
+    "start": "2024-09-18T20:00:00+00:00",
+    "end": "2024-09-19T00:00:00+00:00",
+    "description": "Visst har era phaddergrupper blivit mysiga?! Men vi har ett event till som kommer att boosta bondingen ännu mer. Phaddrarna har i uppdrag att fixa en sittning åt er inom varje grupp. Våra eminenta sektionskockar bjuder på god mat och phaddrarna står för den goa stämningen. Efter detta samlas vi på Lophtet för en fet efterfest!",
+    "location": "Hos phadder",
+    "Ansvarig": "Yazan Al-Aswad"
+  },
+  {
+    "summary": "DunKaDunK",
+    "start": "2024-09-04T17:00:00+00:00",
+    "end": "2024-09-04T22:00:00+00:00",
+    "description": "Det nalkas DraggnING, och efter denna spännande tävling kommer Los Peppos tillsammans med K-phaktorerna anordna en maxad mellanfest! Ta med lite mat och dryck så ses vi i AK-parken efter DraggnINGen.\n\nPå eventet kommer det att finnas ett område för DJ Ackebey och ett för karaoke. Vi kommer att dra i lekar och nolledanser, med lite fokus på att bonda med våra kära K-are. Ta eventet som ett härligt häng, en chans att dansa och sjunga eller för att tagga till ordentligt inför INGvasion. ",
+    "location": "AK-parken",
+    "Ansvarig": "Tilda Fredriksson"
+  }
+]

@@ -1,63 +1,39 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { ThemedText } from "./ThemedText";
-import ICAL from "ical.js";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Ionicons } from "@expo/vector-icons";
-
-const ICAL_URL = "https://www.dsek.se/nollning/events/subscribe";
+import events from "../data/events.json";
 
 interface Event {
   summary: string;
-  start: Date;
-  end: Date;
+  start: string;
+  end: string;
   description: string;
 }
 
 export function TodaysEvents() {
-  const [events, setEvents] = useState<Event[]>([]);
+  const [todaysEvents, setTodaysEvents] = useState<Event[]>([]);
   const [expandedEvents, setExpandedEvents] = useState<{ [key: number]: boolean }>({});
   const primaryColor = useThemeColor("primary");
   const accentColor = useThemeColor("accent");
 
   useEffect(() => {
-    fetchEvents();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const now = new Date();
+
+    const filteredEvents = events
+      .filter((event) => {
+        const eventStart = new Date(event.start);
+        const eventEnd = new Date(event.end);
+        eventStart.setHours(0, 0, 0, 0);
+        return eventStart.getTime() === today.getTime() && eventEnd > now;
+      })
+      .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+
+    setTodaysEvents(filteredEvents);
   }, []);
-
-  const fetchEvents = async () => {
-    try {
-      const response = await fetch(ICAL_URL);
-      const icalData = await response.text();
-      const jcalData = ICAL.parse(icalData);
-      const comp = new ICAL.Component(jcalData);
-      const vevents = comp.getAllSubcomponents("vevent");
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const now = new Date();
-      const todaysEvents = vevents
-        .map((vevent) => {
-          const event = new ICAL.Event(vevent);
-          return {
-            summary: event.summary,
-            start: event.startDate.toJSDate(),
-            end: event.endDate.toJSDate(),
-            description: event.description || 'No description available',
-          };
-        })
-        .filter((event) => {
-          const eventDate = new Date(event.start);
-          eventDate.setHours(0, 0, 0, 0);
-          return eventDate.getTime() === today.getTime() && event.end > now;
-        })
-        .sort((a, b) => a.start.getTime() - b.start.getTime());
-
-      setEvents(todaysEvents);
-    } catch (error) {
-      console.error("Error fetching events:", error);
-    }
-  };
 
   const toggleEventExpansion = (index: number) => {
     setExpandedEvents(prev => ({ ...prev, [index]: !prev[index] }));
@@ -65,7 +41,9 @@ export function TodaysEvents() {
 
   const isEventActive = (event: Event) => {
     const now = new Date();
-    return event.start <= now && event.end > now;
+    const eventStart = new Date(event.start);
+    const eventEnd = new Date(event.end);
+    return eventStart <= now && eventEnd > now;
   };
 
   return (
@@ -81,10 +59,10 @@ export function TodaysEvents() {
         </View>
         <View style={styles.divider} />
         <View style={styles.eventsContainer}>
-          {events.length === 0 ? (
+          {todaysEvents.length === 0 ? (
             <ThemedText style={{ color: "white" }}>Inga event idag</ThemedText>
           ) : (
-            events.map((event, index) => (
+            todaysEvents.map((event, index) => (
               <React.Fragment key={index}>
                 <TouchableOpacity onPress={() => toggleEventExpansion(index)}>
                   <View style={[
@@ -109,10 +87,10 @@ export function TodaysEvents() {
                         styles.eventTime,
                         { color: isEventActive(event) ? "yellow" : "white", fontWeight: isEventActive(event) ? 'bold' : 'normal' }
                       ]}>
-                        {`${event.start.toLocaleTimeString([], {
+                        {`${new Date(event.start).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
-                        })} - ${event.end.toLocaleTimeString([], {
+                        })} - ${new Date(event.end).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}`}
@@ -134,7 +112,7 @@ export function TodaysEvents() {
                     </ThemedText>
                   </View>
                 </TouchableOpacity>
-                {index < events.length - 1 && <View style={styles.eventDivider} />}
+                {index < todaysEvents.length - 1 && <View style={styles.eventDivider} />}
               </React.Fragment>
             ))
           )}
@@ -146,10 +124,10 @@ export function TodaysEvents() {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 5,
+    marginVertical: 10,
     padding: 10,
     borderRadius: 10,
-    borderWidth: 2, // Add this line to create a border
+    borderWidth: 2, 
   },
   row: {
     flexDirection: "row",

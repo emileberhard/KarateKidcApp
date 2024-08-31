@@ -1,7 +1,7 @@
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import { getDatabase, Database } from 'firebase/database';
 import { getAuth, Auth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { getFunctions, httpsCallable, Functions } from 'firebase/functions';
 import { getMessaging, isSupported, Messaging } from 'firebase/messaging'; 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
@@ -40,18 +40,7 @@ export interface DrinkEntry {
 
 const app: FirebaseApp = initializeApp(firebaseConfig);
 
-
-const database: Database = getDatabase(app);
-const functions = getFunctions(app, 'europe-west1');
-
-const cloudFunctions = {
-  getCompletion: httpsCallable(functions, 'getCompletion'),
-  sendAdminNotification: httpsCallable(functions, 'sendAdminNotification'),
-  sendAnnouncement: httpsCallable(functions, 'sendAnnouncement'), 
-}
-
 let auth: Auth;
-
 if (Platform.OS === 'web') {
   auth = getAuth(app); 
 } else {
@@ -60,6 +49,16 @@ if (Platform.OS === 'web') {
   });
 }
 
+const database: Database = getDatabase(app);
+const functions: Functions = getFunctions(app, 'europe-west1');
+
+const cloudFunctions = {
+  getCompletion: httpsCallable(functions, 'getCompletion'),
+  sendAdminNotification: httpsCallable(functions, 'sendAdminNotification'),
+  sendAnnouncement: httpsCallable(functions, 'sendAnnouncement'),
+  getTransactions: httpsCallable(functions, 'getTransactions'),
+  sendSwishReturnNotification: httpsCallable(functions, 'sendSwishReturnNotification'),
+};
 
 let messaging: Messaging | null = null;
 isSupported().then((isSupported) => {

@@ -14,6 +14,7 @@ import { app } from "../firebaseConfig";
 
 SplashScreen.preventAutoHideAsync();
 
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [isFirebaseReady, setIsFirebaseReady] = useState(false);
