@@ -33,6 +33,7 @@ interface User {
   unitTakenTimestamps?: Record<string, number>;
   safeArrival?: string | null;
   admin: boolean;
+  lastPurchaseTimestamp?: number;
 }
 
 type ListItem = User | { type: "header"; title: string } | { type: "tools"; title?: string };
@@ -82,6 +83,7 @@ export default function AdminScreen() {
             | undefined,
           safeArrival: userData.safeArrival as string | null | undefined,
           admin: userData.admin as boolean,
+          lastPurchaseTimestamp: userData.lastPurchaseTimestamp as number | undefined,
         })
       );
       setUsers(userList);
@@ -257,6 +259,7 @@ export default function AdminScreen() {
   const renderUser = ({ item }: { item: User }) => {
     const displayTime = isDisplayTime();
     const isHome = !!item.safeArrival;
+    const showPurchaseNotice = item.lastPurchaseTimestamp && Date.now() - item.lastPurchaseTimestamp < 5 * 60 * 1000;
 
     return (
       <View
@@ -308,6 +311,11 @@ export default function AdminScreen() {
               displayTime ? styles.notHomeExpandedContent : (isHome ? styles.homeExpandedContent : styles.notHomeExpandedContent),
             ]}
           >
+            {showPurchaseNotice && (
+              <ThemedText style={styles.purchaseNotice}>
+                Har precis fått {item.units - (users.find(u => u.userId === item.userId)?.units || 0)}st enhet/er utdelade automatiskt.
+              </ThemedText>
+            )}
             <ThemedView style={styles.buttonContainer}>
               <TouchableOpacity
                 onPress={() => updateUnits(item.userId, -10)}
@@ -777,5 +785,12 @@ const styles = StyleSheet.create({
   },
   notHomeExpandedContent: {
     backgroundColor: "#1A0011",
+  },
+  purchaseNotice: {
+    fontSize: 14,
+    color: '#4CAF50',
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
   },
 });

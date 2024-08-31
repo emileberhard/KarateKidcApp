@@ -28,12 +28,18 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
   const [isTemporaryGreen, setIsTemporaryGreen] = useState(false);
   const [transactionInitiated, setTransactionInitiated] = useState(false);
   const appStateRef = useRef(AppState.currentState);
+  const [verificationTimer, setVerificationTimer] = useState(90);
 
   const verifyTransaction = useCallback(async () => {
     setIsVerifying(true);
+    setVerificationTimer(90);
     const startTime = Date.now();
     const timeout = 90000;
     const checkInterval = 5000;
+
+    const timerInterval = setInterval(() => {
+      setVerificationTimer((prevTime) => Math.max(0, prevTime - 1));
+    }, 1000);
 
     const checkTransaction = async () => {
       try {
@@ -66,8 +72,13 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
               const currentUnitsSnapshot = await get(userRef);
               const currentUnits = currentUnitsSnapshot.val() || 0;
               await set(userRef, currentUnits + units);
+
+              // Add this new code to set the lastPurchaseTimestamp
+              const lastPurchaseRef = ref(database, `users/${user.uid}/lastPurchaseTimestamp`);
+              await set(lastPurchaseRef, Date.now());
             }
             setIsVerifying(false);
+            clearInterval(timerInterval);
             return true;
           }
         }
@@ -79,14 +90,16 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
 
     while (Date.now() - startTime < timeout) {
       const isVerified = await checkTransaction();
-      if (isVerified) return;
-
-     
+      if (isVerified) {
+        clearInterval(timerInterval);
+        return;
+      }
       await new Promise(resolve => setTimeout(resolve, checkInterval));
     }
 
-   
+    clearInterval(timerInterval);
     setIsVerifying(false);
+    setVerificationTimer(90);
     console.log("Transaction verification timed out");
   }, [units, unitPrice]);
 
@@ -198,7 +211,12 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
               <Image source={swishLogo} style={styles.swishLogo} resizeMode="contain" />
             )}
             {isVerifying ? (
-              <ActivityIndicator color="white" size="small" />
+              <>
+                <ActivityIndicator color="white" size="small" />
+                <ThemedText style={styles.verifyingText}>
+                  Väntar på betalning... {verificationTimer}s
+                </ThemedText>
+              </>
             ) : isVerified ? (
               <MaterialIcons name="check-circle" size={24} color="white" />
             ) : (
@@ -264,6 +282,11 @@ const styles = StyleSheet.create({
   },
   centeredContent: {
     justifyContent: 'center',
+  },
+  verifyingText: {
+    fontSize: 14,
+    color: "white",
+    marginLeft: 10,
   },
 });
 
