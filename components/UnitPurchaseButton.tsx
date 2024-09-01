@@ -30,6 +30,7 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
   const appStateRef = useRef(AppState.currentState);
   const [verificationTimer, setVerificationTimer] = useState(90);
   const { debugMode } = useDebugSettings(); // Add this line
+  const orangeColor = "#FFAA00"; // Add this line for the orange color
 
   const verifyTransaction = useCallback(async () => {
     setIsVerifying(true);
@@ -202,8 +203,8 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
           style={[
             styles.buyButton,
             { 
-              backgroundColor: isTemporaryGreen ? greenColor : color, 
-              borderColor: isTemporaryGreen ? greenColor : borderColor 
+              backgroundColor: isVerifying ? orangeColor : isTemporaryGreen ? greenColor : color, 
+              borderColor: isVerifying ? orangeColor : isTemporaryGreen ? greenColor : borderColor 
             },
             isVerifying && styles.disabledButton,
           ]}
@@ -220,9 +221,14 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
             {isVerifying ? (
               <>
                 <ActivityIndicator color="white" size="small" />
-                <ThemedText style={styles.verifyingText}>
-                  Väntar på betalning... {verificationTimer}s
-                </ThemedText>
+                <View style={styles.verifyingTextContainer}>
+                  <ThemedText style={styles.verifyingText}>
+                    Väntar på betalning...
+                  </ThemedText>
+                  <ThemedText style={styles.countdownTimer}>
+                    {verificationTimer}s
+                  </ThemedText>
+                </View>
               </>
             ) : isVerified ? (
               <MaterialIcons name="check-circle" size={24} color="white" />
@@ -286,7 +292,9 @@ const styles = StyleSheet.create({
   },
   swishLogoContainer: {
     backgroundColor: 'white',
-    borderRadius: 15,
+    borderRadius: 9,
+    borderWidth: 0.5,
+    borderColor: '#4400FF',
     padding: 5,
     marginRight: 15,
   },
@@ -296,10 +304,20 @@ const styles = StyleSheet.create({
   centeredContent: {
     justifyContent: 'center',
   },
+  verifyingTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 7,
+  },
   verifyingText: {
     fontSize: 14,
     color: "white",
-    marginLeft: 10,
+  },
+  countdownTimer: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: "white",
+    marginLeft: 5,
   },
 });
 
