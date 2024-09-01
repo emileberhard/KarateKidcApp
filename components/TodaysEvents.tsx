@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   icon: {
-    marginRight: 4,
+    marginRight: 2,
   },
   locationContainer: {
     flexDirection: 'row',
