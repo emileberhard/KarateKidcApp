@@ -60,7 +60,7 @@ export function TodaysEvents() {
         <View style={styles.divider} />
         <View style={styles.eventsContainer}>
           {todaysEvents.length === 0 ? (
-            <ThemedText style={{ color: "white" }}>Inga event idag</ThemedText>
+            <ThemedText style={{ color: "white" }}>Inga fler events idag</ThemedText>
           ) : (
             todaysEvents.map((event, index) => (
               <React.Fragment key={index}>

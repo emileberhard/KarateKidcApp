@@ -5,6 +5,7 @@ import {
   View,
   Modal,
   TouchableWithoutFeedback,
+  Platform,
 } from "react-native";
 import { ThemedText } from "./ThemedText";
 import { getAuth, signOut } from "firebase/auth";
@@ -126,7 +127,7 @@ const styles = StyleSheet.create({
   container: {
     position: "absolute",
     right: -40,
-    top: 50,
+    top: Platform.OS === 'ios' ? 50 : 35,
     zIndex: 1000,
   },
   menuButton: {

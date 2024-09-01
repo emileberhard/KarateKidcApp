@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Stack } from 'expo-router';
-import { useSegments, useRouter } from 'expo-router';
+import { Stack, useSegments, useRouter } from 'expo-router';
 import { auth } from 'firebaseConfig';
 import { User } from 'firebase/auth';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import { View, ActivityIndicator } from 'react-native';
 
 // Import font files
 import JetBrainsMonoRegular from '../assets/fonts/JetBrainsMono-Regular.ttf';
@@ -25,23 +25,23 @@ export default function RootLayout() {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
       setUser(firebaseUser);
-      if (initializing) setInitializing(false);
+      setInitializing(false);
     });
 
     return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    if (initializing) return;
+    if (!fontsLoaded || initializing) return;
 
     const inAuthGroup = segments[0] === '(auth)';
 
-    if (!user) {
-      router.replace('/sign-in');
+    if (!user && !inAuthGroup) {
+      router.replace('/(auth)/sign-in');
     } else if (user && inAuthGroup) {
-      router.replace('/');
+      router.replace('/(app)');
     }
-  }, [user, segments, initializing]);
+  }, [user, segments, initializing, fontsLoaded, router]);
 
   useEffect(() => {
     if (fontsLoaded) {
@@ -49,13 +49,18 @@ export default function RootLayout() {
     }
   }, [fontsLoaded]);
 
-  if (initializing || !fontsLoaded) return null; // or a loading spinner
+  if (!fontsLoaded || initializing) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#ffb4e4" />
+      </View>
+    );
+  }
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false, // Add this line to hide the header
-      }}
-    />
+    <Stack>
+      <Stack.Screen name="(auth)/sign-in" options={{ headerShown: false }} />
+      <Stack.Screen name="(app)" options={{ headerShown: false }} />
+    </Stack>
   );
 }

@@ -3,7 +3,6 @@ import {
   StyleSheet,
   Platform,
   View,
-  StatusBar,
   ActivityIndicator,
 } from "react-native";
 import {
@@ -153,7 +152,6 @@ export default function HomeScreen() {
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#460038" />
       <ScrollView 
         contentContainerStyle={styles.scrollViewContent}
         showsVerticalScrollIndicator={false}
@@ -208,7 +206,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#460038",
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   headerContainer: {
     flexDirection: "column",
@@ -263,14 +260,14 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    paddingTop: 50, 
+    paddingTop: Platform.OS === 'ios' ? 45 : 25,
   },
   scrollViewContent: {
     flexGrow: 1,
     paddingBottom: 90, 
   },
   homeSliderContainer: {
-    marginBottom: 20,
+    marginBottom: 10,
 
   },
   loadingContainer: {

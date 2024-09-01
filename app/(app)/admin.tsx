@@ -576,7 +576,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'black',
   },
   contentContainer: {
-    paddingTop: 60,
+    paddingTop: Platform.OS === 'ios' ? 35 : 15,
     paddingHorizontal: 20,
     paddingBottom: 20,
     backgroundColor: 'black',
@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     overflow: "hidden",
     borderWidth: 3,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: "#b40075",
     backgroundColor: "#41002A",
   },
   userItem: {
@@ -724,7 +724,7 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#48002f",
     borderRadius: 15,
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: "#b40075",
   },
   announcementHeader: {
@@ -740,8 +740,8 @@ const styles = StyleSheet.create({
     backgroundColor: "black",
     borderRadius: 15,
     paddingRight: 10,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.5)",
+    borderWidth: 3,
+    borderColor: "#b40075",
   },
   announcementInput: {
     flex: 1,
@@ -765,7 +765,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "bold",
     color: "white",
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 10,
     textAlign: "left",
   },
@@ -775,7 +775,7 @@ const styles = StyleSheet.create({
   bacMeterLabel: {
     fontSize: 14,
     color: 'white',
-    marginBottom: 5,
+    marginBottom: 10,
   },
   bacMeterBackground: {
     height: 20,
@@ -790,27 +790,27 @@ const styles = StyleSheet.create({
   bacMeterValue: {
     fontSize: 14,
     color: 'white',
-    marginTop: 5,
+    marginTop: 10,
     textAlign: 'center',
   },
   divider: {
     height: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    marginTop: 5,
+    marginTop: 10,
   },
   logContainer: {
     marginVertical: 20,
     padding: 10,
     backgroundColor: '#000',
     borderRadius: 15,
-    borderWidth: 1,
-    borderColor: '#48002f',
+    borderWidth: 3,
+    borderColor: '#b40075',
   },
   logHeader: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#b40075',
-    marginBottom: 5,
+    marginBottom: 10,
   },
   logEntry: {
     fontSize: 13,
@@ -824,7 +824,7 @@ const styles = StyleSheet.create({
   },
   notHomeUserContainer: {
     borderRadius: 15,
-    borderColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: "#b40075",
     backgroundColor: "#41002A",
   },
   homeUserItem: {
@@ -854,6 +854,8 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: '#48002f',
     borderRadius: 15,
+    borderColor: "#b40075",
+    borderWidth: 3,
   },
   debugModeText: {
     fontSize: 16,

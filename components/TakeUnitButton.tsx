@@ -17,6 +17,7 @@ import beerCanImage from "@/assets/images/beer_can.png";
 import crackSound from "@/assets/sounds/crack.wav";
 import openSound from "@/assets/sounds/open.wav";
 import { AntDesign } from '@expo/vector-icons';
+import { theme } from "@/theme";
 
 interface TakeUnitButtonProps {
   onPress: () => void;
@@ -196,8 +197,7 @@ const styles = StyleSheet.create({
   },
   unitsText: {
     fontSize: 40,
-    fontFamily: "Montserrat-Bold",
-    fontWeight: "bold",
+    fontFamily: theme.fonts.bold,
     marginTop: -15,
     marginBottom: 5,
     marginLeft: 9,
