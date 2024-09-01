@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Platform,
   Alert,
+  Switch,
 } from "react-native";
 import nollaImage from "@/assets/images/nollla.png";
 import phadderImage from "@/assets/images/phadder.png";
@@ -24,6 +25,7 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useDebugSettings } from "@/hooks/useDebugSettings";
 
 interface User {
   firstName: string;
@@ -34,6 +36,11 @@ interface User {
   safeArrival?: string | null;
   admin: boolean;
   lastPurchaseTimestamp?: number;
+  lastPurchase?: {
+    timestamp: number;
+    units: number;
+  };
+  godMode?: boolean;
 }
 
 type ListItem = User | { type: "header"; title: string } | { type: "tools"; title?: string };
@@ -62,6 +69,8 @@ export default function AdminScreen() {
   const [sendingAnnouncement, setSendingAnnouncement] = useState(false);
   const [announcementSent, setAnnouncementSent] = useState(false);
   const [unitLogEvents, setUnitLogEvents] = useState<UnitLogEvent[]>([]);
+  const { debugMode, toggleDebugMode } = useDebugSettings();
+  const [godMode, setgodMode] = useState(false);
 
   const notificationListener = useRef<Notifications.Subscription>();
   const responseListener = useRef<Notifications.Subscription>();
@@ -84,9 +93,17 @@ export default function AdminScreen() {
           safeArrival: userData.safeArrival as string | null | undefined,
           admin: userData.admin as boolean,
           lastPurchaseTimestamp: userData.lastPurchaseTimestamp as number | undefined,
+          lastPurchase: userData.lastPurchase as User['lastPurchase'] | undefined,
+          godMode: userData.godMode as boolean | undefined,
         })
       );
       setUsers(userList);
+
+      // Check if the current user has godMode set to true
+      if (user && user.userId) {
+        const currentUserData = data[user.userId];
+        setgodMode(currentUserData?.godMode === true);
+      }
     });
 
     notificationListener.current =
@@ -259,7 +276,17 @@ export default function AdminScreen() {
   const renderUser = ({ item }: { item: User }) => {
     const displayTime = isDisplayTime();
     const isHome = !!item.safeArrival;
-    const showPurchaseNotice = item.lastPurchaseTimestamp && Date.now() - item.lastPurchaseTimestamp < 5 * 60 * 1000;
+
+    const getPurchaseNoticeText = (lastPurchase: User['lastPurchase']) => {
+      if (!lastPurchase) return '';
+      const timeSincePurchase = Date.now() - lastPurchase.timestamp;
+      if (timeSincePurchase > 5 * 60 * 1000) return ''; // More than 5 minutes ago
+
+      const unitText = lastPurchase.units === 1 ? 'enhet' : 'enheter';
+      return `Har precis fått ${lastPurchase.units} ${unitText} utdelad${lastPurchase.units === 1 ? '' : 'e'} automatiskt!`;
+    };
+
+    const purchaseNoticeText = getPurchaseNoticeText(item.lastPurchase);
 
     return (
       <View
@@ -311,9 +338,9 @@ export default function AdminScreen() {
               displayTime ? styles.notHomeExpandedContent : (isHome ? styles.homeExpandedContent : styles.notHomeExpandedContent),
             ]}
           >
-            {showPurchaseNotice && (
+            {purchaseNoticeText && (
               <ThemedText style={styles.purchaseNotice}>
-                Har precis fått {item.units - (users.find(u => u.userId === item.userId)?.units || 0)}st enhet/er utdelade automatiskt.
+                {purchaseNoticeText}
               </ThemedText>
             )}
             <ThemedView style={styles.buttonContainer}>
@@ -459,6 +486,17 @@ export default function AdminScreen() {
           ))}
         </View>
       </View>
+      {godMode && (
+        <View style={styles.debugModeContainer}>
+          <ThemedText style={styles.debugModeText}>Debug Mode (1 SEK, 0723588533)</ThemedText>
+          <Switch
+            value={debugMode}
+            onValueChange={toggleDebugMode}
+            trackColor={{ false: "#767577", true: "#81b0ff" }}
+            thumbColor={debugMode ? "#f5dd4b" : "#f4f3f4"}
+          />
+        </View>
+      )}
     </>
   );
 
@@ -787,10 +825,23 @@ const styles = StyleSheet.create({
     backgroundColor: "#1A0011",
   },
   purchaseNotice: {
-    fontSize: 14,
+    fontSize: 24,
     color: '#4CAF50',
     fontWeight: 'bold',
     marginBottom: 10,
     textAlign: 'center',
+  },
+  debugModeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: '#48002f',
+    borderRadius: 10,
+  },
+  debugModeText: {
+    fontSize: 16,
+    color: 'white',
   },
 });

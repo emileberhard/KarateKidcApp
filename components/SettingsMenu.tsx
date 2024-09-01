@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   container: {
     position: "absolute",
     right: -40,
-    top: 5,
+    top: 50,
     zIndex: 1000,
   },
   menuButton: {

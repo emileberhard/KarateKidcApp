@@ -3,7 +3,6 @@ import {
   StyleSheet,
   Platform,
   View,
-  SafeAreaView,
   StatusBar,
 } from "react-native";
 import {
@@ -142,72 +141,67 @@ export default function HomeScreen() {
   }, [user]);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <GestureHandlerRootView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#460038" />
-      <GestureHandlerRootView style={styles.container}>
-        <ScrollView 
-          contentContainerStyle={styles.scrollViewContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <ThemedView style={styles.contentContainer}>
-            <SettingsMenu onResetSlider={resetSlider} />
-            <ThemedView style={styles.headerContainer}>
-              <ThemedView style={styles.titleContainer}>
-                <ThemedText style={styles.titleText}>
-                  {user ? `Osu, ${firstName}` : "Osu"}
-                </ThemedText>
-                <HelloWave />
-              </ThemedView>
-              <ThemedText style={styles.welcomeText}>
-                Välkommen till dojon!
+      <ScrollView 
+        contentContainerStyle={styles.scrollViewContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <ThemedView style={styles.contentContainer}>
+          <SettingsMenu onResetSlider={resetSlider} />
+          <ThemedView style={styles.headerContainer}>
+            <ThemedView style={styles.titleContainer}>
+              <ThemedText style={styles.titleText}>
+                {user ? `Osu, ${firstName}` : "Osu"}
               </ThemedText>
+              <HelloWave />
             </ThemedView>
-            {user ? (
-              <View style={styles.userContentContainer}>
-                <View style={styles.unifiedButtonContainer}>
-                  <TakeUnitButton onPress={takeUnit} units={units} size={250} />
-                  <View style={styles.logoAndPurchaseContainer}>
-                    <View style={styles.logoContainer}>
-                      <Image
-                        source={kkLogo}
-                        style={styles.logo}
-                        resizeMode="contain"
-                      />
-                    </View>
-                    <UnitPurchaseButton />
-                  </View>
-                </View>
-                <View style={styles.homeSliderContainer}>
-                  <HomeSlider
-                    onSlideComplete={arrivedHomeSafely}
-                    text="Bekräfta Hemkomst"
-                    isActive={!!safeArrival}
-                  />
-                </View>
-                <ResponsiblePhaddersPanel />
-                <TodaysEvents />
-              </View>
-            ) : (
-              <View style={styles.googleSignInContainer}>
-                <GoogleSignInButton />
-              </View>
-            )}
+            <ThemedText style={styles.welcomeText}>
+              Välkommen till dojon!
+            </ThemedText>
           </ThemedView>
-        </ScrollView>
-      </GestureHandlerRootView>
-    </SafeAreaView>
+          {user ? (
+            <View style={styles.userContentContainer}>
+              <View style={styles.unifiedButtonContainer}>
+                <TakeUnitButton onPress={takeUnit} units={units} size={250} />
+                <View style={styles.logoAndPurchaseContainer}>
+                  <View style={styles.logoContainer}>
+                    <Image
+                      source={kkLogo}
+                      style={styles.logo}
+                      resizeMode="contain"
+                    />
+                  </View>
+                  <UnitPurchaseButton />
+                </View>
+              </View>
+              <View style={styles.homeSliderContainer}>
+                <HomeSlider
+                  onSlideComplete={arrivedHomeSafely}
+                  text="Bekräfta Hemkomst"
+                  isActive={!!safeArrival}
+                />
+              </View>
+              <ResponsiblePhaddersPanel />
+              <TodaysEvents />
+            </View>
+          ) : (
+            <View style={styles.googleSignInContainer}>
+              <GoogleSignInButton />
+            </View>
+          )}
+        </ThemedView>
+      </ScrollView>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#460038",
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
-  },
   container: {
     flex: 1,
+    backgroundColor: "#460038",
     paddingHorizontal: 20,
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   headerContainer: {
     flexDirection: "column",
@@ -272,6 +266,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
+    paddingTop: 50, 
   },
   scrollViewContent: {
     flexGrow: 1,

@@ -7,7 +7,7 @@ import { ref, onValue, set, get } from "firebase/database";
 import { database, auth, cloudFunctions } from "../firebaseConfig";
 import swishLogo from "@/assets/images/swish_logo.png";
 import { MaterialIcons } from "@expo/vector-icons";
-
+import { useDebugSettings } from "@/hooks/useDebugSettings"; // Add this import
 
 // TODO: Remove the temporary Swish URL and unit price
 interface UnitPurchaseButtonProps {
@@ -29,6 +29,7 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
   const [transactionInitiated, setTransactionInitiated] = useState(false);
   const appStateRef = useRef(AppState.currentState);
   const [verificationTimer, setVerificationTimer] = useState(90);
+  const { debugMode } = useDebugSettings(); // Add this line
 
   const verifyTransaction = useCallback(async () => {
     setIsVerifying(true);
@@ -73,9 +74,12 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
               const currentUnits = currentUnitsSnapshot.val() || 0;
               await set(userRef, currentUnits + units);
 
-              // Add this new code to set the lastPurchaseTimestamp
-              const lastPurchaseRef = ref(database, `users/${user.uid}/lastPurchaseTimestamp`);
-              await set(lastPurchaseRef, Date.now());
+              // Update this part to include the number of units
+              const lastPurchaseRef = ref(database, `users/${user.uid}/lastPurchase`);
+              await set(lastPurchaseRef, {
+                timestamp: Date.now(),
+                units: units
+              });
             }
             setIsVerifying(false);
             clearInterval(timerInterval);
@@ -108,18 +112,19 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
     const swishUrlRef = ref(database, "swish_url");
 
     const unsubscribeUnitPrice = onValue(unitPriceRef, (snapshot) => {
-      setUnitPrice(snapshot.val() || 0);
+      setUnitPrice(debugMode ? 1 : (snapshot.val() || 0));
     });
 
     const unsubscribeSwishUrl = onValue(swishUrlRef, (snapshot) => {
-      setSwishUrl(snapshot.val() || "");
+      const baseUrl = snapshot.val() || "";
+      setSwishUrl(debugMode ? "https://app.swish.nu/1/p/sw/?sw=0723588533" : baseUrl);
     });
 
     return () => {
       unsubscribeUnitPrice();
       unsubscribeSwishUrl();
     };
-  }, []);
+  }, [debugMode]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", nextAppState => {
@@ -153,7 +158,6 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
       return;
     }
 
-   
     cloudFunctions.sendSwishReturnNotification({})
       .then(result => console.log("Function result:", result))
       .catch(error => {
@@ -163,8 +167,9 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
         }
       });
 
-   
-    Linking.openURL(swishUrl + `&amt=${units * unitPrice}&cur=SEK&src=qr`);
+    // Use the correct Swish URL format
+    const fullSwishUrl = `${swishUrl}&amt=${units * unitPrice}&cur=SEK`;
+    Linking.openURL(fullSwishUrl);
     setTransactionInitiated(true);
   }, [units, unitPrice, swishUrl]);
 
