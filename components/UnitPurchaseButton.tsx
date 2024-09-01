@@ -213,7 +213,9 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
             (isVerifying || isTemporaryGreen) && styles.centeredContent
           ]}>
             {!isVerifying && !isTemporaryGreen && (
-              <Image source={swishLogo} style={styles.swishLogo} resizeMode="contain" />
+              <View style={styles.swishLogoContainer}>
+                <Image source={swishLogo} style={styles.swishLogo} resizeMode="contain" />
+              </View>
             )}
             {isVerifying ? (
               <>
@@ -226,7 +228,7 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
               <MaterialIcons name="check-circle" size={24} color="white" />
             ) : (
               <ThemedText style={styles.buyButtonText}>
-                {units} st ({units * unitPrice}kr)
+                {units} för {units * unitPrice} kr
               </ThemedText>
             )}
           </View>
@@ -255,7 +257,7 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    aspectRatio: 1.25,
+    aspectRatio: 1.5,
     borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
@@ -279,8 +281,14 @@ const styles = StyleSheet.create({
     color: "white",
   },
   swishLogo: {
-    width: 30,
-    height: 24,
+    width: 25,
+    height: 25,
+  },
+  swishLogoContainer: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 5,
+    marginRight: 15,
   },
   disabledButton: {
     opacity: 0.7,

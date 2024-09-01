@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   container: {
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 20,
+    borderRadius: 15,
     borderWidth: 2,
     flex: 1,
   },
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'green',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 20,
+    borderRadius: 15,
   },
   countdownText: {
     fontSize: 44,

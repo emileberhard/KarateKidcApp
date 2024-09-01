@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     position: "relative",
     height: 50,
     overflow: "hidden",
-    borderRadius: 50,
+    borderRadius: 15,
   },
   sliderText: {
     color: "#fff",
@@ -75,6 +75,6 @@ const styles = StyleSheet.create({
     left: 5,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 50,
+    borderRadius: 15,
   },
 });

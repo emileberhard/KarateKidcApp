@@ -67,7 +67,7 @@ export function TodaysEvents() {
                 <TouchableOpacity onPress={() => toggleEventExpansion(index)}>
                   <View style={[
                     styles.eventItem,
-                    isEventActive(event) && { borderColor: accentColor, borderWidth: 3, borderRadius: 8, padding: 10, backgroundColor: "rgba(255, 255, 255, 0.2)"}
+                    isEventActive(event) && { borderColor: accentColor, borderWidth: 3, borderRadius: 15, padding: 10, backgroundColor: "rgba(255, 255, 255, 0.2)"}
                   ]}>
                     <View style={styles.eventHeader}>
                       <ThemedText style={[
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   container: {
     marginVertical: 10,
     padding: 10,
-    borderRadius: 10,
+    borderRadius: 15,
     borderWidth: 2, 
   },
   row: {
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 8,
     paddingVertical: 1,
-    borderRadius: 10,
+    borderRadius: 15,
   },
   activeTagText: {
     color: 'white',

@@ -15,6 +15,7 @@ import CuteNinja from "../assets/images/cute_ninja.png";
 import NinjaHouse from "@/assets/images/ninja_house.png";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Text } from "react-native";
+import { theme } from "@/theme";
 
 interface SlideButtonProps {
   onSlideComplete: () => void;
@@ -109,13 +110,13 @@ const SlideButton: React.FC<SlideButtonProps> = ({
         { borderColor: accentColor },
       ]}
     >
-      <Animated.Text style={[styles.text, textOpacityStyle]}>
+      <Animated.Text style={[styles.text, textOpacityStyle, { fontFamily: theme.fonts.regular }]}>
         {isActive ? "Hemkomst bekräftad" : text}
       </Animated.Text>
       <Animated.View
         style={[styles.sliderBackground, sliderBackgroundTextStyle]}
       >
-        <Text style={styles.sliderBackgroundText}>HEMMA ✅</Text>
+        <Text style={[styles.sliderBackgroundText, { fontFamily: theme.fonts.bold }]}>HEMMA ✅</Text>
       </Animated.View>
       <GestureDetector gesture={panGesture}>
         <Animated.View
@@ -149,7 +150,7 @@ const SlideButton: React.FC<SlideButtonProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 20,
+    borderRadius: 15,
     borderWidth: 2,
     height: 60,
     justifyContent: "center",
@@ -162,7 +163,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#FF5BB8",
-    borderRadius: 16,
+    borderRadius: 15,
     flexDirection: "row",
     borderWidth: 2,
   },
@@ -170,8 +171,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: "100%",
     textAlign: "center",
-    fontSize: 13,
-    fontWeight: "bold",
+    fontSize: 18,
     color: "#ffffff",
   },
   icon: {
@@ -222,7 +222,6 @@ const styles = StyleSheet.create({
   },
   sliderBackgroundText: {
     fontSize: 16,
-    fontWeight: "bold",
     color: "#ffffff",
   },
   sliderText: {

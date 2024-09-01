@@ -4,6 +4,7 @@ import {
   Platform,
   View,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import {
   ref,
@@ -20,7 +21,6 @@ import * as Haptics from "expo-haptics";
 import { HelloWave } from "@/components/HelloWave";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import GoogleSignInButton from "@/components/GoogleSignInButton";
 import HomeSlider from "@/components/HomeSlider";
 import TakeUnitButton from "@/components/TakeUnitButton";
 import { Image } from "react-native";
@@ -33,6 +33,7 @@ import { ResponsiblePhaddersPanel } from "@/components/ResponsiblePhaddersPanel"
 import { DrinkEntry } from "../../firebaseConfig";
 import { useAuth } from "@/hooks/useAuth";
 import { ScrollView } from "react-native";
+import { theme } from "@/theme";
 
 export default function HomeScreen() {
   const { user } = useAuth();
@@ -41,6 +42,7 @@ export default function HomeScreen() {
   const [_, setEstimatedBAC] = useState<number>(0);
   const [safeArrival, setSafeArrival] = useState<string | null>(null);
   const [firstName, setFirstName] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     if (user) {
@@ -68,6 +70,7 @@ export default function HomeScreen() {
           }
           setSafeArrival(userData.safeArrival || null);
         }
+        setIsLoading(false);
       });
 
       return () => {
@@ -140,6 +143,14 @@ export default function HomeScreen() {
     }
   }, [user]);
 
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#ffb4e4" />
+      </View>
+    );
+  }
+
   return (
     <GestureHandlerRootView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#460038" />
@@ -156,11 +167,11 @@ export default function HomeScreen() {
               </ThemedText>
               <HelloWave />
             </ThemedView>
-            <ThemedText style={styles.welcomeText}>
+            <ThemedText bold style={styles.welcomeText}>
               Välkommen till dojon!
             </ThemedText>
           </ThemedView>
-          {user ? (
+          {user && (
             <View style={styles.userContentContainer}>
               <View style={styles.unifiedButtonContainer}>
                 <TakeUnitButton onPress={takeUnit} units={units} size={250} />
@@ -184,10 +195,6 @@ export default function HomeScreen() {
               </View>
               <ResponsiblePhaddersPanel />
               <TodaysEvents />
-            </View>
-          ) : (
-            <View style={styles.googleSignInContainer}>
-              <GoogleSignInButton />
             </View>
           )}
         </ThemedView>
@@ -215,12 +222,13 @@ const styles = StyleSheet.create({
   },
   titleText: {
     fontSize: 36,
-    fontWeight: "bold",
     color: "white",
+    fontFamily: theme.fonts.bold,
   },
   welcomeText: {
-    fontWeight: "bold",
-    fontSize: 19,
+    fontSize: 18,
+    marginLeft: 2,
+    fontFamily: theme.fonts.bold,
     color: "#ffb4e4",
     marginBottom: 10,
   },
@@ -253,17 +261,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  googleSignInContainer: {
-    alignItems: "center",
-    marginTop: 50,
-  },
-  arrivalButtonContainer: {
-    position: "absolute",
-    bottom: 20,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-  },
   contentContainer: {
     flex: 1,
     paddingTop: 50, 
@@ -274,6 +271,12 @@ const styles = StyleSheet.create({
   },
   homeSliderContainer: {
     marginBottom: 20,
-  },
 
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#460038',
+  },
 });

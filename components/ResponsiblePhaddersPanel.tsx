@@ -7,6 +7,7 @@ import { getDatabase, ref, get } from "firebase/database";
 import { Ionicons } from '@expo/vector-icons';
 import { Event, ResponsiblePhadder, UserInfo } from '../types';
 import { useAutoSizeText } from '@/hooks/useAutoSizeText';
+import { theme } from "@/theme";
 
 export function ResponsiblePhaddersPanel() {
   const [responsiblePhadders, setResponsiblePhadders] = useState<ResponsiblePhadder[]>([]);
@@ -77,7 +78,7 @@ export function ResponsiblePhaddersPanel() {
           Alert.alert("Error", "Phone calls are not supported on this device");
         }
       } else {
-        Alert.alert("Sorry:(", `Inget telefonnummer inlagt för ${firstName}`);
+        Alert.alert("Sorry :(", `Inget telefonnummer inlagt för ${firstName}`);
       }
     } catch (error) {
       console.error("Error fetching phone number:", error);
@@ -129,8 +130,9 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: 10,
     padding: 10,
-    borderRadius: 10,
+    borderRadius: 15,
     borderWidth: 2,
+    fontFamily: theme.fonts.bold,
   },
   headerText: {
     paddingHorizontal: 5,
@@ -159,7 +161,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-start',
     backgroundColor: '#A500CE86',
-    borderRadius: 20,
+    borderRadius: 15,
     paddingHorizontal: 15,
     paddingVertical: 10,
     borderWidth: 1,  
@@ -177,6 +179,6 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     paddingHorizontal: 5,
     backgroundColor: 'limegreen',
-    borderRadius: 10,
+    borderRadius: 15,
   },
 });

@@ -69,6 +69,7 @@ export default ({ config }) => {
         },
       ],
       "expo-router",
+      "expo-font"
     ],
     experiments: {
       typedRoutes: true,
@@ -81,5 +82,12 @@ export default ({ config }) => {
         projectId: "06df8d9a-ac9e-460a-a314-10f4ac2bfa4b",
       },
     },
+    fonts: [
+      "./assets/fonts/JetBrainsMono-Regular.ttf",
+      "./assets/fonts/JetBrainsMono-Bold.ttf",
+      "./assets/fonts/SUSE-Regular.ttf",
+      "./assets/fonts/SUSE-Bold.ttf",
+      "./assets/fonts/SUSE-ExtraBold.ttf"
+    ],
   };
 };

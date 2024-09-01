@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     width: 250,
-    borderRadius: 10,
+    borderRadius: 15,
     padding: 5,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 20,
     borderWidth: 2,
-    borderRadius: 10,
+    borderRadius: 15,
     marginBottom: 5,
   },
   optionText: {

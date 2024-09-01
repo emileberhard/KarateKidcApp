@@ -61,12 +61,12 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 50,
     backgroundColor: "#E0E0E0",
-    borderRadius: 25,
+    borderRadius: 15,
     overflow: "hidden",
   },
   meterFill: {
     height: "100%",
-    borderRadius: 25,
+    borderRadius: 15,
     justifyContent: "center",
   },
   meterContent: {

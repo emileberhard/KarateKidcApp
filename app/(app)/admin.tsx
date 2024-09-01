@@ -10,6 +10,7 @@ import {
   Platform,
   Alert,
   Switch,
+  Linking,
 } from "react-native";
 import nollaImage from "@/assets/images/nollla.png";
 import phadderImage from "@/assets/images/phadder.png";
@@ -21,7 +22,6 @@ import { useAuth } from "@/hooks/useAuth";
 import * as Notifications from "expo-notifications";
 import { cloudFunctions } from "@/firebaseConfig";
 import { Ionicons } from "@expo/vector-icons";
-import { FontAwesome5 } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -41,6 +41,7 @@ interface User {
     units: number;
   };
   godMode?: boolean;
+  phoneNumber?: string;
 }
 
 type ListItem = User | { type: "header"; title: string } | { type: "tools"; title?: string };
@@ -95,6 +96,7 @@ export default function AdminScreen() {
           lastPurchaseTimestamp: userData.lastPurchaseTimestamp as number | undefined,
           lastPurchase: userData.lastPurchase as User['lastPurchase'] | undefined,
           godMode: userData.godMode as boolean | undefined,
+          phoneNumber: userData.phoneNumber as string | undefined,
         })
       );
       setUsers(userList);
@@ -381,35 +383,36 @@ export default function AdminScreen() {
             {!displayTime && (
               <>
                 <View style={styles.divider} />
-                <ThemedView style={styles.safeArrivalRow}>
-                  <ThemedView style={styles.safeArrivalContainer}>
-                    <FontAwesome5
-                      name={isHome ? "home" : "walking"}
-                      size={20}
-                      color={isHome ? "green" : "orange"}
-                    />
-                    <ThemedText style={styles.safeArrivalText}>
-                      {isHome
-                        ? `Hemma ${new Date(item.safeArrival!).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}`
-                        : "Inte hemma än"}
-                    </ThemedText>
-                  </ThemedView>
+                <ThemedView style={styles.actionRow}>
                   <TouchableOpacity
                     style={styles.toggleHomeStateButton}
                     onPress={() => toggleUserHomeState(item.userId, isHome)}
                   >
                     <MaterialCommunityIcons
                       name={isHome ? "home-remove" : "home-plus"}
-                      size={24}
+                      size={20}
                       color="white"
                     />
                     <ThemedText style={styles.toggleHomeStateText}>
-                      {isHome ? "Markera som ute" : "Markera som hemma"}
+                      {isHome ? "Fortfarande ute" : "Markera som hemma"}
                     </ThemedText>
                   </TouchableOpacity>
+                  {item.phoneNumber && (
+                    <View style={styles.communicationButtons}>
+                      <TouchableOpacity
+                        style={[styles.communicationButton, styles.callButton]}
+                        onPress={() => Linking.openURL(`tel:${item.phoneNumber}`)}
+                      >
+                        <Ionicons name="call" size={20} color="white" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.communicationButton, styles.textButton]}
+                        onPress={() => Linking.openURL(`sms:${item.phoneNumber}`)}
+                      >
+                        <Ionicons name="chatbubble" size={20} color="white" />
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </ThemedView>
                 <View style={styles.divider} />
                 <View style={styles.bacMeterContainer}>
@@ -580,7 +583,7 @@ const styles = StyleSheet.create({
   },
   userContainer: {
     marginBottom: 10,
-    borderRadius: 10,
+    borderRadius: 15,
     overflow: "hidden",
     borderWidth: 3,
     borderColor: "rgba(255, 255, 255, 0.1)",
@@ -588,7 +591,7 @@ const styles = StyleSheet.create({
   },
   userItem: {
     flexDirection: "row",
-    borderRadius: 2,
+    borderRadius: 15,
     justifyContent: "space-between",
     alignItems: "center",
     padding: 10,
@@ -623,7 +626,7 @@ const styles = StyleSheet.create({
   roleTag: {
     paddingHorizontal: 10,
     paddingVertical: 3,
-    borderRadius: 10,
+    borderRadius: 15,
     marginLeft: 8,
   },
   adminTag: {
@@ -656,7 +659,7 @@ const styles = StyleSheet.create({
   unitButton: {
     flex: 1,
     height: 36,
-    borderRadius: 10,
+    borderRadius: 15,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#007AFF",
@@ -677,38 +680,50 @@ const styles = StyleSheet.create({
   resetButton: {
     backgroundColor: "red",
   },
-  safeArrivalRow: {
+  actionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 10,
-  },
-  safeArrivalContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  safeArrivalText: {
-    marginLeft: 10,
-    fontSize: 14,
-    color: 'white',
+    marginVertical: 10,
+    height: 40, // Set a fixed height for the row
   },
   toggleHomeStateButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#007AFF',
-    padding: 8,
-    borderRadius: 5,
+    justifyContent: 'center',
+    backgroundColor: '#FF7700', // Changed to orange
+    paddingHorizontal: 10,
+    borderRadius: 15,
+    flex: 1,
+    marginRight: 10,
+    height: '100%', // Make it full height of the actionRow
   },
   toggleHomeStateText: {
     color: 'white',
-    marginLeft: 5,
     fontSize: 14,
+    marginLeft: 5,
+  },
+  communicationButtons: {
+    flexDirection: 'row',
+    height: '100%', // Make it full height of the actionRow
+  },
+  communicationButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 15,
+    width: 55, 
+    marginLeft: 6
+  },
+  callButton: {
+    backgroundColor: '#4CAF50', // Green color for call button
+  },
+  textButton: {
+    backgroundColor: '#007AFF', // Blue color for text button
   },
   announcementContainer: {
     padding: 10,
     backgroundColor: "#48002f",
-    borderRadius: 10,
+    borderRadius: 15,
     borderWidth: 2,
     borderColor: "#b40075",
   },
@@ -723,7 +738,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "black",
-    borderRadius: 5,
+    borderRadius: 15,
     paddingRight: 10,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.5)",
@@ -740,7 +755,7 @@ const styles = StyleSheet.create({
     height: 50,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 25,
+    borderRadius: 15,
     backgroundColor: "#b40075",
   },
   sentButton: {
@@ -765,12 +780,12 @@ const styles = StyleSheet.create({
   bacMeterBackground: {
     height: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 10,
+    borderRadius: 15,
     overflow: 'hidden',
   },
   bacMeterFill: {
     height: '100%',
-    borderRadius: 10,
+    borderRadius: 15,
   },
   bacMeterValue: {
     fontSize: 14,
@@ -787,7 +802,7 @@ const styles = StyleSheet.create({
     marginVertical: 20,
     padding: 10,
     backgroundColor: '#000',
-    borderRadius: 5,
+    borderRadius: 15,
     borderWidth: 1,
     borderColor: '#48002f',
   },
@@ -803,12 +818,12 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   homeUserContainer: {
-    borderRadius: 10,
+    borderRadius: 15,
     borderColor: "rgba(0, 255, 0, 0.3)",
     backgroundColor: "#015101",
   },
   notHomeUserContainer: {
-    borderRadius: 10,
+    borderRadius: 15,
     borderColor: "rgba(255, 255, 255, 0.1)",
     backgroundColor: "#41002A",
   },
@@ -838,7 +853,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     padding: 10,
     backgroundColor: '#48002f',
-    borderRadius: 10,
+    borderRadius: 15,
   },
   debugModeText: {
     fontSize: 16,

@@ -23,7 +23,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
+        headerShown: false, 
         tabBarActiveTintColor: Colors.dark.primary,
         tabBarStyle: { backgroundColor: "black"},
       }}
@@ -39,6 +39,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="admin"
         options={{
+          headerShown: false, // This line hides the header for the admin screen
           tabBarIcon: ({ color }) => <TabBarIcon name="people" color={color} />,
           tabBarLabel: "Phadder",
         }}

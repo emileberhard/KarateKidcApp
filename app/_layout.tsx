@@ -1,52 +1,61 @@
-import React, { useEffect, useState } from "react";
-import { useFonts } from "expo-font";
-import { Stack, Redirect } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import "react-native-reanimated";
-import { SpaceMono_400Regular as SpaceMono } from "@expo-google-fonts/space-mono";
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from "@react-navigation/native";
-import { useColorScheme } from "@/hooks/useColorScheme";
-import { app } from "../firebaseConfig";
+import React, { useState, useEffect } from 'react';
+import { Stack } from 'expo-router';
+import { useSegments, useRouter } from 'expo-router';
+import { auth } from 'firebaseConfig';
+import { User } from 'firebase/auth';
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
 
-SplashScreen.preventAutoHideAsync();
-
+// Import font files
+import JetBrainsMonoRegular from '../assets/fonts/JetBrainsMono-Regular.ttf';
+import JetBrainsMonoBold from '../assets/fonts/JetBrainsMono-Bold.ttf';
+import SUSERegular from '../assets/fonts/SUSE-Regular.ttf';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [isFirebaseReady, setIsFirebaseReady] = useState(false);
-
-  const [loaded] = useFonts({
-    SpaceMono,
+  const [user, setUser] = useState<User | null>(null);
+  const [initializing, setInitializing] = useState(true);
+  const [fontsLoaded] = useFonts({
+    'JetBrainsMono-Regular': JetBrainsMonoRegular,
+    'JetBrainsMono-Bold': JetBrainsMonoBold,
+    'SUSE-Regular': SUSERegular,
   });
+  const segments = useSegments();
+  const router = useRouter();
 
   useEffect(() => {
-    if (app) {
-      setIsFirebaseReady(true);
-    } else {
-      console.error("Firebase app is not initialized");
-    }
+    const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
+      setUser(firebaseUser);
+      if (initializing) setInitializing(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    if (loaded && isFirebaseReady) {
+    if (initializing) return;
+
+    const inAuthGroup = segments[0] === '(auth)';
+
+    if (!user) {
+      router.replace('/sign-in');
+    } else if (user && inAuthGroup) {
+      router.replace('/');
+    }
+  }, [user, segments, initializing]);
+
+  useEffect(() => {
+    if (fontsLoaded) {
       SplashScreen.hideAsync();
     }
-  }, [loaded, isFirebaseReady]);
+  }, [fontsLoaded]);
 
-  if (!loaded || !isFirebaseReady) {
-    return null;
-  }
+  if (initializing || !fontsLoaded) return null; // or a loading spinner
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="tabs" options={{ headerShown: false }} />
-      </Stack>
-      <Redirect href="/tabs" />
-    </ThemeProvider>
+    <Stack
+      screenOptions={{
+        headerShown: false, // Add this line to hide the header
+      }}
+    />
   );
 }
