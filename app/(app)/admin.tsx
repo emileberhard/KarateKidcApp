@@ -72,6 +72,7 @@ export default function AdminScreen() {
   const [unitLogEvents, setUnitLogEvents] = useState<UnitLogEvent[]>([]);
   const { debugMode, toggleDebugMode } = useDebugSettings();
   const [godMode, setgodMode] = useState(false);
+  const [showEventSections, setShowEventSections] = useState(false);
 
   const notificationListener = useRef<Notifications.Subscription>();
   const responseListener = useRef<Notifications.Subscription>();
@@ -144,6 +145,43 @@ export default function AdminScreen() {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    const db = getDatabase();
+    const eventsRef = ref(db, 'events');
+    const unsubscribeEvents = onValue(eventsRef, (snapshot) => {
+      const events = snapshot.val();
+      if (events) {
+        const now = new Date();
+        const relevantEvent = Object.values(events).find((event: any) => {
+          const eventEnd = new Date(event.end);
+          const morningAfter = new Date(eventEnd);
+          if (morningAfter.getHours() < 8) {
+            morningAfter.setHours(8, 0, 0, 0);
+          } else {
+            morningAfter.setDate(morningAfter.getDate() + 1);
+            morningAfter.setHours(8, 0, 0, 0);
+          }
+          
+          const hasNykter = event.Nykter && (typeof event.Nykter === 'string' || event.Nykter.length > 0);
+          const hasAnsvarig = event.Ansvarig && (typeof event.Ansvarig === 'string' || event.Ansvarig.length > 0);
+          
+          return (
+            (hasNykter || hasAnsvarig) &&
+            now >= eventEnd &&
+            now < morningAfter
+          );
+        });
+        setShowEventSections(!!relevantEvent);
+      }
+    });
+
+    return () => {
+      unsubscribeEvents();
+    };
+  }, []);
+
+  const isDisplayTime = () => !showEventSections;
 
   const calculateBAC = (
     unitTakenTimestamps: Record<string, number> | undefined
@@ -244,12 +282,6 @@ export default function AdminScreen() {
     if (announcement.trim()) {
       sendAnnouncement();
     }
-  };
-
-  const isDisplayTime = () => {
-    const now = new Date();
-    const hours = now.getHours();
-    return hours >= 8 && hours < 15;
   };
 
   const renderItem = ({ item }: { item: ListItem }) => {
@@ -548,7 +580,10 @@ export default function AdminScreen() {
     <View style={styles.blackBackground}>
       <FlatList
         style={styles.container}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[
+          styles.contentContainer,
+          isDisplayTime() && styles.contentContainerWithExtraPadding
+        ]}
         data={getListData()}
         renderItem={renderItem}
         keyExtractor={(item: ListItem) => {
@@ -580,6 +615,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 20,
     backgroundColor: 'black',
+  },
+  contentContainerWithExtraPadding: {
+    paddingTop: Platform.OS === 'ios' ? 55 : 35, // Increased padding when headers are hidden
   },
   userContainer: {
     marginBottom: 10,

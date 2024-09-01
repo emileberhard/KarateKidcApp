@@ -42,6 +42,7 @@ export default function HomeScreen() {
   const [safeArrival, setSafeArrival] = useState<string | null>(null);
   const [firstName, setFirstName] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [showHomeSlider, setShowHomeSlider] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -72,8 +73,38 @@ export default function HomeScreen() {
         setIsLoading(false);
       });
 
+      const eventsRef = ref(database, 'events');
+      const unsubscribeEvents = onValue(eventsRef, (snapshot) => {
+        const events = snapshot.val();
+        if (events) {
+          const now = new Date();
+          const relevantEvent = Object.values(events).find((event: any) => {
+            const eventEnd = new Date(event.end);
+            const morningAfter = new Date(eventEnd);
+            if (morningAfter.getHours() < 8) {
+              morningAfter.setHours(8, 0, 0, 0);
+            } else {
+              morningAfter.setDate(morningAfter.getDate() + 1);
+              morningAfter.setHours(8, 0, 0, 0);
+            }
+            
+            const hasNykter = event.Nykter && (typeof event.Nykter === 'string' || event.Nykter.length > 0);
+            const hasAnsvarig = event.Ansvarig && (typeof event.Ansvarig === 'string' || event.Ansvarig.length > 0);
+            
+            return (
+              (hasNykter || hasAnsvarig) &&
+              now >= eventEnd &&
+              now < morningAfter
+            );
+          });
+          console.log("relevantEvent", relevantEvent);
+          setShowHomeSlider(!!relevantEvent);
+        }
+      });
+
       return () => {
         unsubscribe();
+        unsubscribeEvents();
       };
     }
   }, [user]);
@@ -184,13 +215,15 @@ export default function HomeScreen() {
                   <UnitPurchaseButton />
                 </View>
               </View>
-              <View style={styles.homeSliderContainer}>
-                <HomeSlider
-                  onSlideComplete={arrivedHomeSafely}
-                  text="Bekräfta Hemkomst"
-                  isActive={!!safeArrival}
-                />
-              </View>
+              {showHomeSlider && (
+                <View style={styles.homeSliderContainer}>
+                  <HomeSlider
+                    onSlideComplete={arrivedHomeSafely}
+                    text="Bekräfta Hemkomst"
+                    isActive={!!safeArrival}
+                  />
+                </View>
+              )}
               <ResponsiblePhaddersPanel />
               <TodaysEvents />
             </View>
@@ -240,7 +273,7 @@ const styles = StyleSheet.create({
   unifiedButtonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   logoAndPurchaseContainer: {
     flexDirection: "column",
@@ -260,7 +293,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    paddingTop: Platform.OS === 'ios' ? 45 : 25,
+    paddingTop: Platform.OS === 'ios' ? 50 : 30,
   },
   scrollViewContent: {
     flexGrow: 1,

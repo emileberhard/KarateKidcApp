@@ -6,9 +6,10 @@ import {
   Modal,
   TouchableWithoutFeedback,
   Platform,
+  Alert,
 } from "react-native";
 import { ThemedText } from "./ThemedText";
-import { getAuth, signOut } from "firebase/auth";
+import { getAuth, signOut, deleteUser } from "firebase/auth";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import * as Haptics from "expo-haptics";
@@ -56,6 +57,36 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onResetSlider }) => {
   };
 
   const logoutButtonColor = "#FF3B30";
+
+  const handleDeleteAccount = async () => {
+    Alert.alert(
+      "Radera konto",
+      "Är du säker på att du vill radera ditt konto? Denna åtgärd kan inte ångras.",
+      [
+        {
+          text: "Avbryt",
+          style: "cancel"
+        },
+        {
+          text: "Radera",
+          style: "destructive",
+          onPress: async () => {
+            const auth = getAuth();
+            const user = auth.currentUser;
+            if (user) {
+              try {
+                await deleteUser(user);
+                // You might want to navigate to a login screen or show a confirmation message here
+              } catch (error) {
+                console.error("Error deleting account:", error);
+                Alert.alert("Fel", "Kunde inte radera kontot. Försök igen senare.");
+              }
+            }
+          }
+        }
+      ]
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -114,6 +145,18 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onResetSlider }) => {
                 >
                   <ThemedText style={styles.optionText}>Logga ut</ThemedText>
                 </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleDeleteAccount}
+                  style={[
+                    styles.option,
+                    {
+                      backgroundColor: "#D00000", // Darker red color
+                      borderColor: iconColor,
+                    },
+                  ]}
+                >
+                  <ThemedText style={styles.optionText}>Radera konto</ThemedText>
+                </TouchableOpacity>
               </View>
             </TouchableWithoutFeedback>
           </View>
@@ -127,7 +170,7 @@ const styles = StyleSheet.create({
   container: {
     position: "absolute",
     right: -40,
-    top: Platform.OS === 'ios' ? 50 : 35,
+    top: Platform.OS === 'ios' ? 55 : 40,
     zIndex: 1000,
   },
   menuButton: {
@@ -162,11 +205,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 10,
-    borderBottomWidth: 1,
   },
   headerText: {
     color: "white",
-    fontSize: 22,
+    fontSize: 28,
     marginLeft: 10,
     fontWeight: "bold",
   },

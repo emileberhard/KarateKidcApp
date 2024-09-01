@@ -38,6 +38,8 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
   const [showOverlay, setShowOverlay] = useState(false);
   const [countdown, setCountdown] = useState(15); 
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isScrolling = useSharedValue(false);
+  const pressStartTime = useSharedValue(0);
 
   const playSound = useCallback(async (sound: number) => {
     try {
@@ -111,35 +113,55 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
   }, []);
 
   const duration = 250;
+  const minPressTime = 100; // 0.1 seconds
+
+  const panGesture = Gesture.Pan()
+    .onStart(() => {
+      isScrolling.value = true;
+    })
+    .onFinalize(() => {
+      isScrolling.value = false;
+    });
+
   const longPressGesture = Gesture.LongPress()
     .minDuration(duration)
     .enabled(!showOverlay)
     .onBegin(() => {
-      if (units > 0 && !showOverlay) {
+      pressStartTime.value = Date.now();
+    })
+    .onTouchesDown(() => {
+      if (units > 0 && !showOverlay && !isScrolling.value) {
         scale.value = withSpring(0.95);
         progress.value = withTiming(1, {
           duration,
           easing: Easing.inOut(Easing.quad),
         });
-        runOnJS(startHapticFeedback)();
         runOnJS(playSound)(crackSound);
-      } else {
-        runOnJS(handleHapticFeedback)();
+        runOnJS(startHapticFeedback)();
       }
     })
+    .onTouchesUp(() => {
+      scale.value = withSpring(1);
+      progress.value = withTiming(0, { duration: 200 });
+      runOnJS(stopHapticFeedback)();
+    })
     .onFinalize((event) => {
-      if (!showOverlay) {
-        scale.value = withSpring(1);
+      const pressDuration = Date.now() - pressStartTime.value;
+      if (!showOverlay && !isScrolling.value && pressDuration >= minPressTime) {
         if (units > 0) {
-          progress.value = withTiming(0, { duration: 200 });
-          runOnJS(stopHapticFeedback)();
           if (event.duration >= duration) {
             runOnJS(playSound)(openSound);
             runOnJS(handlePress)();
+          } else {
+            runOnJS(handleHapticFeedback)();
           }
+        } else {
+          runOnJS(handleHapticFeedback)();
         }
       }
     });
+
+  const combinedGesture = Gesture.Simultaneous(panGesture, longPressGesture);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -153,7 +175,7 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
   }));
 
   return (
-    <GestureDetector gesture={longPressGesture}>
+    <GestureDetector gesture={combinedGesture}>
       <Animated.View
         style={[
           styles.container,

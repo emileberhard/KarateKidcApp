@@ -3,37 +3,73 @@ import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { ThemedText } from "./ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Ionicons } from "@expo/vector-icons";
-import events from "../data/events.json";
+import { ref, onValue, off } from "firebase/database";
+import { database } from "../firebaseConfig";
+import localEvents from "../data/events.json";
+import Markdown from 'react-native-markdown-display';
 
 interface Event {
   summary: string;
   start: string;
   end: string;
   description: string;
+  location: string;
 }
 
 export function TodaysEvents() {
-  const [todaysEvents, setTodaysEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [isShowingTomorrow, setIsShowingTomorrow] = useState(false);
   const [expandedEvents, setExpandedEvents] = useState<{ [key: number]: boolean }>({});
   const primaryColor = useThemeColor("primary");
   const accentColor = useThemeColor("accent");
 
   useEffect(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const now = new Date();
+    const eventsRef = ref(database, 'events');
+    
+    const handleData = (snapshot: any) => {
+      const firebaseEvents = snapshot.val();
+      if (firebaseEvents) {
+        processEvents(firebaseEvents);
+      } else {
+        processEvents(localEvents);
+      }
+    };
 
-    const filteredEvents = events
-      .filter((event) => {
-        const eventStart = new Date(event.start);
-        const eventEnd = new Date(event.end);
-        eventStart.setHours(0, 0, 0, 0);
-        return eventStart.getTime() === today.getTime() && eventEnd > now;
-      })
-      .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+    const handleError = (error: any) => {
+      console.error("Error fetching events from Firebase:", error);
+      processEvents(localEvents);
+    };
 
-    setTodaysEvents(filteredEvents);
+    onValue(eventsRef, handleData, handleError);
+
+    return () => {
+      off(eventsRef, 'value', handleData);
+    };
   }, []);
+
+  const processEvents = (allEvents: Event[]) => {
+    const now = new Date();
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const fiveAM = new Date(today);
+    fiveAM.setHours(5, 0, 0, 0);
+
+    const isBeforeFiveAM = now < fiveAM;
+    const referenceDate = isBeforeFiveAM ? today : tomorrow;
+
+    const relevantEvents = allEvents.filter((event) => {
+      const eventStart = new Date(event.start);
+      eventStart.setHours(0, 0, 0, 0);
+      return eventStart.getTime() === referenceDate.getTime() && new Date(event.end) > now;
+    });
+
+    setEvents(relevantEvents);
+    setIsShowingTomorrow(isBeforeFiveAM || relevantEvents.length === 0);
+
+    setEvents((events) => events.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()));
+  };
 
   const toggleEventExpansion = (index: number) => {
     setExpandedEvents(prev => ({ ...prev, [index]: !prev[index] }));
@@ -46,12 +82,45 @@ export function TodaysEvents() {
     return eventStart <= now && eventEnd > now;
   };
 
+  const renderEventDescription = (description: string, isActive: boolean, isExpanded: boolean) => {
+    const formattedDescription = description.replace(/\\n/g, ' ').trim();
+    const displayedText = isExpanded 
+      ? formattedDescription 
+      : formattedDescription.length > 50 
+        ? formattedDescription.substring(0, 50) + '...'
+        : formattedDescription;
+    
+    return (
+      <Markdown
+        style={{
+          body: {
+            color: isActive ? "yellow" : "white",
+            fontSize: 14,
+            lineHeight: 16,
+          },
+          paragraph: {
+            marginBottom: isExpanded ? 10 : 0,
+          },
+          strong: {
+            fontWeight: 'bold',
+          },
+        }}
+      >
+        {displayedText}
+      </Markdown>
+    );
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: primaryColor, borderColor: accentColor }]}>
       <View style={styles.row}>
         <View style={styles.column}>
-          <ThemedText style={[styles.idagText, { color: "white" }]}>
-            IDAG
+          <ThemedText style={[
+            styles.idagText,
+            { color: "white" },
+            isShowingTomorrow && styles.imorgenText
+          ]}>
+            {isShowingTomorrow ? "IMORGON" : "IDAG"}
           </ThemedText>
           <View style={styles.iconContainer}>
             <Ionicons name="calendar" size={40} color="white" />
@@ -59,10 +128,10 @@ export function TodaysEvents() {
         </View>
         <View style={styles.divider} />
         <View style={styles.eventsContainer}>
-          {todaysEvents.length === 0 ? (
-            <ThemedText style={{ color: "white" }}>Inga fler events idag</ThemedText>
+          {events.length === 0 ? (
+            <ThemedText style={{ color: "white" }}>Inga events {isShowingTomorrow ? "imorgon" : "idag"}</ThemedText>
           ) : (
-            todaysEvents.map((event, index) => (
+            events.map((event, index) => (
               <React.Fragment key={index}>
                 <TouchableOpacity onPress={() => toggleEventExpansion(index)}>
                   <View style={[
@@ -83,6 +152,7 @@ export function TodaysEvents() {
                       />
                     </View>
                     <View style={styles.eventTimeContainer}>
+                      <Ionicons name="time-outline" size={16} color={isEventActive(event) ? "yellow" : "white"} style={styles.icon} />
                       <ThemedText style={[
                         styles.eventTime,
                         { color: isEventActive(event) ? "yellow" : "white", fontWeight: isEventActive(event) ? 'bold' : 'normal' }
@@ -100,19 +170,27 @@ export function TodaysEvents() {
                           <ThemedText style={[styles.activeTagText, { color: "yellow" }]}>NU</ThemedText>
                         </View>
                       )}
+                      {event.location && (
+                        <View style={styles.locationContainer}>
+                          <Ionicons name="location-outline" size={16} color={isEventActive(event) ? "yellow" : "white"} style={styles.icon} />
+                          <ThemedText style={[
+                            styles.locationText,
+                            { color: isEventActive(event) ? "yellow" : "white" }
+                          ]}>
+                            {event.location}
+                          </ThemedText>
+                        </View>
+                      )}
                     </View>
-                    <ThemedText
-                      style={[
-                        styles.eventDescription,
-                        { color: isEventActive(event) ? "yellow" : "white" }
-                      ]}
-                      numberOfLines={expandedEvents[index] ? undefined : 2}
-                    >
-                      {event.description}
-                    </ThemedText>
+                    <View style={styles.eventDescriptionContainer}>
+                      {renderEventDescription(event.description, isEventActive(event), expandedEvents[index])}
+                    </View>
+                    {!expandedEvents[index] && event.description.length > 50 && (
+                      <ThemedText style={styles.showMoreText}>Tryck för att läsa mer...</ThemedText>
+                    )}
                   </View>
                 </TouchableOpacity>
-                {index < todaysEvents.length - 1 && <View style={styles.eventDivider} />}
+                {index < events.length - 1 && <View style={styles.eventDivider} />}
               </React.Fragment>
             ))
           )}
@@ -139,6 +217,9 @@ const styles = StyleSheet.create({
   idagText: {
     fontSize: 15,
     fontWeight: "bold",
+  },
+  imorgenText: {
+    fontSize: 10, 
   },
   eventTitle: {
     fontWeight: "bold",
@@ -211,10 +292,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 5,
+    flexWrap: 'wrap',
+  },
+  icon: {
+    marginRight: 4,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 10,
+  },
+  locationText: {
+    fontSize: 12,
+  },
+  eventDescriptionContainer: {
+    marginTop: 5,
   },
   eventTime: {
-    color: "white",
-    fontSize: 12,
+    fontSize: 14,
     marginRight: 5,
+  },
+  showMoreText: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 12,
+    marginTop: 2,
+    fontStyle: 'italic',
   },
 });
