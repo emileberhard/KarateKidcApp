@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: Platform.OS === 'android' ? NativeStatusBar.currentHeight : 0, // Update to use NativeStatusBar
+    paddingTop: Platform.OS === 'android' ? NativeStatusBar.currentHeight : 0,
   },
   logoContainer: {
     alignItems: 'center',

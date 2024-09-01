@@ -113,7 +113,7 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
   }, []);
 
   const duration = 250;
-  const minPressTime = 100; // 0.1 seconds
+  const minPressTime = 100;
 
   const panGesture = Gesture.Pan()
     .onStart(() => {

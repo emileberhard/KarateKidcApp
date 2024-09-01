@@ -7,7 +7,7 @@ import { ref, onValue, set, get } from "firebase/database";
 import { database, auth, cloudFunctions } from "../firebaseConfig";
 import swishLogo from "@/assets/images/swish_logo.png";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useDebugSettings } from "@/hooks/useDebugSettings"; // Add this import
+import { useDebugSettings } from "@/hooks/useDebugSettings";
 
 // TODO: Remove the temporary Swish URL and unit price
 interface UnitPurchaseButtonProps {
@@ -29,8 +29,8 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
   const [transactionInitiated, setTransactionInitiated] = useState(false);
   const appStateRef = useRef(AppState.currentState);
   const [verificationTimer, setVerificationTimer] = useState(90);
-  const { debugMode } = useDebugSettings(); // Add this line
-  const orangeColor = "#FFAA00"; // Add this line for the orange color
+  const { debugMode } = useDebugSettings();
+  const orangeColor = "#FFAA00";
 
   const verifyTransaction = useCallback(async () => {
     setIsVerifying(true);
@@ -75,7 +75,7 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
               const currentUnits = currentUnitsSnapshot.val() || 0;
               await set(userRef, currentUnits + units);
 
-              // Update this part to include the number of units
+             
               const lastPurchaseRef = ref(database, `users/${user.uid}/lastPurchase`);
               await set(lastPurchaseRef, {
                 timestamp: Date.now(),
@@ -168,7 +168,7 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
         }
       });
 
-    // Use the correct Swish URL format
+   
     const fullSwishUrl = `${swishUrl}&amt=${units * unitPrice}&cur=SEK`;
     Linking.openURL(fullSwishUrl);
     setTransactionInitiated(true);

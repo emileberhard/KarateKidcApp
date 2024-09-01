@@ -76,7 +76,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onResetSlider }) => {
             if (user) {
               try {
                 await deleteUser(user);
-                // You might want to navigate to a login screen or show a confirmation message here
+               
               } catch (error) {
                 console.error("Error deleting account:", error);
                 Alert.alert("Fel", "Kunde inte radera kontot. Försök igen senare.");
@@ -150,7 +150,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onResetSlider }) => {
                   style={[
                     styles.option,
                     {
-                      backgroundColor: "#D00000", // Darker red color
+                      backgroundColor: "#D00000",
                       borderColor: iconColor,
                     },
                   ]}

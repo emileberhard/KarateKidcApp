@@ -102,7 +102,7 @@ export default function AdminScreen() {
       );
       setUsers(userList);
 
-      // Check if the current user has godMode set to true
+     
       if (user && user.userId) {
         const currentUserData = data[user.userId];
         setgodMode(currentUserData?.godMode === true);
@@ -314,7 +314,7 @@ export default function AdminScreen() {
     const getPurchaseNoticeText = (lastPurchase: User['lastPurchase']) => {
       if (!lastPurchase) return '';
       const timeSincePurchase = Date.now() - lastPurchase.timestamp;
-      if (timeSincePurchase > 5 * 60 * 1000) return ''; // More than 5 minutes ago
+      if (timeSincePurchase > 5 * 60 * 1000) return '';
 
       const unitText = lastPurchase.units === 1 ? 'enhet' : 'enheter';
       return `Har precis fått ${lastPurchase.units} ${unitText} utdelad${lastPurchase.units === 1 ? '' : 'e'} automatiskt!`;
@@ -617,7 +617,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'black',
   },
   contentContainerWithExtraPadding: {
-    paddingTop: Platform.OS === 'ios' ? 55 : 35, // Increased padding when headers are hidden
+    paddingTop: Platform.OS === 'ios' ? 55 : 35,
   },
   userContainer: {
     marginBottom: 10,
@@ -723,18 +723,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginVertical: 10,
-    height: 40, // Set a fixed height for the row
+    height: 40,
   },
   toggleHomeStateButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FF7700', // Changed to orange
+    backgroundColor: '#FF7700',
     paddingHorizontal: 10,
     borderRadius: 15,
     flex: 1,
     marginRight: 10,
-    height: '100%', // Make it full height of the actionRow
+    height: '100%',
   },
   toggleHomeStateText: {
     color: 'white',
@@ -743,7 +743,7 @@ const styles = StyleSheet.create({
   },
   communicationButtons: {
     flexDirection: 'row',
-    height: '100%', // Make it full height of the actionRow
+    height: '100%',
   },
   communicationButton: {
     justifyContent: 'center',
@@ -753,10 +753,10 @@ const styles = StyleSheet.create({
     marginLeft: 6
   },
   callButton: {
-    backgroundColor: '#4CAF50', // Green color for call button
+    backgroundColor: '#4CAF50',
   },
   textButton: {
-    backgroundColor: '#007AFF', // Blue color for text button
+    backgroundColor: '#007AFF',
   },
   announcementContainer: {
     padding: 10,

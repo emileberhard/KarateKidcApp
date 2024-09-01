@@ -39,7 +39,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="admin"
         options={{
-          headerShown: false, // This line hides the header for the admin screen
+          headerShown: false,
           tabBarIcon: ({ color }) => <TabBarIcon name="people" color={color} />,
           tabBarLabel: "Phadder",
         }}
