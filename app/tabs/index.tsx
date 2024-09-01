@@ -1,12 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
-  Image,
   StyleSheet,
   Platform,
   View,
-  useWindowDimensions,
-  ImageSourcePropType,
-  SafeAreaView,
+  StatusBar,
 } from "react-native";
 import {
   ref,
@@ -15,46 +12,45 @@ import {
   serverTimestamp,
   increment,
   set,
-  getDatabase,
-  get,
   child,
 } from "firebase/database";
 import { database } from "../../firebaseConfig";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as Haptics from "expo-haptics";
-import * as Notifications from "expo-notifications";
 import { HelloWave } from "@/components/HelloWave";
-import { ScrollView } from "react-native-gesture-handler";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import GoogleSignInButton from "@/components/GoogleSignInButton"; // eslint-disable-line @typescript-eslint/no-unused-vars
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 import HomeSlider from "@/components/HomeSlider";
 import TakeUnitButton from "@/components/TakeUnitButton";
+import { Image } from "react-native";
+import kkLogo from "@/assets/images/kk_logo.png";
+import SettingsMenu from "@/components/SettingsMenu";
+import UnitPurchaseButton from "@/components/UnitPurchaseButton";
+import { TodaysEvents } from "@/components/TodaysEvents";
+import { ResponsiblePhaddersPanel } from "@/components/ResponsiblePhaddersPanel";
 
 import { DrinkEntry } from "../../firebaseConfig";
 import { useAuth } from "@/hooks/useAuth";
-import KarateKidcLogo from "@/assets/images/karatekidc_logo.png";
-
-const KarateKidcLogoTyped = KarateKidcLogo as ImageSourcePropType;
-
-const PROMILLE_WARNING_THRESHOLD = 2.0;
+import { ScrollView } from "react-native";
 
 export default function HomeScreen() {
   const { user } = useAuth();
   const [units, setUnits] = useState<number>(0);
   const [drinks, setDrinks] = useState<DrinkEntry[]>([]);
   const [_, setEstimatedBAC] = useState<number>(0);
-  const { width: SCREEN_WIDTH } = useWindowDimensions();
-  const BUTTON_WIDTH = SCREEN_WIDTH * 0.9;
+  const [safeArrival, setSafeArrival] = useState<string | null>(null);
+  const [firstName, setFirstName] = useState<string>("");
 
   useEffect(() => {
     if (user) {
-      const userRef = ref(database, `users/${user.firstName}`);
+      const userRef = ref(database, `users/${user.userId}`);
 
       const unsubscribe = onValue(userRef, (snapshot) => {
         const userData = snapshot.val();
         if (userData) {
           setUnits(userData.units || 0);
+          setFirstName(userData.firstName || "");
 
           if (userData.unitTakenTimestamps) {
             const drinkEntries: DrinkEntry[] = Object.entries(
@@ -70,6 +66,7 @@ export default function HomeScreen() {
             setDrinks([]);
             setEstimatedBAC(0);
           }
+          setSafeArrival(userData.safeArrival || null);
         }
       });
 
@@ -105,68 +102,15 @@ export default function HomeScreen() {
     return promille;
   };
 
-  const sendWarningNotification = async (
-    user: { uid: string; firstName: string; displayName?: string },
-    promille: number
-  ) => {
-    try {
-      Notifications.setNotificationHandler({
-        handleNotification: async () => ({
-          shouldShowAlert: true,
-          shouldPlaySound: true,
-          shouldSetBadge: false,
-        }),
-      });
-
-      const firstName = user.displayName?.split(" ")[0] || "User";
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: `⚠️ FYLLEVARNING PÅ ${firstName} ⚠️`,
-          body: `${firstName} har ${promille.toFixed(
-            2
-          )} promille alkohol i blodet`,
-          data: { userId: user.uid, promille: promille.toString() },
-        },
-        trigger: null,
-      });
-
-      const db = getDatabase();
-      const notificationsRef = ref(db, "notifications/highPromille");
-      const newNotificationRef = push(notificationsRef);
-      await set(newNotificationRef, {
-        userId: user.uid,
-        firstName,
-        promille,
-        timestamp: serverTimestamp(),
-      });
-    } catch (error) {
-      console.error("Error sending warning notification:", error);
-    }
-  };
-
   const takeUnit = useCallback(async () => {
-    if (user && user.firstName && units > 0) {
+    if (user && user.userId && units > 0) {
       try {
-        const userRef = ref(database, `users/${user.firstName}`);
+        const userRef = ref(database, `users/${user.userId}`);
 
         await set(child(userRef, "units"), increment(-1));
 
         const newDrinkRef = push(child(userRef, "unitTakenTimestamps"));
         await set(newDrinkRef, serverTimestamp());
-
-        const newDrinkSnapshot = await get(newDrinkRef);
-        const newDrink = { timestamp: newDrinkSnapshot.val(), units: 1 };
-
-        const updatedDrinks = [...drinks, newDrink];
-        const newPromille = calculateBAC(updatedDrinks);
-
-        if (newPromille >= PROMILLE_WARNING_THRESHOLD) {
-          console.log("Sending warning notification...");
-          await sendWarningNotification(
-            { uid: user.userId, firstName: user.firstName },
-            newPromille
-          );
-        }
       } catch (error) {
         console.error("Error taking unit:", error);
       }
@@ -177,74 +121,97 @@ export default function HomeScreen() {
     if (Platform.OS !== "web") {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
-    if (user && user.firstName) {
+    if (user && user.userId) {
       const safeArrivalRef = ref(
         database,
-        `users/${user.firstName}/safeArrival`
+        `users/${user.userId}/safeArrival`
       );
       set(safeArrivalRef, new Date().toISOString());
     }
   };
 
+  const resetSlider = useCallback(() => {
+    if (user && user.userId) {
+      const safeArrivalRef = ref(
+        database,
+        `users/${user.userId}/safeArrival`
+      );
+      set(safeArrivalRef, null);
+    }
+  }, [user]);
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <ScrollView>
-          <ThemedView style={styles.contentContainer}>
-            <ThemedView style={styles.headerContainer}>
-              <ThemedView style={styles.titleContainer}>
-                <ThemedText style={styles.titleText}>
-                  {user ? `Konnichiwa, ${user.firstName}` : "Konnichiwa"}
-                </ThemedText>
-                <HelloWave />
-              </ThemedView>
-              <ThemedText style={styles.welcomeText}>
-                Välkommen till dojon!
+    <GestureHandlerRootView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#460038" />
+      <ScrollView 
+        contentContainerStyle={styles.scrollViewContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <ThemedView style={styles.contentContainer}>
+          <SettingsMenu onResetSlider={resetSlider} />
+          <ThemedView style={styles.headerContainer}>
+            <ThemedView style={styles.titleContainer}>
+              <ThemedText style={styles.titleText}>
+                {user ? `Osu, ${firstName}` : "Osu"}
               </ThemedText>
-              <Image source={KarateKidcLogoTyped} style={styles.logo} />
+              <HelloWave />
             </ThemedView>
-            {user && (
-              <View style={styles.takeUnitButtonContainer}>
-                <TakeUnitButton onPress={takeUnit} units={units} size={250} />
-              </View>
-            )}
+            <ThemedText style={styles.welcomeText}>
+              Välkommen till dojon!
+            </ThemedText>
           </ThemedView>
-        </ScrollView>
-        {user && (
-          <View style={styles.arrivalButtonContainer}>
-            <HomeSlider
-              onSlideComplete={arrivedHomeSafely}
-              text="Bekräfta Hemkomst"
-              width={BUTTON_WIDTH}
-            />
-          </View>
-        )}
-      </GestureHandlerRootView>
-    </SafeAreaView>
+          {user ? (
+            <View style={styles.userContentContainer}>
+              <View style={styles.unifiedButtonContainer}>
+                <TakeUnitButton onPress={takeUnit} units={units} size={250} />
+                <View style={styles.logoAndPurchaseContainer}>
+                  <View style={styles.logoContainer}>
+                    <Image
+                      source={kkLogo}
+                      style={styles.logo}
+                      resizeMode="contain"
+                    />
+                  </View>
+                  <UnitPurchaseButton />
+                </View>
+              </View>
+              <View style={styles.homeSliderContainer}>
+                <HomeSlider
+                  onSlideComplete={arrivedHomeSafely}
+                  text="Bekräfta Hemkomst"
+                  isActive={!!safeArrival}
+                />
+              </View>
+              <ResponsiblePhaddersPanel />
+              <TodaysEvents />
+            </View>
+          ) : (
+            <View style={styles.googleSignInContainer}>
+              <GoogleSignInButton />
+            </View>
+          )}
+        </ThemedView>
+      </ScrollView>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#460038",
-  },
   container: {
     flex: 1,
-  },
-  contentContainer: {
-    padding: 25,
-    gap: 10,
+    backgroundColor: "#460038",
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   headerContainer: {
     flexDirection: "column",
     alignItems: "flex-start",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   titleContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
   titleText: {
     fontSize: 36,
@@ -253,33 +220,42 @@ const styles = StyleSheet.create({
   },
   welcomeText: {
     fontWeight: "bold",
-    fontSize: 20,
+    fontSize: 19,
     color: "#ffb4e4",
-    marginBottom: -25,
-    marginTop: 8,
+    marginBottom: 10,
   },
   logo: {
-    width: 140,
-    height: 140,
-    resizeMode: "cover",
-    position: "absolute",
-    top: 50,
-    left: 210,
+    width: '90%',
+    height: '90%',
   },
-  stepContainer: {
-    gap: 8,
+  userContentContainer: {
+    flex: 1,
+    width: "100%",
+  },
+  unifiedButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  logoAndPurchaseContainer: {
+    flexDirection: "column",
+    flex: 1,
+    paddingLeft: 20,
+  },
+  logoContainer: {
+    marginBottom: 30,
+    marginRight: -10,
+    position: 'absolute',
+    top: -150,
+    left: 10,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   googleSignInContainer: {
     alignItems: "center",
-  },
-  buttonContainer: {
-    alignItems: "center",
-    gap: 20,
-  },
-  unitsText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "white",
+    marginTop: 50,
   },
   arrivalButtonContainer: {
     position: "absolute",
@@ -288,9 +264,16 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: "center",
   },
-  takeUnitButtonContainer: {
-    position: "absolute",
-    top: 125,
-    left: 20,
+  contentContainer: {
+    flex: 1,
+    paddingTop: 50, 
   },
+  scrollViewContent: {
+    flexGrow: 1,
+    paddingBottom: 90, 
+  },
+  homeSliderContainer: {
+    marginBottom: 20,
+  },
+
 });

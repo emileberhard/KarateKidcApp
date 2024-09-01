@@ -1,5 +1,5 @@
-import React from "react";
-import { View, StyleSheet, Image, useWindowDimensions } from "react-native";
+import React, { useEffect } from "react";
+import { StyleSheet, Image, useWindowDimensions } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   useAnimatedStyle,
@@ -10,44 +10,57 @@ import Animated, {
   interpolateColor,
 } from "react-native-reanimated";
 import { ImageSourcePropType } from "react-native";
+import { AntDesign } from '@expo/vector-icons';
 import CuteNinja from "../assets/images/cute_ninja.png";
 import NinjaHouse from "@/assets/images/ninja_house.png";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { Text } from "react-native";
 
 interface SlideButtonProps {
   onSlideComplete: () => void;
   text: string;
-  width?: number;
+  isActive: boolean;
 }
 
 const SlideButton: React.FC<SlideButtonProps> = ({
   onSlideComplete,
   text,
-  width,
+  isActive,
 }) => {
   const { width: SCREEN_WIDTH } = useWindowDimensions();
-  const BUTTON_WIDTH = width || SCREEN_WIDTH * 0.9;
-  const SLIDER_WIDTH = BUTTON_WIDTH * 0.25;
-  const SLIDE_THRESHOLD = BUTTON_WIDTH * 0.75;
+  const SLIDER_WIDTH = SCREEN_WIDTH * 0.2;
+  const SLIDE_THRESHOLD = SCREEN_WIDTH * 0.75;
 
   const accentColor = useThemeColor("accent");
 
   const translateX = useSharedValue(0);
 
+  useEffect(() => {
+    if (!isActive) {
+      translateX.value = withTiming(0, { duration: 300 });
+    } else {
+      translateX.value = withTiming(SCREEN_WIDTH - SLIDER_WIDTH, {
+        duration: 300,
+      });
+    }
+  }, [isActive, SCREEN_WIDTH, SLIDER_WIDTH]);
+
   const panGesture = Gesture.Pan()
     .activeOffsetX([-10, 10])
     .onChange((event) => {
-      let newValue = event.translationX;
-      newValue = Math.max(0, Math.min(newValue, BUTTON_WIDTH - SLIDER_WIDTH));
-      translateX.value = newValue;
+      if (!isActive) {
+        let newValue = event.translationX;
+        newValue = Math.max(0, Math.min(newValue, SCREEN_WIDTH - SLIDER_WIDTH));
+        translateX.value = newValue;
+      }
     })
     .onFinalize(() => {
-      if (translateX.value >= SLIDE_THRESHOLD) {
-        translateX.value = withTiming(BUTTON_WIDTH - SLIDER_WIDTH, {
+      if (!isActive && translateX.value >= SLIDE_THRESHOLD) {
+        translateX.value = withTiming(SCREEN_WIDTH - SLIDER_WIDTH, {
           duration: 100,
         });
         runOnJS(onSlideComplete)();
-      } else {
+      } else if (!isActive) {
         translateX.value = withTiming(0, { duration: 100 });
       }
     });
@@ -57,19 +70,35 @@ const SlideButton: React.FC<SlideButtonProps> = ({
   }));
 
   const textOpacityStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(translateX.value, [0, BUTTON_WIDTH / 2], [1, 0]),
+    opacity: interpolate(translateX.value, [0, SCREEN_WIDTH / 2], [1, 0]),
   }));
 
   const houseOpacityStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(translateX.value, [0, BUTTON_WIDTH / 2], [1, 0]),
+    opacity: interpolate(translateX.value, [0, SCREEN_WIDTH / 2], [1, 0]),
   }));
 
   const backgroundColorStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(
       translateX.value,
-      [0, BUTTON_WIDTH - SLIDER_WIDTH],
+      [0, SCREEN_WIDTH - SLIDER_WIDTH],
       ["#ff8c00", "#4caf50"]
     ),
+  }));
+
+  const sliderOpacityStyle = useAnimatedStyle(() => ({
+    opacity: isActive ? 0 : 1,
+  }));
+
+  const sliderBackgroundTextStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      translateX.value,
+      [0, SCREEN_WIDTH / 2, SCREEN_WIDTH - SLIDER_WIDTH],
+      [0, 1, 1]
+    ),
+  }));
+
+  const arrowOpacityStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(translateX.value, [0, SCREEN_WIDTH / 4], [1, 0]),
   }));
 
   return (
@@ -77,25 +106,34 @@ const SlideButton: React.FC<SlideButtonProps> = ({
       style={[
         styles.container,
         backgroundColorStyle,
-        { width: BUTTON_WIDTH, borderColor: accentColor },
+        { borderColor: accentColor },
       ]}
     >
       <Animated.Text style={[styles.text, textOpacityStyle]}>
-        {text}
+        {isActive ? "Hemkomst bekräftad" : text}
       </Animated.Text>
+      <Animated.View
+        style={[styles.sliderBackground, sliderBackgroundTextStyle]}
+      >
+        <Text style={styles.sliderBackgroundText}>HEMMA ✅</Text>
+      </Animated.View>
       <GestureDetector gesture={panGesture}>
         <Animated.View
-          style={[styles.slider, animatedStyle, { width: SLIDER_WIDTH }]}
+          style={[
+            styles.slider,
+            animatedStyle,
+            sliderOpacityStyle,
+            { width: SLIDER_WIDTH, borderColor: accentColor },
+          ]}
         >
           <Image
             source={CuteNinja as ImageSourcePropType}
             style={styles.icon}
             resizeMode="contain"
           />
-          <View style={styles.arrow}>
-            <View style={styles.arrowLine} />
-            <View style={styles.arrowHead} />
-          </View>
+          <Animated.View style={[styles.arrowContainer, arrowOpacityStyle]}>
+            <AntDesign name="arrowright" size={27} color={accentColor} />
+          </Animated.View>
         </Animated.View>
       </GestureDetector>
       <Animated.View style={[styles.houseIconContainer, houseOpacityStyle]}>
@@ -123,9 +161,10 @@ const styles = StyleSheet.create({
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#ffd7f4",
+    backgroundColor: "#FF5BB8",
     borderRadius: 16,
     flexDirection: "row",
+    borderWidth: 2,
   },
   text: {
     position: "absolute",
@@ -136,8 +175,9 @@ const styles = StyleSheet.create({
     color: "#ffffff",
   },
   icon: {
-    width: "35%",
-    height: "80%",
+    width: "45%",
+    height: "100%",
+    marginRight: 25,
   },
   arrow: {
     flexDirection: "row",
@@ -147,7 +187,7 @@ const styles = StyleSheet.create({
   arrowLine: {
     width: "20%",
     height: 2,
-    backgroundColor: "#ff8c00",
+    backgroundColor: "#FFFFFF",
   },
   arrowHead: {
     width: 0,
@@ -170,6 +210,33 @@ const styles = StyleSheet.create({
   houseIcon: {
     width: "100%",
     height: "100%",
+  },
+  sliderBackground: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  sliderBackgroundText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#ffffff",
+  },
+  sliderText: {
+    position: "absolute",
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#ff8c00",
+    right: 10,
+  },
+  arrowContainer: {
+    position: 'absolute',
+    right: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

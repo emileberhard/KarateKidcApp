@@ -2,11 +2,30 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyDTqZC-VC6Rz2yS5q2JGpMozvWhmygLcpI",
+        "EXPO_PUBLIC_EAS_BUILD_PROFILE": "development",
+        "APP_VARIANT": "development"
+      },
+      "node": "22.4.1"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyDTqZC-VC6Rz2yS5q2JGpMozvWhmygLcpI",
+        "EXPO_PUBLIC_EAS_BUILD_PROFILE": "preview",
+        "APP_VARIANT": "preview"
+      },
+      "node": "22.4.1"
     },
-    "production": {}
+    "production": {
+      "env": {
+        "APP_VARIANT": "production",
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyDTqZC-VC6Rz2yS5q2JGpMozvWhmygLcpI",
+        "EXPO_PUBLIC_EAS_BUILD_PROFILE": "production"
+      },
+      "node": "22.4.1"
+    }
   }
 }

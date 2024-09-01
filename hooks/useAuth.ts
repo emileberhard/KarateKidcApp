@@ -1,10 +1,10 @@
 import { getAuth, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
-import { getDatabase, ref, onValue } from "firebase/database";
+import { getDatabase, ref, onValue, update } from "firebase/database";
 import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getDevicePushTokenAsync } from "expo-notifications";
 
 interface UserData {
   userId: string;
@@ -16,6 +16,8 @@ interface UserData {
   pushToken?: string;
   firstName: string;
   email: string;
+  platform?: string;
+  profile?: string;
 }
 
 export function useAuth() {
@@ -47,11 +49,16 @@ export function useAuth() {
             };
             setUser(userObj);
 
-            if (userObj.admin && Platform.OS !== "web") {
-              const hasConfiguredPushNotifications = await AsyncStorage.getItem('hasConfiguredPushNotifications');
-              if (!hasConfiguredPushNotifications) {
-                configurePushNotifications();
-                AsyncStorage.setItem('hasConfiguredPushNotifications', 'true');
+            if (Platform.OS !== "web") {
+              const currentPlatform = Platform.OS;
+              const currentProfile = process.env.EXPO_PUBLIC_EAS_BUILD_PROFILE;
+              const currentToken = await getDevicePushTokenAsync();
+              
+              if (!userData.pushToken || 
+                  userData.platform !== currentPlatform || 
+                  userData.profile !== currentProfile ||
+                  userData.pushToken !== currentToken.data) {
+                await configurePushNotifications(firstName, currentToken);
               }
             }
           } else {
@@ -68,7 +75,7 @@ export function useAuth() {
     return () => unsubscribe();
   }, []);
 
-  const configurePushNotifications = async () => {
+  const configurePushNotifications = async (firstName: string, currentToken: Notifications.DevicePushToken) => {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
     if (existingStatus !== "granted") {
@@ -104,13 +111,20 @@ export function useAuth() {
       if (!projectId) {
         throw new Error("Project ID not found");
       }
-      const token = await Notifications.getExpoPushTokenAsync({
-        projectId,
+      console.log("Push token:", currentToken);
+
+      const currentPlatform = Platform.OS;
+      const currentProfile = process.env.EXPO_PUBLIC_EAS_BUILD_PROFILE;
+      
+      const userRef = ref(database, `users/${firstName}`);
+      await update(userRef, { 
+        pushToken: currentToken.data, 
+        platform: currentPlatform, 
+        profile: currentProfile 
       });
-      console.log("Push token:", token);
       
     } catch (error) {
-      console.error("Error getting push token:", error);
+      console.error("Error updating push token:", error);
     }
   };
 

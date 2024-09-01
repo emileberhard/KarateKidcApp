@@ -6,7 +6,7 @@ import pluginReact from "eslint-plugin-react";
 export default [
   {
     files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"],
-    ignores: ["/lib/**/*"],
+    ignores: ["/lib/**/*", "/node_modules/**/*"],
   },
   {
     languageOptions: {
@@ -27,7 +27,7 @@ export default [
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unused-vars": [
-        "warn",
+        "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
       "@typescript-eslint/ban-ts-comment": "off",

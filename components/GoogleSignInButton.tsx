@@ -1,35 +1,75 @@
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet } from "react-native";
+import { TouchableOpacity, Text, StyleSheet, Platform } from "react-native";
 import {
   GoogleSignin,
   statusCodes,
 } from "@react-native-google-signin/google-signin";
 import { auth, database } from "../firebaseConfig";
 import { GoogleAuthProvider, signInWithCredential } from "firebase/auth";
-import { ref, set } from "firebase/database";
+import { ref, set, get, query, orderByChild, equalTo, remove } from "firebase/database";
 
 GoogleSignin.configure({
   webClientId:
     "341175787162-34emlae8g18b2cm8i08gf7ei1dq97anl.apps.googleusercontent.com",
+
+  offlineAccess: true,
+  forceCodeForRefreshToken: true,
+  accountName: "",
+  scopes: ["profile", "email"],
 });
 
 const GoogleSignInButton = () => {
   const handleGoogleSignIn = async () => {
     try {
-      await GoogleSignin.hasPlayServices();
+      await GoogleSignin.hasPlayServices({
+        showPlayServicesUpdateDialog: true,
+      });
       const { idToken, user } = await GoogleSignin.signIn();
       const credential = GoogleAuthProvider.credential(idToken);
       const result = await signInWithCredential(auth, credential);
 
-      const userRef = ref(database, `users/${user.givenName}`);
-      await set(userRef, {
-        userId: result.user.uid,
-        firstName: user.givenName,
-        lastName: user.familyName,
-        email: user.email,
-        admin: false,
-        units: 0,
-      });
+      const usersRef = ref(database, "users");
+      const userQuery = query(
+        usersRef,
+        orderByChild("userId"),
+        equalTo(result.user.uid)
+      );
+      const userSnapshot = await get(userQuery);
+
+      if (userSnapshot.exists()) {
+        console.log("User already exists in the database");
+       
+        const oldUserRef = ref(database, `users/${user.givenName}`);
+        const oldUserSnapshot = await get(oldUserRef);
+        
+        if (oldUserSnapshot.exists()) {
+         
+          const oldUserData = oldUserSnapshot.val();
+          const newUserRef = ref(database, `users/${result.user.uid}`);
+          
+         
+          await set(newUserRef, {
+            ...oldUserData,
+            userId: result.user.uid,
+          });
+          
+         
+          await remove(oldUserRef);
+          
+          console.log("User data structure updated");
+        }
+      } else {
+        const newUserRef = ref(database, `users/${result.user.uid}`);
+        await set(newUserRef, {
+          userId: result.user.uid,
+          firstName: user.givenName,
+          lastName: user.familyName,
+          email: user.email,
+          admin: false,
+          units: 0,
+        });
+        console.log("New user created in the database");
+      }
 
       console.log("Google Sign-In Successful");
     } catch (error) {
@@ -42,6 +82,14 @@ const GoogleSignInButton = () => {
         console.log("Play services not available");
       } else {
         console.error("Error signing in with Google:", error);
+      }
+      if (Platform.OS === "android") {
+        console.error(
+          "Detailed error on Android:",
+          JSON.stringify(error, null, 2)
+        );
+        console.error("Error code:", errorCode);
+        console.error("Error message:", (error as Error).message);
       }
     }
   };

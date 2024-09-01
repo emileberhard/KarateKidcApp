@@ -1,61 +1,85 @@
-export default ({ config }) => ({
-  ...config,
-  name: "KarateKidcApp",
-  slug: "KarateKidcApp",
-  version: "1.0.0",
-  orientation: "portrait",
-  icon: "./assets/images/icon.png",
-  scheme: "myapp",
-  userInterfaceStyle: "automatic",
-  splash: {
-    image: "./assets/images/splash.png",
-    resizeMode: "contain",
-    backgroundColor: "#ffffff",
-  },
-  ios: {
-    supportsTablet: true,
-    bundleIdentifier: "com.emileberhard.karatekidc",
-    googleServicesFile: process.env.GOOGLE_SERVICE_INFO,
-  },
-  android: {
-    adaptiveIcon: {
-      foregroundImage: "./assets/images/adaptive-icon.png",
+const getVariantSpecificConfig = (variant) => {
+  switch (variant) {
+    case "development":
+      return {
+        name: "KarateKids",
+        ios: { bundleIdentifier: "com.emileberhard.karatekidc.dev" },
+        android: { package: "com.emileberhard.karatekidc" },
+      };
+    case "preview":
+      return {
+        name: "KarateKids",
+        ios: { bundleIdentifier: "com.emileberhard.karatekidc.preview" },
+        android: { package: "com.emileberhard.karatekidc" },
+      };
+    default:
+      return {
+        name: "KarateKids",
+        ios: { bundleIdentifier: "com.emileberhard.karatekidc" },
+        android: { package: "com.emileberhard.karatekidc" },
+      };
+  }
+};
+
+export default ({ config }) => {
+  const variant = process.env.APP_VARIANT || "production";
+  const variantConfig = getVariantSpecificConfig(variant);
+
+  return {
+    ...config,
+    ...variantConfig,
+    slug: "KarateKidcApp",
+    version: "1.4.0",
+    orientation: "portrait",
+    icon: "./assets/images/icon.png",
+    scheme: "karatekidcapp",
+    userInterfaceStyle: "automatic",
+    splash: {
+      image: "./assets/images/splash.png",
+      resizeMode: "contain",
       backgroundColor: "#ffffff",
     },
-    package: "com.emileberhard.karatekidc",
-  },
-  web: {
-    bundler: "metro",
-    output: "static",
-    favicon: "./assets/images/favicon.png",
-  },
-  plugins: [
-    [
-      "expo-notifications",
-      {
-        icon: "./assets/images/notification-icon.png",
-        color: "#ffffff",
-        sounds: ["./assets/sounds/notification-sound.wav"],
+    ios: {
+      ...variantConfig.ios,
+      supportsTablet: false,
+      googleServicesFile: process.env.GOOGLE_SERVICE_INFO,
+      infoPlist: {
+        UIBackgroundModes: ["remote-notification"],
+        NSMicrophoneUsageDescription:
+          "This app needs access to the microphone to record voice messages.",
       },
+    },
+    android: {
+      ...variantConfig.android,
+      permissions: ["RECORD_AUDIO"],
+      googleServicesFile: process.env.GOOGLE_SERVICE_JSON,
+    },
+    web: {
+      bundler: "metro",
+      output: "static",
+      favicon: "./assets/images/favicon.png",
+    },
+    plugins: [
+      [
+        "expo-notifications",
+        {
+          color: "#ffffff",
+          sounds: ["./assets/sounds/notification.wav"],
+          playSoundOnNotification: true,
+        },
+      ],
+      "expo-router",
     ],
-    "expo-router",
-  ],
-  experiments: {
-    typedRoutes: true,
-  },
-  extra: {
-    router: {
-      origin: false,
+    experiments: {
+      typedRoutes: true,
     },
-    eas: {
-      projectId: "06df8d9a-ac9e-460a-a314-10f4ac2bfa4b",
+    extra: {
+      router: {
+        origin: false,
+      },
+      eas: {
+        projectId: "06df8d9a-ac9e-460a-a314-10f4ac2bfa4b",
+      },
     },
-  },
-  owner: "emileberhard",
-  runtimeVersion: {
-    policy: "appVersion",
-  },
-  updates: {
-    url: "https://u.expo.dev/06df8d9a-ac9e-460a-a314-10f4ac2bfa4b",
-  },
-});
+  };
+};

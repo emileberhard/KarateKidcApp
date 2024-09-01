@@ -1,5 +1,5 @@
-import React, { useCallback, useRef } from "react";
-import { StyleSheet, Image, Text, ViewStyle } from "react-native";
+import React, { useCallback, useRef, useState } from "react";
+import { StyleSheet, Image, Text } from "react-native";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import Animated, {
@@ -16,6 +16,7 @@ import { ImageSourcePropType } from "react-native";
 import beerCanImage from "@/assets/images/beer_can.png";
 import crackSound from "@/assets/sounds/crack.wav";
 import openSound from "@/assets/sounds/open.wav";
+import { AntDesign } from '@expo/vector-icons';
 
 interface TakeUnitButtonProps {
   onPress: () => void;
@@ -26,7 +27,6 @@ interface TakeUnitButtonProps {
 const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
   onPress,
   units,
-  size = 100,
 }) => {
   const backgroundColor = useThemeColor("primary");
   const borderColor = useThemeColor("accent");
@@ -34,6 +34,9 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
   const scale = useSharedValue(1);
   const progress = useSharedValue(0);
   const hapticIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [countdown, setCountdown] = useState(15); 
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const playSound = useCallback(async (sound: number) => {
     try {
@@ -57,12 +60,28 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
     }
   }, [units]);
 
+  const startCountdown = useCallback(() => {
+    setShowOverlay(true);
+    setCountdown(15);
+    countdownIntervalRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdownIntervalRef.current!);
+          setShowOverlay(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
   const handlePress = useCallback(() => {
     handleHapticFeedback();
     if (units > 0) {
       onPress();
+      startCountdown();
     }
-  }, [handleHapticFeedback, onPress, units]);
+  }, [handleHapticFeedback, onPress, units, startCountdown]);
 
   const startHapticFeedback = useCallback(() => {
     if (units === 0) return;
@@ -93,8 +112,9 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
   const duration = 250;
   const longPressGesture = Gesture.LongPress()
     .minDuration(duration)
+    .enabled(!showOverlay)
     .onBegin(() => {
-      if (units > 0) {
+      if (units > 0 && !showOverlay) {
         scale.value = withSpring(0.95);
         progress.value = withTiming(1, {
           duration,
@@ -107,13 +127,15 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
       }
     })
     .onFinalize((event) => {
-      scale.value = withSpring(1);
-      if (units > 0) {
-        progress.value = withTiming(0, { duration: 200 });
-        runOnJS(stopHapticFeedback)();
-        if (event.duration >= duration) {
-          runOnJS(playSound)(openSound);
-          runOnJS(handlePress)();
+      if (!showOverlay) {
+        scale.value = withSpring(1);
+        if (units > 0) {
+          progress.value = withTiming(0, { duration: 200 });
+          runOnJS(stopHapticFeedback)();
+          if (event.duration >= duration) {
+            runOnJS(playSound)(openSound);
+            runOnJS(handlePress)();
+          }
         }
       }
     });
@@ -121,6 +143,12 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
     opacity: units > 0 ? 1 : 0.5,
+    zIndex: 1000,
+  }));
+
+  const overlayStyle = useAnimatedStyle(() => ({
+    opacity: showOverlay ? 0.95 : 0,
+    display: showOverlay ? 'flex' : 'none',
   }));
 
   return (
@@ -130,8 +158,8 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
           styles.container,
           animatedStyle,
           {
-            width: size / 1.5,
-            height: size,
+            width: "48%",
+            aspectRatio: 2 / 3,
             backgroundColor,
             borderColor,
           },
@@ -141,7 +169,12 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
           source={beerCanImage as ImageSourcePropType}
           style={styles.beerCanIcon}
         />
-        <Text style={[styles.unitsText, { color: textColor }]}>{units}st</Text>
+        <Text style={[styles.unitsText, { color: textColor }]}>{units} st</Text>
+        <Animated.View style={[styles.overlay, overlayStyle]}>
+          <AntDesign name="checkcircle" size={100} color="white" style={{  }} />
+          <Text style={styles.countdownText}>{countdown}</Text>
+          <Text style={styles.instructiveText}>VISA PHADDER</Text>
+        </Animated.View>
       </Animated.View>
     </GestureDetector>
   );
@@ -151,20 +184,43 @@ const styles = StyleSheet.create({
   container: {
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 2,
+    flex: 1,
   },
   beerCanIcon: {
-    height: "75%",
-    marginLeft: 9,
+    height: "85%",
+    width: "110%",
+    marginLeft: 13,
     resizeMode: "contain",
   },
   unitsText: {
     fontSize: 40,
     fontFamily: "Montserrat-Bold",
     fontWeight: "bold",
-    marginTop: 5,
+    marginTop: -15,
+    marginBottom: 5,
+    marginLeft: 9,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'green',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
+  },
+  countdownText: {
+    fontSize: 44,
+    marginTop:10,
+    color: 'white',
+    fontWeight: 'bold',
+
+  },
+  instructiveText: {
+    fontSize: 14,
+    color: 'white',
+    margin: 5,
+    fontWeight: 'bold'
   },
 });
 

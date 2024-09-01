@@ -1,33 +1,43 @@
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from "@react-navigation/native";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useFonts } from "expo-font";
 import { Stack, Redirect } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import "react-native-reanimated";
 import { SpaceMono_400Regular as SpaceMono } from "@expo-google-fonts/space-mono";
-
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "@react-navigation/native";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { app } from "../firebaseConfig";
 
 SplashScreen.preventAutoHideAsync();
 
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const [isFirebaseReady, setIsFirebaseReady] = useState(false);
 
   const [loaded] = useFonts({
     SpaceMono,
   });
 
   useEffect(() => {
-    if (loaded) {
+    if (app) {
+      setIsFirebaseReady(true);
+    } else {
+      console.error("Firebase app is not initialized");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (loaded && isFirebaseReady) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [loaded, isFirebaseReady]);
 
-  if (!loaded) {
+  if (!loaded || !isFirebaseReady) {
     return null;
   }
 
