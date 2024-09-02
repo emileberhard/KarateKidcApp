@@ -5,7 +5,6 @@ import {
   View,
   Modal,
   TouchableWithoutFeedback,
-  Platform,
   Alert,
 } from "react-native";
 import { ThemedText } from "./ThemedText";
@@ -170,7 +169,7 @@ const styles = StyleSheet.create({
   container: {
     position: "absolute",
     right: -40,
-    top: Platform.OS === 'ios' ? 55 : 40,
+    top: 55,
     zIndex: 1000,
   },
   menuButton: {

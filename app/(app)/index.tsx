@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    paddingTop: Platform.OS === 'ios' ? 50 : 30,
+    paddingTop: Platform.OS === 'ios' ? 55 : 45,
   },
   scrollViewContent: {
     flexGrow: 1,

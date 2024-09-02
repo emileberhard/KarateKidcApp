@@ -324,9 +324,9 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
   showMoreText: {
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: 'rgba(255 255 255 / 0.39)',
     fontSize: 12,
-    marginTop: 2,
+    marginTop: 5,
     fontStyle: 'italic',
   },
 });
