@@ -27,5 +27,14 @@
       },
       "node": "22.4.1"
     }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "neha.misra8@gmail.com",
+        "ascAppId": "8GBTB77VMY",
+        "appleTeamId": "NNP2B278S6"
+      }
+    }
   }
 }
