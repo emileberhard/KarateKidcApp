@@ -42,6 +42,7 @@ interface User {
   };
   godMode?: boolean;
   phoneNumber?: string;
+  nickname?: string;
 }
 
 type ListItem = User | { type: "header"; title: string } | { type: "tools"; title?: string };
@@ -98,6 +99,7 @@ export default function AdminScreen() {
           lastPurchase: userData.lastPurchase as User['lastPurchase'] | undefined,
           godMode: userData.godMode as boolean | undefined,
           phoneNumber: userData.phoneNumber as string | undefined,
+          nickname: userData.nickname as string | undefined,
         })
       );
       setUsers(userList);
@@ -310,6 +312,7 @@ export default function AdminScreen() {
   const renderUser = ({ item }: { item: User }) => {
     const displayTime = isDisplayTime();
     const isHome = !!item.safeArrival;
+    const displayName = item.nickname || item.firstName;
 
     const getPurchaseNoticeText = (lastPurchase: User['lastPurchase']) => {
       if (!lastPurchase) return '';
@@ -343,7 +346,7 @@ export default function AdminScreen() {
           <ThemedView style={styles.userInfo}>
             <View style={styles.userTextContainer}>
               <View style={styles.userNameContainer}>
-                <ThemedText style={styles.userName}>{item.firstName}</ThemedText>
+                <ThemedText style={styles.userName}>{displayName}</ThemedText>
                 <View style={[
                   styles.roleTag,
                   item.admin ? styles.adminTag : styles.userTag
