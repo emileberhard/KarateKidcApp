@@ -8,7 +8,13 @@
         "EXPO_PUBLIC_EAS_BUILD_PROFILE": "development",
         "APP_VARIANT": "development"
       },
-      "node": "22.4.1"
+      "node": "22.4.1",
+      "android": {
+        "image": "latest"
+      },
+      "ios": {
+        "image": "latest"
+      }
     },
     "preview": {
       "distribution": "internal",
@@ -17,7 +23,13 @@
         "EXPO_PUBLIC_EAS_BUILD_PROFILE": "preview",
         "APP_VARIANT": "preview"
       },
-      "node": "22.4.1"
+      "node": "22.4.1",
+      "android": {
+        "image": "latest"
+      },
+      "ios": {
+        "image": "latest"
+      }
     },
     "production": {
       "env": {
@@ -25,7 +37,13 @@
         "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyDTqZC-VC6Rz2yS5q2JGpMozvWhmygLcpI",
         "EXPO_PUBLIC_EAS_BUILD_PROFILE": "production"
       },
-      "node": "22.4.1"
+      "node": "22.4.1",
+      "android": {
+        "image": "latest"
+      },
+      "ios": {
+        "image": "latest"
+      }
     }
   },
   "submit": {
@@ -33,8 +51,7 @@
       "ios": {
         "appleId": "neha.misra8@gmail.com",
         "ascAppId": "6630364500",
-        "appleTeamId": "NNP2B278S6",
-        "image": "latest"
+        "appleTeamId": "NNP2B278S6"
       }
     }
   }
