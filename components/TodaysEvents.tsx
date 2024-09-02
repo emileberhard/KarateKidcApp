@@ -67,7 +67,9 @@ export function TodaysEvents() {
     });
 
     setEvents(relevantEvents);
-    setIsShowingTomorrow(isBeforeThreeAM || relevantEvents.length === 0);
+    
+    // Update this line
+    setIsShowingTomorrow(!isBeforeThreeAM || relevantEvents.length === 0);
 
     const sortedEvents = relevantEvents.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
     setEvents(sortedEvents);
