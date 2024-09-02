@@ -20,6 +20,7 @@ export function TodaysEvents() {
   const [events, setEvents] = useState<Event[]>([]);
   const [isShowingTomorrow, setIsShowingTomorrow] = useState(false);
   const [expandedEvents, setExpandedEvents] = useState<{ [key: number]: boolean }>({});
+  const [_, setClosestEventIndex] = useState<number | null>(null);
   const primaryColor = useThemeColor("primary");
   const accentColor = useThemeColor("accent");
 
@@ -53,11 +54,11 @@ export function TodaysEvents() {
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const fiveAM = new Date(today);
-    fiveAM.setHours(5, 0, 0, 0);
+    const threeAM = new Date(today);
+    threeAM.setHours(3, 0, 0, 0);
 
-    const isBeforeFiveAM = now < fiveAM;
-    const referenceDate = isBeforeFiveAM ? today : tomorrow;
+    const isBeforeThreeAM = now < threeAM;
+    const referenceDate = isBeforeThreeAM ? today : tomorrow;
 
     const relevantEvents = allEvents.filter((event) => {
       const eventStart = new Date(event.start);
@@ -66,9 +67,17 @@ export function TodaysEvents() {
     });
 
     setEvents(relevantEvents);
-    setIsShowingTomorrow(isBeforeFiveAM || relevantEvents.length === 0);
+    setIsShowingTomorrow(isBeforeThreeAM || relevantEvents.length === 0);
 
-    setEvents((events) => events.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()));
+    const sortedEvents = relevantEvents.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+    setEvents(sortedEvents);
+
+    const closestEvent = sortedEvents.findIndex(event => new Date(event.end) > now);
+    setClosestEventIndex(closestEvent !== -1 ? closestEvent : null);
+
+    if (closestEvent !== -1) {
+      setExpandedEvents(prev => ({ ...prev, [closestEvent]: true }));
+    }
   };
 
   const toggleEventExpansion = (index: number) => {

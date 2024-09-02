@@ -185,7 +185,7 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
               { backgroundColor: color, borderColor: borderColor },
             ]}
           >
-            <Ionicons name="remove" size={24} color="white" />
+            <Ionicons name="remove" size={40} color="white" />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={incrementUnits}
@@ -194,7 +194,7 @@ const UnitPurchaseButton: React.FC<UnitPurchaseButtonProps> = ({
               { backgroundColor: color, borderColor: borderColor },
             ]}
           >
-            <Ionicons name="add" size={24} color="white" />
+            <Ionicons name="add" size={40} color="white" />
           </TouchableOpacity>
         </View>
         <TouchableOpacity

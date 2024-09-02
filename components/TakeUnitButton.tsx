@@ -192,7 +192,7 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
           source={beerCanImage as ImageSourcePropType}
           style={styles.beerCanIcon}
         />
-        <Text style={[styles.unitsText, { color: textColor }]}>{units} st</Text>
+        <Text style={[styles.unitsText, { color: textColor }]}>{units} enheter</Text>
         <Animated.View style={[styles.overlay, overlayStyle]}>
           <AntDesign name="checkcircle" size={100} color="white" style={{  }} />
           <Text style={styles.countdownText}>{countdown}</Text>
@@ -212,15 +212,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   beerCanIcon: {
-    height: "85%",
+    height: "80%",
     width: "110%",
     marginLeft: 13,
     resizeMode: "contain",
   },
   unitsText: {
-    fontSize: 40,
+    fontSize: 30,
     fontFamily: theme.fonts.bold,
-    marginTop: -15,
+    marginTop: -5,
     marginBottom: 5,
     marginLeft: 9,
   },

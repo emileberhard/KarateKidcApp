@@ -287,7 +287,7 @@ export default function AdminScreen() {
   const renderItem = ({ item }: { item: ListItem }) => {
     if ("type" in item) {
       if (item.type === "header") {
-        return isDisplayTime() ? null : (
+        return (
           <ThemedText style={styles.sectionHeader}>{item.title}</ThemedText>
         );
       } else if (item.type === "tools") {
@@ -412,40 +412,44 @@ export default function AdminScreen() {
                 <Ionicons name="refresh" size={16} color="white" />
               </TouchableOpacity>
             </ThemedView>
+            <View style={styles.divider} />
+            <ThemedView style={styles.actionRow}>
+              {!displayTime ? (
+                <TouchableOpacity
+                  style={styles.toggleHomeStateButton}
+                  onPress={() => toggleUserHomeState(item.userId, isHome)}
+                >
+                  <MaterialCommunityIcons
+                    name={isHome ? "home-remove" : "home-plus"}
+                    size={20}
+                    color="white"
+                  />
+                  <ThemedText style={styles.toggleHomeStateText}>
+                    {isHome ? "Fortfarande ute" : "Markera som hemma"}
+                  </ThemedText>
+                </TouchableOpacity>
+              ) : null}
+              {item.phoneNumber && (
+                <View style={[styles.communicationButtons, displayTime && styles.fullWidthCommunicationButtons]}>
+                  <TouchableOpacity
+                    style={[styles.communicationButton, styles.callButton, displayTime && styles.flexCommunicationButton]}
+                    onPress={() => Linking.openURL(`tel:${item.phoneNumber}`)}
+                  >
+                    <Ionicons name="call" size={20} color="white" />
+                    {displayTime && <ThemedText style={styles.communicationButtonText}>Ring</ThemedText>}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.communicationButton, styles.textButton, displayTime && styles.flexCommunicationButton]}
+                    onPress={() => Linking.openURL(`sms:${item.phoneNumber}`)}
+                  >
+                    <Ionicons name="chatbubble" size={20} color="white" />
+                    {displayTime && <ThemedText style={styles.communicationButtonText}>Meddelande</ThemedText>}
+                  </TouchableOpacity>
+                </View>
+              )}
+            </ThemedView>
             {!displayTime && (
               <>
-                <View style={styles.divider} />
-                <ThemedView style={styles.actionRow}>
-                  <TouchableOpacity
-                    style={styles.toggleHomeStateButton}
-                    onPress={() => toggleUserHomeState(item.userId, isHome)}
-                  >
-                    <MaterialCommunityIcons
-                      name={isHome ? "home-remove" : "home-plus"}
-                      size={20}
-                      color="white"
-                    />
-                    <ThemedText style={styles.toggleHomeStateText}>
-                      {isHome ? "Fortfarande ute" : "Markera som hemma"}
-                    </ThemedText>
-                  </TouchableOpacity>
-                  {item.phoneNumber && (
-                    <View style={styles.communicationButtons}>
-                      <TouchableOpacity
-                        style={[styles.communicationButton, styles.callButton]}
-                        onPress={() => Linking.openURL(`tel:${item.phoneNumber}`)}
-                      >
-                        <Ionicons name="call" size={20} color="white" />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.communicationButton, styles.textButton]}
-                        onPress={() => Linking.openURL(`sms:${item.phoneNumber}`)}
-                      >
-                        <Ionicons name="chatbubble" size={20} color="white" />
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                </ThemedView>
                 <View style={styles.divider} />
                 <View style={styles.bacMeterContainer}>
                   <ThemedText style={styles.bacMeterLabel}>Promillemätare (grov uppskattning):</ThemedText>
@@ -554,7 +558,11 @@ export default function AdminScreen() {
   const getListData = (): ListItem[] => {
     const allUsers = sortUsers(users);
     if (isDisplayTime()) {
-      return [...allUsers, { type: "tools" as const, title: "Verktyg" }];
+      return [
+        { type: "header" as const, title: "Medlemmar" },
+        ...allUsers,
+        { type: "tools" as const, title: "Verktyg" }
+      ];
     } else {
       const usersNotHome = users.filter((user) => !user.safeArrival);
       const usersHome = users.filter((user) => !!user.safeArrival);
@@ -592,6 +600,7 @@ export default function AdminScreen() {
           }
           return item.userId;
         }}
+        showsVerticalScrollIndicator={false}
       />
     </View>
   );
@@ -733,7 +742,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 15,
     flex: 1,
-    marginRight: 10,
     height: '100%',
   },
   toggleHomeStateText: {
@@ -745,12 +753,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     height: '100%',
   },
+  fullWidthCommunicationButtons: {
+    flex: 1,
+  },
   communicationButton: {
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 15,
-    width: 55, 
-    marginLeft: 6
+    width: 55,
+    marginLeft: 6,
+    flexDirection: 'row',
+  },
+  flexCommunicationButton: {
+    flex: 1,
+    marginLeft: 0,
+    marginRight: 5,
+  },
+  communicationButtonText: {
+    color: 'white',
+    marginLeft: 5,
+    fontSize: 14,
   },
   callButton: {
     backgroundColor: '#4CAF50',
@@ -800,10 +822,11 @@ const styles = StyleSheet.create({
     backgroundColor: "green",
   },
   sectionHeader: {
-    fontSize: 32,
+    fontSize: 35,
     fontWeight: "bold",
     color: "white",
-    marginTop: 10,
+    marginTop: 15,
+    marginLeft: 3,
     marginBottom: 10,
     textAlign: "left",
   },

@@ -12,6 +12,7 @@ import {
   serverTimestamp,
   increment,
   set,
+  update,
   child,
 } from "firebase/database";
 import { database } from "../../firebaseConfig";
@@ -33,6 +34,7 @@ import { DrinkEntry } from "../../firebaseConfig";
 import { useAuth } from "@/hooks/useAuth";
 import { ScrollView } from "react-native";
 import { theme } from "@/theme";
+import PhoneNumberPrompt from "@/components/PhoneNumberPrompt";
 
 export default function HomeScreen() {
   const { user } = useAuth();
@@ -42,7 +44,8 @@ export default function HomeScreen() {
   const [safeArrival, setSafeArrival] = useState<string | null>(null);
   const [firstName, setFirstName] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [showHomeSlider, setShowHomeSlider] = useState(false);
+  const [showHomeSlider, _setShowHomeSlider] = useState(false);
+  const [showPhonePrompt, setShowPhonePrompt] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -51,6 +54,10 @@ export default function HomeScreen() {
       const unsubscribe = onValue(userRef, (snapshot) => {
         const userData = snapshot.val();
         if (userData) {
+         
+          if (!userData.phoneNumber) {
+            setShowPhonePrompt(true);
+          }
           setUnits(userData.units || 0);
           setFirstName(userData.firstName || "");
 
@@ -73,39 +80,24 @@ export default function HomeScreen() {
         setIsLoading(false);
       });
 
-      const eventsRef = ref(database, 'events');
-      const unsubscribeEvents = onValue(eventsRef, (snapshot) => {
-        const events = snapshot.val();
-        if (events) {
-          const now = new Date();
-          const relevantEvent = Object.values(events).find((event: any) => {
-            const eventEnd = new Date(event.end);
-            const morningAfter = new Date(eventEnd);
-            if (morningAfter.getHours() < 8) {
-              morningAfter.setHours(8, 0, 0, 0);
-            } else {
-              morningAfter.setDate(morningAfter.getDate() + 1);
-              morningAfter.setHours(8, 0, 0, 0);
-            }
-            
-            const hasNykter = event.Nykter && (typeof event.Nykter === 'string' || event.Nykter.length > 0);
-            const hasAnsvarig = event.Ansvarig && (typeof event.Ansvarig === 'string' || event.Ansvarig.length > 0);
-            
-            return (
-              (hasNykter || hasAnsvarig) &&
-              now >= eventEnd &&
-              now < morningAfter
-            );
-          });
-          console.log("relevantEvent", relevantEvent);
-          setShowHomeSlider(!!relevantEvent);
-        }
-      });
-
       return () => {
         unsubscribe();
-        unsubscribeEvents();
       };
+    }
+  }, [user]);
+
+  const handlePhoneSubmit = useCallback((phoneNumber: string) => {
+    if (user && user.userId) {
+      const userRef = ref(database, `users/${user.userId}`);
+      update(userRef, { phoneNumber })
+        .then(() => {
+          setShowPhonePrompt(false);
+         
+        })
+        .catch((error) => {
+          console.error("Error saving phone number:", error);
+         
+        });
     }
   }, [user]);
 
@@ -230,6 +222,11 @@ export default function HomeScreen() {
           )}
         </ThemedView>
       </ScrollView>
+      <PhoneNumberPrompt 
+        isVisible={showPhonePrompt} 
+        onSubmit={handlePhoneSubmit} 
+        isAdmin={user?.admin || false} 
+      />
     </GestureHandlerRootView>
   );
 }
