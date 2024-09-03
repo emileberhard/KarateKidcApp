@@ -21,14 +21,14 @@ export const getUpcomingEvents = onCall({
     const eventsData = snapshot.val() || {};
 
     const now = new Date();
-    const sevenDaysLater = new Date(now);
-    sevenDaysLater.setDate(now.getDate() + 7);
+    const fourDaysLater = new Date(now);
+    fourDaysLater.setDate(now.getDate() + 4);
 
     const upcomingEvents: { [key: string]: Event } = {};
 
     Object.entries(eventsData).forEach(([key, event]: [string, any]) => {
       const eventStart = new Date(event.start);
-      if (eventStart >= now && eventStart <= sevenDaysLater) {
+      if (eventStart >= now && eventStart <= fourDaysLater) {
         upcomingEvents[key] = event as Event;
       }
     });

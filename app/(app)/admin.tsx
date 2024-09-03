@@ -565,7 +565,7 @@ export default function AdminScreen() {
           const user = users.find(u => `${u.firstName} ${u.lastName?.charAt(0)}` === name);
           const backgroundColor = user?.admin ? '#007AFF' : '#FF1493'; // Blue for admin, pink for others
           return (
-            <View key={name} style={{ backgroundColor, padding: 5, borderRadius: 15, marginHorizontal: 12, justifyContent: 'center', alignItems: 'center' }}>
+            <View key={name} style={{ backgroundColor, padding: 5, borderRadius: 15, marginHorizontal: 12, marginVertical: 2, justifyContent: 'center', alignItems: 'center' }}>
               <Text style={{ color: 'white', fontSize: 11 }}>{name}</Text>
             </View>
           );
