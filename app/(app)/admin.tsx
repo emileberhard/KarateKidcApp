@@ -545,32 +545,18 @@ export default function AdminScreen() {
     );
   };
 
-  const wrapNameWithTag = (name: string) => {
-    const user = users.find(u => `${u.firstName} ${u.lastName?.charAt(0)}` === name);
-    if (user) {
-      const backgroundColor = user.admin ? '#007AFF' : '#FF1493';
-      return (
-        <View key={name} style={[styles.attendanceNameTag, { backgroundColor }]}>
-          <Text style={styles.attendanceNameText}>{name}</Text>
-        </View>
-      );
-    }
-    return name;
-  };
-
   const renderAttendanceNames = (names: string[]) => {
-    if (names.length === 0) return '-';
-
-    return (
-      <View style={styles.attendanceNameContainer}>
-        {names.map((name, index) => (
-          <React.Fragment key={name}>
-            {index > 0 && <Text style={styles.attendanceNameSeparator}>{' '}</Text>}
-            {wrapNameWithTag(name)}
-          </React.Fragment>
-        ))}
-      </View>
-    );
+    return names.length > 0 
+      ? names.map(name => {
+          const user = users.find(u => `${u.firstName} ${u.lastName?.charAt(0)}` === name);
+          const backgroundColor = user?.admin ? '#007AFF' : '#FF1493'; // Blue for admin, pink for others
+          return (
+            <View key={name} style={{ backgroundColor, padding: 5, borderRadius: 15, marginHorizontal: 12, justifyContent: 'center', alignItems: 'center' }}>
+              <Text style={{ color: 'white', fontSize: 11 }}>{name}</Text>
+            </View>
+          );
+        })
+      : [<Text key="none">-</Text>];
   };
 
   const renderEventOverview = () => (
@@ -592,15 +578,21 @@ export default function AdminScreen() {
                 <ThemedText style={[styles.tableHeader, styles.noTag]}>Nej</ThemedText>
               </View>
               <View style={styles.tableRow}>
-                <ThemedText style={styles.tableCell}>
-                  {renderAttendanceNames(attendanceOverview[eventId]?.yes || [])}
-                </ThemedText>
-                <ThemedText style={styles.tableCell}>
-                  {renderAttendanceNames(attendanceOverview[eventId]?.maybe || [])}
-                </ThemedText>
-                <ThemedText style={styles.tableCell}>
-                  {renderAttendanceNames(attendanceOverview[eventId]?.no || [])}
-                </ThemedText>
+                <View style={styles.tableCell}>
+                  {renderAttendanceNames(attendanceOverview[eventId]?.yes || []).map((element, index) => (
+                    <React.Fragment key={index}>{element}</React.Fragment>
+                  ))}
+                </View>
+                <View style={styles.tableCell}>
+                  {renderAttendanceNames(attendanceOverview[eventId]?.maybe || []).map((element, index) => (
+                    <React.Fragment key={index}>{element}</React.Fragment>
+                  ))}
+                </View>
+                <View style={styles.tableCell}>
+                  {renderAttendanceNames(attendanceOverview[eventId]?.no || []).map((element, index) => (
+                    <React.Fragment key={index}>{element}</React.Fragment>
+                  ))}
+                </View>
               </View>
             </View>
           </View>
@@ -1130,8 +1122,8 @@ const styles = StyleSheet.create({
   },
   tableCell: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    color: 'white',
+    textAlign: 'center',
     paddingVertical: 5,
     borderWidth: 0.5,
     borderColor: 'rgba(255, 255, 255, 0.2)',
@@ -1147,35 +1139,5 @@ const styles = StyleSheet.create({
   noTag: {
     backgroundColor: '#FF5252', // Red
     paddingVertical: 5,
-  },
-  phadderTag: {
-    backgroundColor: '#007AFF', // Blue
-    paddingVertical: 5,
-  },
-  nollaTag: {
-    backgroundColor: '#FF1493', // Pink
-    paddingVertical: 5,
-  },
-  attendanceNameTag: {
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    margin: 2,
-  },
-  attendanceNameText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  attendanceNameSeparator: {
-    color: 'white',
-    fontSize: 12,
-  },
-  attendanceNameContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 2,
   },
 });
