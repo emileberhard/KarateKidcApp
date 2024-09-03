@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import {
   StyleSheet,
-  FlatList,
+  SectionList,
   Image,
   TouchableOpacity,
   View,
@@ -65,6 +65,18 @@ const getUserShortName = (userId: string, users: User[]): string => {
   return 'Unknown User';
 };
 
+type ToolsSection = {
+  title: "Info & Verktyg";
+  data: "tools"[] | [];
+};
+
+type MembersSection = {
+  title: "Medlemmar";
+  data: ListItem[];
+};
+
+type Section = ToolsSection | MembersSection;
+
 export default function AdminScreen() {
   const [users, setUsers] = useState<User[]>([]);
   const { user } = useAuth();
@@ -82,6 +94,12 @@ export default function AdminScreen() {
 
   const notificationListener = useRef<Notifications.Subscription>();
   const responseListener = useRef<Notifications.Subscription>();
+
+  const [toolsExpanded, setToolsExpanded] = useState(true);
+  const [membersExpanded, setMembersExpanded] = useState(true);
+
+  const toggleToolsExpanded = () => setToolsExpanded(!toolsExpanded);
+  const toggleMembersExpanded = () => setMembersExpanded(!membersExpanded);
 
   useEffect(() => {
     const db = getDatabase();
@@ -352,17 +370,12 @@ export default function AdminScreen() {
     }
   };
 
-  const renderItem = ({ item }: { item: ListItem }) => {
-    if ("type" in item) {
-      if (item.type === "header") {
-        return (
-          <ThemedText style={styles.sectionHeader}>{item.title}</ThemedText>
-        );
-      } else if (item.type === "tools") {
-        return renderTools();
-      }
+  const renderItem = (item: ListItem | "tools", sectionTitle: string) => {
+    if (sectionTitle === "Info & Verktyg") {
+      return renderTools();
+    } else {
+      return item === "tools" ? null : renderUser({ item: item as User });
     }
-    return renderUser({ item: item as User });
   };
 
   const toggleUserHomeState = (userId: string, currentState: boolean) => {
@@ -534,7 +547,8 @@ export default function AdminScreen() {
                     />
                   </View>
                   <ThemedText style={styles.bacMeterValue}>
-                    {calculateBAC(item.unitTakenTimestamps).toFixed(2)} promille = {getBACLabelAndEmoji(calculateBAC(item.unitTakenTimestamps)).label} {getBACLabelAndEmoji(calculateBAC(item.unitTakenTimestamps)).emoji}
+                    {calculateBAC(item.unitTakenTimestamps).toFixed(2)} promille = 
+                    {getBACLabelAndEmoji(calculateBAC(item.unitTakenTimestamps)).label} {getBACLabelAndEmoji(calculateBAC(item.unitTakenTimestamps)).emoji}
                   </ThemedText>
                 </View>
               </>
@@ -556,12 +570,12 @@ export default function AdminScreen() {
             </View>
           );
         })
-      : [<Text key="none">-</Text>];
+      : [<Text key="none" style={{ color: 'white' }}></Text>]; // Wrap the "-" in a Text component
   };
 
   const renderEventOverview = () => (
     <View style={styles.eventOverviewContainer}>
-      <ThemedText style={styles.eventOverviewHeader}>Vem kommer?</ThemedText>
+      <ThemedText style={styles.eventOverviewHeader}>Vem kommer på vad?</ThemedText>
       {Object.entries(upcomingEvents).map(([eventId, event]) => {
         const eventDate = new Date(event.start);
         const weekdays = ['Söndag', 'Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag'];
@@ -601,68 +615,68 @@ export default function AdminScreen() {
     </View>
   );
 
-  const renderTools = () => (
-    <>
-      <ThemedText style={styles.sectionHeader}>Verktyg</ThemedText>
-      <View style={styles.announcementContainer}>
-        <ThemedText style={styles.announcementHeader}>
-          Skicka notis till nollor
-        </ThemedText>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.announcementInput}
-            placeholder="Skriv meddelande"
-            placeholderTextColor="rgba(255, 255, 255, 0.5)"
-            value={announcement}
-            onChangeText={setAnnouncement}
-            onSubmitEditing={handleAnnouncementSubmit}
-            blurOnSubmit={false}
-          />
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              announcementSent && styles.sentButton,
-            ]}
-            onPress={sendAnnouncement}
-            disabled={sendingAnnouncement || announcementSent}
-          >
-            {sendingAnnouncement ? (
-              <ActivityIndicator color="white" size="small" />
-            ) : announcementSent ? (
-              <MaterialIcons name="check" size={30} color="white" />
-            ) : (
-              <Ionicons name="send" size={30} color="white" />
-            )}
-          </TouchableOpacity>
-        </View>
+const renderTools = () => (
+  <View style={styles.toolsContainer}>
+    {renderEventOverview()}
+    <View style={styles.announcementContainer}>
+      <ThemedText style={styles.announcementHeader}>
+        Skicka notis till nollor
+      </ThemedText>
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.announcementInput}
+          placeholder="Skriv meddelande"
+          placeholderTextColor="rgba(255, 255, 255, 0.5)"
+          value={announcement}
+          onChangeText={setAnnouncement}
+          onSubmitEditing={handleAnnouncementSubmit}
+          blurOnSubmit={false}
+        />
+        <TouchableOpacity
+          style={[
+            styles.sendButton,
+            announcementSent && styles.sentButton,
+          ]}
+          onPress={sendAnnouncement}
+          disabled={sendingAnnouncement || announcementSent}
+        >
+          {sendingAnnouncement ? (
+            <ActivityIndicator color="white" size="small" />
+          ) : announcementSent ? (
+            <MaterialIcons name="check" size={30} color="white" />
+          ) : (
+            <Ionicons name="send" size={30} color="white" />
+          )}
+        </TouchableOpacity>
       </View>
-      <View style={styles.logContainer}>
-        <ThemedText style={styles.logHeader}>Enhetslogg</ThemedText>
-        <View>
-          {unitLogEvents.map((event, index) => (
-            <ThemedText key={index} style={styles.logEntry}>
-              {`[${new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}] ${getUserShortName(event.userId, users)} ${
-                event.change === -1
-                  ? `tog en enhet (${event.oldUnits}->${event.newUnits})`
-                  : `${event.oldUnits}->${event.newUnits} (${event.change > 0 ? '+' : ''}${event.change})`
-              }`}
-            </ThemedText>
-          ))}
-        </View>
+    </View>
+    <View style={styles.logContainer}>
+      <ThemedText style={styles.logHeader}>Enhetslogg</ThemedText>
+      <View>
+        {unitLogEvents.map((event, index) => (
+          <ThemedText key={index} style={styles.logEntry}>
+            {`[${new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}] ${getUserShortName(event.userId, users)} ${
+              event.change === -1
+                ? `tog en enhet (${event.oldUnits}->${event.newUnits})`
+                : `${event.oldUnits}->${event.newUnits} (${event.change > 0 ? '+' : ''}${event.change})`
+            }`}
+          </ThemedText>
+        ))}
       </View>
-      {godMode && (
-        <View style={styles.debugModeContainer}>
-          <ThemedText style={styles.debugModeText}>Debug Mode (1 SEK, 0723588533)</ThemedText>
-          <Switch
-            value={debugMode}
-            onValueChange={toggleDebugMode}
-            trackColor={{ false: "#767577", true: "#81b0ff" }}
-            thumbColor={debugMode ? "#f5dd4b" : "#f4f3f4"}
-          />
-        </View>
-      )}
-    </>
-  );
+    </View>
+    {godMode && (
+      <View style={styles.debugModeContainer}>
+        <ThemedText style={styles.debugModeText}>Debug Mode (1 SEK, 0723588533)</ThemedText>
+        <Switch
+          value={debugMode}
+          onValueChange={toggleDebugMode}
+          trackColor={{ false: "#767577", true: "#81b0ff" }}
+          thumbColor={debugMode ? "#f5dd4b" : "#f4f3f4"}
+        />
+      </View>
+    )}
+  </View>
+);
 
   const getBACLabelAndEmoji = (bac: number) => {
     if (bac < 0.2) return { label: 'Nykter', emoji: '😊' };
@@ -682,20 +696,16 @@ export default function AdminScreen() {
 
   const getListData = (): ListItem[] => {
     const allUsers = sortUsers(users);
-    if (isDisplayTime()) {
-      return [
-        { type: "header" as const, title: "Medlemmar" },
-        ...allUsers,
-        { type: "tools" as const, title: "Verktyg" }
-      ];
-    } else {
+    const listData: ListItem[] = [...allUsers];
+
+    if (!isDisplayTime()) {
       const usersNotHome = users.filter((user) => !user.safeArrival);
       const usersHome = users.filter((user) => !!user.safeArrival);
-      
-      const listData: ListItem[] = [
+
+      listData.unshift(
         { type: "header" as const, title: "Kvar på event" },
-        ...usersNotHome,
-      ];
+        ...usersNotHome
+      );
 
       if (usersHome.length > 0) {
         listData.push(
@@ -703,56 +713,63 @@ export default function AdminScreen() {
           ...usersHome
         );
       }
-
-      listData.push({ type: "tools" as const, title: "Verktyg" });
-      return listData;
     }
+
+    return listData;
   };
+
+  const sections: Section[] = [
+    {
+      title: "Info & Verktyg",
+      data: toolsExpanded ? ["tools"] : [],
+    },
+    {
+      title: "Medlemmar",
+      data: membersExpanded ? getListData() : [],
+    },
+  ];
+
+  const renderSectionHeader = ({ section: { title } }) => (
+    <TouchableOpacity
+      style={styles.sectionHeaderContainer}
+      onPress={title === "Info & Verktyg" ? toggleToolsExpanded : toggleMembersExpanded}
+    >
+      <ThemedText style={styles.sectionHeader}>
+        {title}
+      </ThemedText>
+      <Ionicons
+        name={title === "Info & Verktyg" ? (toolsExpanded ? "chevron-up" : "chevron-down") : (membersExpanded ? "chevron-up" : "chevron-down")}
+        size={40}
+        color="white"
+      />
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.blackBackground}>
-      <FlatList
-        style={styles.container}
-        contentContainerStyle={[
-          styles.contentContainer,
-          isDisplayTime() && styles.contentContainerWithExtraPadding
-        ]}
-        data={getListData()}
-        renderItem={renderItem}
-        keyExtractor={(item: ListItem) => {
-          if ("type" in item) {
-            return item.type === "header" ? `header-${item.title}` : "tools";
-          }
-          return item.userId;
+      <SectionList<ListItem | "tools", Section>
+        sections={sections}
+        keyExtractor={(item, index) => {
+          if (typeof item === 'string') return item;
+          if ('userId' in item) return item.userId;
+          return index.toString();
         }}
+        renderSectionHeader={renderSectionHeader}
+        renderItem={({ item, section }) => renderItem(item, section.title)}
+        contentContainerStyle={styles.sectionScrollContainer}
         showsVerticalScrollIndicator={false}
-        ListHeaderComponent={renderEventOverview}
+        style={styles.scrollContainer}
+        stickySectionHeadersEnabled={false}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  mainContainer: {
-    flex: 1,
-    backgroundColor: 'black',
-  },
   blackBackground: {
     flex: 1,
     backgroundColor: 'black',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: 'black',
-  },
-  contentContainer: {
-    paddingTop: Platform.OS === 'ios' ? 35 : 15,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    backgroundColor: 'black',
-  },
-  contentContainerWithExtraPadding: {
-    paddingTop: Platform.OS === 'ios' ? 55 : 35,
+    paddingTop: 50
   },
   userContainer: {
     marginBottom: 10,
@@ -772,7 +789,7 @@ const styles = StyleSheet.create({
   },
   expandedContent: {
     paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: 20,
     borderTopWidth: 3,
     borderTopColor: "rgba(255, 255, 255, 0.1)",
     gap: 5,
@@ -908,9 +925,11 @@ const styles = StyleSheet.create({
   },
   announcementContainer: {
     padding: 10,
-    backgroundColor: "#48002f",
+    backgroundColor: "#28001A",
     borderRadius: 15,
+    marginBottom: 10,
     borderWidth: 3,
+    marginVertical: 10,
     borderColor: "#b40075",
   },
   announcementHeader: {
@@ -922,8 +941,8 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flexDirection: "row",
+    backgroundColor: "#1F0014", 
     alignItems: "center",
-    backgroundColor: "black",
     borderRadius: 15,
     paddingRight: 10,
     borderWidth: 3,
@@ -948,12 +967,11 @@ const styles = StyleSheet.create({
     backgroundColor: "green",
   },
   sectionHeader: {
-    fontSize: 35,
+    fontSize: 38,
     fontWeight: "bold",
     color: "white",
-    marginTop: 15,
-    marginLeft: 3,
-    marginBottom: 10,
+    marginTop: 5,
+    marginBottom: 5,
     textAlign: "left",
   },
   bacMeterContainer: {
@@ -986,22 +1004,22 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   logContainer: {
-    marginVertical: 20,
+    marginVertical: 10,
     padding: 10,
-    backgroundColor: '#000',
+    backgroundColor: "#28001A",
     borderRadius: 15,
     borderWidth: 3,
-    borderColor: '#b40075',
+    borderColor: "#b40075",
   },
   logHeader: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#b40075',
+    color: '#FFFFFF',
     marginBottom: 10,
   },
   logEntry: {
     fontSize: 13,
-    color: '#b40075',
+    color: '#FF86D5',
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   homeUserContainer: {
@@ -1039,7 +1057,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
     padding: 10,
-    backgroundColor: '#48002f',
+    backgroundColor: '#28001A',
     borderRadius: 15,
     borderColor: "#b40075",
     borderWidth: 3,
@@ -1052,7 +1070,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginTop: 10,
+    marginVertical: 10,
     padding: 10,
     backgroundColor: '#48002f',
     borderRadius: 15,
@@ -1074,26 +1092,33 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   eventOverviewContainer: {
-    marginTop: 20,
     padding: 10,
-    backgroundColor: '#48002f',
+    backgroundColor: '#28001A',
     borderRadius: 15,
     borderWidth: 3,
     borderColor: '#b40075',
+    marginBottom: 10,
   },
   eventOverviewHeader: {
-    fontSize: 30,
+    fontSize: 25,
     marginLeft: 4,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 5,
+    marginTop: 4,
+    marginBottom: 7,
   },
   eventOverview: {
     marginBottom: 10,
+    marginVertical: 5,
+    borderWidth: 2,
+    backgroundColor: '#48002f',
+    borderColor: 'rgba(249 19 237 / 0.2)',
+    borderRadius: 5,
   },
   eventTitle: {
     marginTop: 10,
-    marginLeft: 4,
+    marginLeft: 8,
+    marginBottom:4,
     fontSize: 19,
     fontWeight: 'bold',
     color: 'white',
@@ -1129,15 +1154,32 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   yesTag: {
-    backgroundColor: '#4CAF50', // Green
+    backgroundColor: '#4CAF50',
     paddingVertical: 5,
   },
   maybeTag: {
-    backgroundColor: 'orange', // Yellow
+    backgroundColor: 'orange',
     paddingVertical: 5,
   },
   noTag: {
-    backgroundColor: '#FF5252', // Red
+    backgroundColor: '#FF5252',
     paddingVertical: 5,
+  },
+  sectionScrollContainer: {
+    paddingHorizontal: 10,
+    backgroundColor: 'black',
+  },
+  sectionHeaderContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  scrollContainer: {
+    backgroundColor: 'black',
+  },
+  toolsContainer: {
+    paddingBottom: 25,
   },
 });

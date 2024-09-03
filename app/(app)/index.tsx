@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     flexGrow: 1,
-    paddingBottom: 90, 
+    paddingBottom: 20, 
   },
   homeSliderContainer: {
     marginBottom: 10,

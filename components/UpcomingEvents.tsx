@@ -67,8 +67,8 @@ const UpcomingEvents = () => {
     if (eventId && animatedOpacities[eventId]) {
       // Animate the opacity change for the specific event
       Animated.sequence([
-        Animated.timing(animatedOpacities[eventId], { toValue: 0.5, duration: 100, useNativeDriver: true }),
-        Animated.timing(animatedOpacities[eventId], { toValue: 1, duration: 100, useNativeDriver: true })
+        Animated.timing(animatedOpacities[eventId], { toValue: 0.5, duration: 50, useNativeDriver: true }),
+        Animated.timing(animatedOpacities[eventId], { toValue: 1, duration: 50, useNativeDriver: true })
       ]).start();
 
       // Update local state immediately

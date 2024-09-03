@@ -5,6 +5,7 @@ import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
 import { getDevicePushTokenAsync } from "expo-notifications";
+import { UserInfo } from "@/types";
 
 interface UserData {
   userId: string;
@@ -23,7 +24,7 @@ interface UserData {
 export function useAuth() {
   const auth = getAuth();
   const database = getDatabase();
-  const [user, setUser] = useState<UserData | null>(null);
+  const [user, setUser] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export function useAuth() {
               lastName: userData.lastName,
               pushToken: userData.pushToken,
             };
-            setUser(userObj);
+            setUser(userObj as UserInfo);
 
             if (Platform.OS !== "web") {
               const currentPlatform = Platform.OS;
