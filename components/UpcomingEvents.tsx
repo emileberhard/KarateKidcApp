@@ -7,6 +7,7 @@ import { update, ref, query, orderByChild, equalTo, get, onValue, set } from 'fi
 import { database } from '../firebaseConfig';
 import { useAuth } from '@/hooks/useAuth';
 import { theme } from '@/theme';
+import { Animated } from 'react-native';
 
 interface Event {
   summary: string;
@@ -18,6 +19,7 @@ type AttendanceStatus = 'initial' | 'yes' | 'no' | 'maybe';
 const UpcomingEvents = () => {
   const [events, setEvents] = useState<{ [key: string]: Event }>({});
   const [attendanceStatus, setAttendanceStatus] = useState<{ [key: string]: AttendanceStatus }>({});
+  const [animatedOpacities, setAnimatedOpacities] = useState<{ [key: string]: Animated.Value }>({});
   const primaryColor = useThemeColor('primary');
   const user = useAuth().user; 
 
@@ -27,6 +29,13 @@ const UpcomingEvents = () => {
         const result = await cloudFunctions.getUpcomingEvents();
         const fetchedEvents = (result.data as { events: { [key: string]: Event } }).events;
         setEvents(fetchedEvents);
+
+        // Initialize animated opacities for each event
+        const newAnimatedOpacities: { [key: string]: Animated.Value } = {};
+        Object.keys(fetchedEvents).forEach((eventId) => {
+          newAnimatedOpacities[eventId] = new Animated.Value(1);
+        });
+        setAnimatedOpacities(newAnimatedOpacities);
 
         // Fetch attendance status for each event
         Object.keys(fetchedEvents).forEach((eventId) => {
@@ -54,9 +63,15 @@ const UpcomingEvents = () => {
   const handleAttendanceUpdate = async (eventDate: string, newStatus: AttendanceStatus) => {
     if (!user) return;
 
-    // Update local state immediately
     const eventId = Object.keys(events).find(key => events[key].start === eventDate);
-    if (eventId) {
+    if (eventId && animatedOpacities[eventId]) {
+      // Animate the opacity change for the specific event
+      Animated.sequence([
+        Animated.timing(animatedOpacities[eventId], { toValue: 0.5, duration: 100, useNativeDriver: true }),
+        Animated.timing(animatedOpacities[eventId], { toValue: 1, duration: 100, useNativeDriver: true })
+      ]).start();
+
+      // Update local state immediately
       setAttendanceStatus((prevStatus) => ({
         ...prevStatus,
         [eventId]: newStatus,
@@ -109,7 +124,7 @@ const UpcomingEvents = () => {
         const weekday = new Date(event.start).toLocaleDateString('sv-SE', { weekday: 'long' }).replace(/^\w/, c => c.toUpperCase());
 
         return (
-          <View key={eventKey} style={styles.eventContainer}>
+          <Animated.View key={eventKey} style={[styles.eventContainer, { opacity: animatedOpacities[eventKey] || 1 }]}>
             <View style={styles.eventInfo}>
               <View style={styles.weekdayContainer}>
                 <AntDesign name="calendar" size={13} color="white" style={styles.calendarIcon} />
@@ -142,7 +157,7 @@ const UpcomingEvents = () => {
                 );
               })}
             </View>
-          </View>
+          </Animated.View>
         );
       })}
     </View>

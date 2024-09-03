@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    aspectRatio: 1.5,
+    aspectRatio: 1.75,
     borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",

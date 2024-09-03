@@ -34,6 +34,7 @@ export default ({ config }) => {
     icon: "./assets/images/icon.png",
     scheme: "karatekidcapp",
     userInterfaceStyle: "automatic",
+    owner: "emileberhard",
     splash: {
       image: "./assets/images/splash.png",
       resizeMode: "contain",

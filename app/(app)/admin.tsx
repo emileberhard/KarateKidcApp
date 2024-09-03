@@ -11,6 +11,7 @@ import {
   Alert,
   Switch,
   Linking,
+  Text,
 } from "react-native";
 import nollaImage from "@/assets/images/nollla.png";
 import phadderImage from "@/assets/images/phadder.png";
@@ -544,6 +545,70 @@ export default function AdminScreen() {
     );
   };
 
+  const wrapNameWithTag = (name: string) => {
+    const user = users.find(u => `${u.firstName} ${u.lastName?.charAt(0)}` === name);
+    if (user) {
+      const backgroundColor = user.admin ? '#007AFF' : '#FF1493';
+      return (
+        <View key={name} style={[styles.attendanceNameTag, { backgroundColor }]}>
+          <Text style={styles.attendanceNameText}>{name}</Text>
+        </View>
+      );
+    }
+    return name;
+  };
+
+  const renderAttendanceNames = (names: string[]) => {
+    if (names.length === 0) return '-';
+
+    return (
+      <View style={styles.attendanceNameContainer}>
+        {names.map((name, index) => (
+          <React.Fragment key={name}>
+            {index > 0 && <Text style={styles.attendanceNameSeparator}>{' '}</Text>}
+            {wrapNameWithTag(name)}
+          </React.Fragment>
+        ))}
+      </View>
+    );
+  };
+
+  const renderEventOverview = () => (
+    <View style={styles.eventOverviewContainer}>
+      <ThemedText style={styles.eventOverviewHeader}>Vem kommer?</ThemedText>
+      {Object.entries(upcomingEvents).map(([eventId, event]) => {
+        const eventDate = new Date(event.start);
+        const weekdays = ['Söndag', 'Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag'];
+        const weekday = weekdays[eventDate.getDay()];
+        return (
+          <View key={eventId} style={styles.eventOverview}>
+            <ThemedText style={styles.eventTitle}>
+              {event.summary} ({weekday})
+            </ThemedText>
+            <View style={styles.table}>
+              <View style={styles.tableRow}>
+                <ThemedText style={[styles.tableHeader, styles.yesTag]}>Ja</ThemedText>
+                <ThemedText style={[styles.tableHeader, styles.maybeTag]}>Kanske</ThemedText>
+                <ThemedText style={[styles.tableHeader, styles.noTag]}>Nej</ThemedText>
+              </View>
+              <View style={styles.tableRow}>
+                <ThemedText style={styles.tableCell}>
+                  {renderAttendanceNames(attendanceOverview[eventId]?.yes || [])}
+                </ThemedText>
+                <ThemedText style={styles.tableCell}>
+                  {renderAttendanceNames(attendanceOverview[eventId]?.maybe || [])}
+                </ThemedText>
+                <ThemedText style={styles.tableCell}>
+                  {renderAttendanceNames(attendanceOverview[eventId]?.no || [])}
+                </ThemedText>
+              </View>
+            </View>
+          </View>
+        );
+      })}
+    </View>
+  );
+
   const renderTools = () => (
     <>
       <ThemedText style={styles.sectionHeader}>Verktyg</ThemedText>
@@ -578,33 +643,6 @@ export default function AdminScreen() {
             )}
           </TouchableOpacity>
         </View>
-      </View>
-      <View style={styles.eventOverviewContainer}>
-        <ThemedText style={styles.eventOverviewHeader}>Vem kommer?</ThemedText>
-        {Object.entries(upcomingEvents).map(([eventId, event]) => {
-          const eventDate = new Date(event.start);
-          const weekdays = ['Söndag', 'Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag'];
-          const weekday = weekdays[eventDate.getDay()];
-          return (
-            <View key={eventId} style={styles.eventOverview}>
-              <ThemedText style={styles.eventTitle}>
-                {event.summary} ({weekday})
-              </ThemedText>
-              <View style={styles.table}>
-                <View style={styles.tableRow}>
-                  <ThemedText style={[styles.tableHeader, styles.yesTag]}>Ja</ThemedText>
-                  <ThemedText style={[styles.tableHeader, styles.maybeTag]}>Kanske</ThemedText>
-                  <ThemedText style={[styles.tableHeader, styles.noTag]}>Nej</ThemedText>
-                </View>
-                <View style={styles.tableRow}>
-                  <ThemedText style={styles.tableCell}>{attendanceOverview[eventId]?.yes.join(', ') || '-'}</ThemedText>
-                  <ThemedText style={styles.tableCell}>{attendanceOverview[eventId]?.maybe.join(', ') || '-'}</ThemedText>
-                  <ThemedText style={styles.tableCell}>{attendanceOverview[eventId]?.no.join(', ') || '-'}</ThemedText>
-                </View>
-              </View>
-            </View>
-          );
-        })}
       </View>
       <View style={styles.logContainer}>
         <ThemedText style={styles.logHeader}>Enhetslogg</ThemedText>
@@ -696,6 +734,7 @@ export default function AdminScreen() {
           return item.userId;
         }}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={renderEventOverview}
       />
     </View>
   );
@@ -1091,8 +1130,8 @@ const styles = StyleSheet.create({
   },
   tableCell: {
     flex: 1,
-    color: 'white',
-    textAlign: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingVertical: 5,
     borderWidth: 0.5,
     borderColor: 'rgba(255, 255, 255, 0.2)',
@@ -1108,5 +1147,35 @@ const styles = StyleSheet.create({
   noTag: {
     backgroundColor: '#FF5252', // Red
     paddingVertical: 5,
+  },
+  phadderTag: {
+    backgroundColor: '#007AFF', // Blue
+    paddingVertical: 5,
+  },
+  nollaTag: {
+    backgroundColor: '#FF1493', // Pink
+    paddingVertical: 5,
+  },
+  attendanceNameTag: {
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    margin: 2,
+  },
+  attendanceNameText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  attendanceNameSeparator: {
+    color: 'white',
+    fontSize: 12,
+  },
+  attendanceNameContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 2,
   },
 });
