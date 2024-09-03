@@ -925,4 +925,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'white',
   },
+  debugTimeContainer: {
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: '#48002f',
+    borderRadius: 15,
+    borderColor: "#b40075",
+    borderWidth: 3,
+  },
+  debugTimeText: {
+    fontSize: 16,
+    color: 'white',
+    marginBottom: 5,
+  },
+  debugTimeButton: {
+    backgroundColor: '#b40075',
+    padding: 10,
+    borderRadius: 5,
+  },
+  debugTimeButtonText: {
+    color: 'white',
+    fontSize: 14,
+  },
 });

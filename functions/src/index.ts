@@ -12,3 +12,4 @@ export * from './notificationService';
 
 export { logUnitChanges } from './logUnitChanges';
 export { sendSwishReturnNotification } from './sendSwishReturnNotification';
+export { getEvents } from './getEvents';

@@ -9,7 +9,6 @@ import {
   ref,
   onValue,
   push,
-  serverTimestamp,
   increment,
   set,
   update,
@@ -35,6 +34,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ScrollView } from "react-native";
 import { theme } from "@/theme";
 import PhoneNumberPrompt from "@/components/PhoneNumberPrompt";
+import { useDebugSettings } from "@/hooks/useDebugSettings";
 
 export default function HomeScreen() {
   const { user } = useAuth();
@@ -46,6 +46,8 @@ export default function HomeScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showHomeSlider, _setShowHomeSlider] = useState(false);
   const [showPhonePrompt, setShowPhonePrompt] = useState(false);
+  const [debugTime, setDebugTime] = useState<Date | null>(null);
+  const { debugMode } = useDebugSettings();
 
   useEffect(() => {
     if (user) {
@@ -80,8 +82,20 @@ export default function HomeScreen() {
         setIsLoading(false);
       });
 
+      // Add a listener for debug time
+      const debugTimeRef = ref(database, 'debugTime');
+      const unsubscribeDebugTime = onValue(debugTimeRef, (snapshot) => {
+        const debugTimeValue = snapshot.val();
+        if (debugTimeValue) {
+          setDebugTime(new Date(debugTimeValue));
+        } else {
+          setDebugTime(null);
+        }
+      });
+
       return () => {
         unsubscribe();
+        unsubscribeDebugTime();
       };
     }
   }, [user]);
@@ -101,13 +115,18 @@ export default function HomeScreen() {
     }
   }, [user]);
 
-  const calculateBAC = (drinkEntries: DrinkEntry[]): number => {
+  // Function to get the current time (either debug time or actual time)
+  const getCurrentTime = useCallback(() => {
+    return debugTime || new Date();
+  }, [debugTime]);
+
+  const calculateBAC = useCallback((drinkEntries: DrinkEntry[]): number => {
     const weight = 70;
     const gender = "male";
     const metabolismRate = gender === "male" ? 0.015 : 0.017;
     const bodyWaterConstant = gender === "male" ? 0.68 : 0.55;
 
-    const now = Date.now();
+    const now = getCurrentTime().getTime();
     const last24Hours = now - 24 * 60 * 60 * 1000;
 
     let totalAlcohol = 0;
@@ -125,7 +144,7 @@ export default function HomeScreen() {
     const bac = (totalAlcohol / (weight * 1000 * bodyWaterConstant)) * 100;
     const promille = Math.max(0, bac) * 10;
     return promille;
-  };
+  }, [getCurrentTime]);
 
   const takeUnit = useCallback(async () => {
     if (user && user.userId && units > 0) {
@@ -135,12 +154,12 @@ export default function HomeScreen() {
         await set(child(userRef, "units"), increment(-1));
 
         const newDrinkRef = push(child(userRef, "unitTakenTimestamps"));
-        await set(newDrinkRef, serverTimestamp());
+        await set(newDrinkRef, getCurrentTime().getTime());
       } catch (error) {
         console.error("Error taking unit:", error);
       }
     }
-  }, [user, units, drinks]);
+  }, [user, units, drinks, getCurrentTime]);
 
   const arrivedHomeSafely = async () => {
     if (Platform.OS !== "web") {
@@ -189,7 +208,7 @@ export default function HomeScreen() {
               <HelloWave />
             </ThemedView>
             <ThemedText bold style={styles.welcomeText}>
-              Välkommen till dojon!
+              Välkommen till dojen!
             </ThemedText>
           </ThemedView>
           {user && (
@@ -217,7 +236,7 @@ export default function HomeScreen() {
                 </View>
               )}
               <ResponsiblePhaddersPanel />
-              <TodaysEvents />
+              <TodaysEvents debugMode={debugMode} />
             </View>
           )}
         </ThemedView>
@@ -227,6 +246,11 @@ export default function HomeScreen() {
         onSubmit={handlePhoneSubmit} 
         isAdmin={user?.admin || false} 
       />
+      {debugTime && (
+        <ThemedText style={styles.debugTimeText}>
+          Debug Time: {debugTime.toLocaleString()}
+        </ThemedText>
+      )}
     </GestureHandlerRootView>
   );
 }
@@ -305,5 +329,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#460038',
+  },
+  debugTimeText: {
+    color: 'yellow',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 5,
   },
 });

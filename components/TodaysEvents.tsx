@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { View, StyleSheet, TouchableOpacity, TextInput } from "react-native";
 import { ThemedText } from "./ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Ionicons } from "@expo/vector-icons";
-import { ref, onValue, off } from "firebase/database";
-import { database } from "../firebaseConfig";
-import localEvents from "../data/events.json";
+import { cloudFunctions } from "../firebaseConfig";
 import Markdown from 'react-native-markdown-display';
 
 interface Event {
@@ -16,82 +14,57 @@ interface Event {
   location: string;
 }
 
-export function TodaysEvents() {
+interface TodaysEventsProps {
+  debugMode: boolean;
+}
+
+export function TodaysEvents({ debugMode }: TodaysEventsProps) {
   const [events, setEvents] = useState<Event[]>([]);
-  const [isShowingTomorrow, setIsShowingTomorrow] = useState(false);
+  const [idagText, setIdagText] = useState("IDAG");
   const [expandedEvents, setExpandedEvents] = useState<{ [key: number]: boolean }>({});
   const [_, setClosestEventIndex] = useState<number | null>(null);
   const primaryColor = useThemeColor("primary");
   const accentColor = useThemeColor("accent");
+  const [debugTime, setDebugTime] = useState<Date | null>(null);
+  const [debugTimeInput, setDebugTimeInput] = useState("");
 
   useEffect(() => {
-    const eventsRef = ref(database, 'events');
-    
-    const handleData = (snapshot: any) => {
-      const firebaseEvents = snapshot.val();
-      if (firebaseEvents) {
-        processEvents(firebaseEvents);
-      } else {
-        processEvents(localEvents);
+    const fetchEvents = async () => {
+      try {
+        const result = await cloudFunctions.getEvents();
+        const data = result.data as { events: Event[], idagText: string };
+        setEvents(data.events);
+        setIdagText(data.idagText);
+
+        const now = getCurrentTime();
+        const closestEvent = data.events.findIndex(event => new Date(event.end) > now);
+        setClosestEventIndex(closestEvent !== -1 ? closestEvent : null);
+
+        if (closestEvent !== -1) {
+          setExpandedEvents(prev => ({ ...prev, [closestEvent]: true }));
+        }
+      } catch (error) {
+        console.error("Error fetching events:", error);
       }
     };
 
-    const handleError = (error: any) => {
-      console.error("Error fetching events from Firebase:", error);
-      processEvents(localEvents);
-    };
-
-    onValue(eventsRef, handleData, handleError);
-
-    return () => {
-      off(eventsRef, 'value', handleData);
-    };
+    fetchEvents();
   }, []);
 
-  const processEvents = (allEvents: Event[]) => {
-    const now = new Date();
-    const today = new Date(now);
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const threeAM = new Date(today);
-    threeAM.setHours(3, 0, 0, 0);
-
-    const isBeforeThreeAM = now < threeAM;
-    const referenceDate = isBeforeThreeAM ? today : tomorrow;
-
-    const relevantEvents = allEvents.filter((event) => {
-      const eventStart = new Date(event.start);
-      eventStart.setHours(0, 0, 0, 0);
-      return eventStart.getTime() === referenceDate.getTime() && new Date(event.end) > now;
-    });
-
-    setEvents(relevantEvents);
-    
-    // Update this line
-    setIsShowingTomorrow(!isBeforeThreeAM || relevantEvents.length === 0);
-
-    const sortedEvents = relevantEvents.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
-    setEvents(sortedEvents);
-
-    const closestEvent = sortedEvents.findIndex(event => new Date(event.end) > now);
-    setClosestEventIndex(closestEvent !== -1 ? closestEvent : null);
-
-    if (closestEvent !== -1) {
-      setExpandedEvents(prev => ({ ...prev, [closestEvent]: true }));
-    }
-  };
+  const getCurrentTime = useCallback(() => {
+    return debugTime || new Date();
+  }, [debugTime]);
 
   const toggleEventExpansion = (index: number) => {
     setExpandedEvents(prev => ({ ...prev, [index]: !prev[index] }));
   };
 
-  const isEventActive = (event: Event) => {
-    const now = new Date();
+  const isEventActive = useCallback((event: Event) => {
+    const now = getCurrentTime();
     const eventStart = new Date(event.start);
     const eventEnd = new Date(event.end);
     return eventStart <= now && eventEnd > now;
-  };
+  }, [getCurrentTime]);
 
   const renderEventDescription = (description: string, isActive: boolean, isExpanded: boolean) => {
     const formattedDescription = description.replace(/\\n/g, ' ').trim();
@@ -122,16 +95,59 @@ export function TodaysEvents() {
     );
   };
 
+  const handleDebugTimeChange = (text: string) => {
+    setDebugTimeInput(text);
+  };
+
+  const setDebugTimeFromInput = () => {
+    const date = new Date(debugTimeInput);
+    if (!isNaN(date.getTime())) {
+      setDebugTime(date);
+    } else {
+      alert("Invalid date format. Please use YYYY-MM-DD HH:MM format.");
+    }
+  };
+
+  useEffect(() => {
+    if (debugMode) {
+      const now = new Date();
+      const formattedTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      setDebugTimeInput(formattedTime);
+    } else {
+      setDebugTime(null); // Reset debug time when debug mode is off
+    }
+  }, [debugMode]);
+
   return (
     <View style={[styles.container, { backgroundColor: primaryColor, borderColor: accentColor }]}>
+      {debugMode && (
+        <View style={styles.debugTimeContainer}>
+          <ThemedText style={styles.debugTimeText}>Debug Time:</ThemedText>
+          <TextInput
+            style={styles.debugTimeInput}
+            value={debugTimeInput}
+            onChangeText={handleDebugTimeChange}
+            placeholder="YYYY-MM-DD HH:MM"
+            placeholderTextColor="rgba(255, 255, 255, 0.5)"
+          />
+          <TouchableOpacity onPress={setDebugTimeFromInput} style={styles.debugTimeButton}>
+            <ThemedText style={styles.debugTimeButtonText}>Set</ThemedText>
+          </TouchableOpacity>
+        </View>
+      )}
+      {debugMode && debugTime && ( // Only show when debug mode is on
+        <ThemedText style={styles.currentDebugTimeText}>
+          Current Debug Time: {debugTime.toLocaleString()}
+        </ThemedText>
+      )}
       <View style={styles.row}>
         <View style={styles.column}>
           <ThemedText style={[
             styles.idagText,
             { color: "white" },
-            isShowingTomorrow && styles.imorgenText
+            idagText === "IMORGON" && styles.imorgenText
           ]}>
-            {isShowingTomorrow ? "IMORGON" : "IDAG"}
+            {idagText}
           </ThemedText>
           <View style={styles.iconContainer}>
             <Ionicons name="calendar" size={40} color="white" />
@@ -140,7 +156,7 @@ export function TodaysEvents() {
         <View style={styles.divider} />
         <View style={styles.eventsContainer}>
           {events.length === 0 ? (
-            <ThemedText style={{ color: "white" }}>Inga events {isShowingTomorrow ? "imorgon" : "idag"}</ThemedText>
+            <ThemedText style={{ color: "white" }}>Inga events {idagText === "IMORGON" ? "imorgon" : "idag"}</ThemedText>
           ) : (
             events.map((event, index) => (
               <React.Fragment key={index}>
@@ -328,5 +344,42 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 5,
     fontStyle: 'italic',
+  },
+  debugTimeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    padding: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 5,
+  },
+  debugTimeText: {
+    fontSize: 14,
+    color: 'yellow',
+    marginRight: 5,
+  },
+  debugTimeInput: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    color: 'white',
+    padding: 5,
+    borderRadius: 5,
+    marginRight: 5,
+  },
+  debugTimeButton: {
+    backgroundColor: '#b40075',
+    padding: 5,
+    borderRadius: 5,
+  },
+  debugTimeButtonText: {
+    color: 'white',
+    fontSize: 12,
+  },
+  currentDebugTimeText: {
+    color: 'yellow',
+    fontSize: 12,
+    marginBottom: 10,
+    textAlign: 'center',
   },
 });

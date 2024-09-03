@@ -1,31 +1,25 @@
 import { useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getDatabase, ref, onValue, set } from 'firebase/database';
 
-export const useDebugSettings = () => {
+export function useDebugSettings() {
   const [debugMode, setDebugMode] = useState(false);
 
   useEffect(() => {
-    const loadDebugMode = async () => {
-      try {
-        const value = await AsyncStorage.getItem('debugMode');
-        setDebugMode(value === 'true');
-      } catch (error) {
-        console.error('Error loading debug mode:', error);
-      }
-    };
+    const db = getDatabase();
+    const debugModeRef = ref(db, 'debugMode');
 
-    loadDebugMode();
+    const unsubscribe = onValue(debugModeRef, (snapshot) => {
+      setDebugMode(snapshot.val() || false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const toggleDebugMode = async () => {
-    try {
-      const newDebugMode = !debugMode;
-      await AsyncStorage.setItem('debugMode', newDebugMode.toString());
-      setDebugMode(newDebugMode);
-    } catch (error) {
-      console.error('Error toggling debug mode:', error);
-    }
+  const toggleDebugMode = () => {
+    const db = getDatabase();
+    const debugModeRef = ref(db, 'debugMode');
+    set(debugModeRef, !debugMode);
   };
 
   return { debugMode, toggleDebugMode };
-};
+}
