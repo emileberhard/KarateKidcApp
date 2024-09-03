@@ -150,6 +150,7 @@ const SlideButton: React.FC<SlideButtonProps> = ({
 
 const styles = StyleSheet.create({
   container: {
+    marginVertical: 10,
     borderRadius: 15,
     borderWidth: 2,
     height: 60,

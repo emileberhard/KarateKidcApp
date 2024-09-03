@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import {
   StyleSheet,
   SectionList,
@@ -28,6 +28,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useDebugSettings } from "@/hooks/useDebugSettings";
 import { Event } from "@/types";
+import { useEventSections } from '@/hooks/useEventSections';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface User {
   firstName: string;
@@ -47,7 +49,7 @@ interface User {
   nickname?: string;
 }
 
-type ListItem = User | { type: "header"; title: string } | { type: "tools"; title?: string };
+type ListItem = User | { type: "header"; title: string } | { type: "tools"; title?: string } | { key?: string };
 
 interface UnitLogEvent {
   userId: string;
@@ -56,14 +58,6 @@ interface UnitLogEvent {
   change: number;
   timestamp: number;
 }
-
-const getUserShortName = (userId: string, users: User[]): string => {
-  const user = users.find(u => u.userId === userId);
-  if (user) {
-    return `${user.firstName} ${user.lastName?.charAt(0)}`;
-  }
-  return 'Unknown User';
-};
 
 type ToolsSection = {
   title: "Info & Verktyg";
@@ -87,7 +81,7 @@ export default function AdminScreen() {
   const [unitLogEvents, setUnitLogEvents] = useState<UnitLogEvent[]>([]);
   const { debugMode, toggleDebugMode } = useDebugSettings();
   const [godMode, setgodMode] = useState(false);
-  const [showEventSections, setShowEventSections] = useState(false);
+  const { isPartyMode } = useEventSections();
   const [upcomingEvents, setUpcomingEvents] = useState<{ [key: string]: Event }>({});
   const [attendanceOverview, setAttendanceOverview] = useState<{ [key: string]: { yes: string[], maybe: string[], no: string[] } }>({});
   const [attendanceListeners, setAttendanceListeners] = useState<{ [key: string]: () => void }>({});
@@ -100,6 +94,39 @@ export default function AdminScreen() {
 
   const toggleToolsExpanded = () => setToolsExpanded(!toolsExpanded);
   const toggleMembersExpanded = () => setMembersExpanded(!membersExpanded);
+
+  const [usersLoaded, setUsersLoaded] = useState(false);
+
+  const [cachedAttendanceOverview, setCachedAttendanceOverview] = useState<{ [key: string]: { yes: string[], maybe: string[], no: string[] } }>({});
+
+  // Load cached data on component mount
+  useEffect(() => {
+    const loadCachedData = async () => {
+      try {
+        const cachedData = await AsyncStorage.getItem('attendanceOverview');
+        if (cachedData) {
+          setCachedAttendanceOverview(JSON.parse(cachedData));
+        }
+      } catch (error) {
+        console.error("Error loading cached data:", error);
+      }
+    };
+
+    loadCachedData();
+  }, []);
+
+  // Use cached data if available, otherwise use the fetched data
+  const memoizedAttendanceOverview = useMemo(() => {
+    return Object.keys(attendanceOverview).length > 0 ? attendanceOverview : cachedAttendanceOverview;
+  }, [attendanceOverview, cachedAttendanceOverview]);
+
+  // Update cache when attendance overview changes
+  useEffect(() => {
+    if (Object.keys(attendanceOverview).length > 0) {
+      AsyncStorage.setItem('attendanceOverview', JSON.stringify(attendanceOverview))
+        .catch(error => console.error("Error caching attendance data:", error));
+    }
+  }, [attendanceOverview]);
 
   useEffect(() => {
     const db = getDatabase();
@@ -126,6 +153,7 @@ export default function AdminScreen() {
         })
       );
       setUsers(userList);
+      setUsersLoaded(true);  // Set this flag when users are loaded
 
      
       if (user && user.userId) {
@@ -171,42 +199,17 @@ export default function AdminScreen() {
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const db = getDatabase();
-    const eventsRef = ref(db, 'events');
-    const unsubscribeEvents = onValue(eventsRef, (snapshot) => {
-      const events = snapshot.val();
-      if (events) {
-        const now = new Date();
-        const relevantEvent = Object.values(events).find((event: any) => {
-          const eventEnd = new Date(event.end);
-          const morningAfter = new Date(eventEnd);
-          if (morningAfter.getHours() < 8) {
-            morningAfter.setHours(8, 0, 0, 0);
-          } else {
-            morningAfter.setDate(morningAfter.getDate() + 1);
-            morningAfter.setHours(8, 0, 0, 0);
-          }
-          
-          const hasNykter = event.Nykter && (typeof event.Nykter === 'string' || event.Nykter.length > 0);
-          const hasAnsvarig = event.Ansvarig && (typeof event.Ansvarig === 'string' || event.Ansvarig.length > 0);
-          
-          return (
-            (hasNykter || hasAnsvarig) &&
-            now >= eventEnd &&
-            now < morningAfter
-          );
-        });
-        setShowEventSections(!!relevantEvent);
-      }
-    });
-
-    return () => {
-      unsubscribeEvents();
-    };
-  }, []);
+  const getUserShortName = useCallback((userId: string): string => {
+    const user = users.find(u => u.userId === userId);
+    if (user) {
+      return `${user.firstName} ${user.lastName?.charAt(0)}`;
+    }
+    return 'Unknown User';
+  }, [users]);
 
   useEffect(() => {
+    if (!usersLoaded) return;  // Don't fetch events until users are loaded
+
     const fetchUpcomingEvents = async () => {
       try {
         const result = await cloudFunctions.getUpcomingEvents();
@@ -234,18 +237,24 @@ export default function AdminScreen() {
               const eventOverview = {
                 yes: Object.entries(attendanceData)
                   .filter(([_, status]) => status === 'yes')
-                  .map(([userId, _]) => getUserShortName(userId, users)),
+                  .map(([userId, _]) => getUserShortName(userId)),
                 maybe: Object.entries(attendanceData)
                   .filter(([_, status]) => status === 'maybe')
-                  .map(([userId, _]) => getUserShortName(userId, users)),
+                  .map(([userId, _]) => getUserShortName(userId)),
                 no: Object.entries(attendanceData)
                   .filter(([_, status]) => status === 'no')
-                  .map(([userId, _]) => getUserShortName(userId, users)),
+                  .map(([userId, _]) => getUserShortName(userId)),
               };
-              setAttendanceOverview(prev => ({
-                ...prev,
-                [eventId]: eventOverview
-              }));
+              setAttendanceOverview(prev => {
+                const newOverview = {
+                  ...prev,
+                  [eventId]: eventOverview
+                };
+                // Update cache
+                AsyncStorage.setItem('attendanceOverview', JSON.stringify(newOverview))
+                  .catch(error => console.error("Error caching attendance data:", error));
+                return newOverview;
+              });
             }
           });
           newListeners[eventId] = () => off(eventAttendanceRef);
@@ -265,9 +274,7 @@ export default function AdminScreen() {
     return () => {
       Object.values(attendanceListeners).forEach(removeListener => removeListener());
     };
-  }, [users]); // Dependencies array includes users to re-fetch when user list changes
-
-  const isDisplayTime = () => !showEventSections;
+  }, [usersLoaded, getUserShortName]); // Dependencies array includes usersLoaded and getUserShortName
 
   const calculateBAC = (
     unitTakenTimestamps: Record<string, number> | undefined
@@ -370,8 +377,8 @@ export default function AdminScreen() {
     }
   };
 
-  const renderItem = (item: ListItem | "tools", sectionTitle: string) => {
-    if (sectionTitle === "Info & Verktyg") {
+  const renderItem = ({ item, section }: { item: ListItem | "tools"; section: Section }) => {
+    if (section.title === "Info & Verktyg") {
       return renderTools();
     } else {
       return item === "tools" ? null : renderUser({ item: item as User });
@@ -389,7 +396,6 @@ export default function AdminScreen() {
   };
 
   const renderUser = ({ item }: { item: User }) => {
-    const displayTime = isDisplayTime();
     const isHome = !!item.safeArrival;
     const displayName = item.nickname || item.firstName;
 
@@ -408,13 +414,13 @@ export default function AdminScreen() {
       <View
         style={[
           styles.userContainer,
-          displayTime ? styles.notHomeUserContainer : (isHome ? styles.homeUserContainer : styles.notHomeUserContainer),
+          !isPartyMode ? styles.notHomeUserContainer : (isHome ? styles.homeUserContainer : styles.notHomeUserContainer),
         ]}
       >
         <TouchableOpacity
           style={[
             styles.userItem,
-            displayTime ? styles.notHomeUserItem : (isHome ? styles.homeUserItem : styles.notHomeUserItem),
+            !isPartyMode ? styles.notHomeUserItem : (isHome ? styles.homeUserItem : styles.notHomeUserItem),
           ]}
           onPress={() => toggleExpandUser(item.userId)}
         >
@@ -437,7 +443,7 @@ export default function AdminScreen() {
               </View>
               <ThemedText style={styles.userDetails}>
                 {item.units} enheter
-                {!displayTime && ` • BAC: ${calculateBAC(item.unitTakenTimestamps).toFixed(2)}`}
+                {isPartyMode && ` • BAC: ${calculateBAC(item.unitTakenTimestamps).toFixed(2)}`}
               </ThemedText>
             </View>
           </ThemedView>
@@ -451,7 +457,7 @@ export default function AdminScreen() {
           <ThemedView
             style={[
               styles.expandedContent,
-              displayTime ? styles.notHomeExpandedContent : (isHome ? styles.homeExpandedContent : styles.notHomeExpandedContent),
+              !isPartyMode ? styles.notHomeExpandedContent : (isHome ? styles.homeExpandedContent : styles.notHomeExpandedContent),
             ]}
           >
             {purchaseNoticeText && (
@@ -496,7 +502,7 @@ export default function AdminScreen() {
             </ThemedView>
             <View style={styles.divider} />
             <ThemedView style={styles.actionRow}>
-              {!displayTime ? (
+              {isPartyMode ? (
                 <TouchableOpacity
                   style={styles.toggleHomeStateButton}
                   onPress={() => toggleUserHomeState(item.userId, isHome)}
@@ -512,25 +518,25 @@ export default function AdminScreen() {
                 </TouchableOpacity>
               ) : null}
               {item.phoneNumber && (
-                <View style={[styles.communicationButtons, displayTime && styles.fullWidthCommunicationButtons]}>
+                <View style={[styles.communicationButtons, !isPartyMode && styles.fullWidthCommunicationButtons]}>
                   <TouchableOpacity
-                    style={[styles.communicationButton, styles.callButton, displayTime && styles.flexCommunicationButton]}
+                    style={[styles.communicationButton, styles.callButton, !isPartyMode && styles.flexCommunicationButton]}
                     onPress={() => Linking.openURL(`tel:${item.phoneNumber}`)}
                   >
                     <Ionicons name="call" size={20} color="white" />
-                    {displayTime && <ThemedText style={styles.communicationButtonText}>Ring</ThemedText>}
+                    {!isPartyMode && <ThemedText style={styles.communicationButtonText}>Ring</ThemedText>}
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.communicationButton, styles.textButton, displayTime && styles.flexCommunicationButton]}
+                    style={[styles.communicationButton, styles.textButton, !isPartyMode && styles.flexCommunicationButton]}
                     onPress={() => Linking.openURL(`sms:${item.phoneNumber}`)}
                   >
                     <Ionicons name="chatbubble" size={20} color="white" />
-                    {displayTime && <ThemedText style={styles.communicationButtonText}>Meddelande</ThemedText>}
+                    {!isPartyMode && <ThemedText style={styles.communicationButtonText}>Meddelande</ThemedText>}
                   </TouchableOpacity>
                 </View>
               )}
             </ThemedView>
-            {!displayTime && (
+            {isPartyMode && (
               <>
                 <View style={styles.divider} />
                 <View style={styles.bacMeterContainer}>
@@ -593,17 +599,17 @@ export default function AdminScreen() {
               </View>
               <View style={styles.tableRow}>
                 <View style={styles.tableCell}>
-                  {renderAttendanceNames(attendanceOverview[eventId]?.yes || []).map((element, index) => (
+                  {renderAttendanceNames(memoizedAttendanceOverview[eventId]?.yes || []).map((element, index) => (
                     <React.Fragment key={index}>{element}</React.Fragment>
                   ))}
                 </View>
                 <View style={styles.tableCell}>
-                  {renderAttendanceNames(attendanceOverview[eventId]?.maybe || []).map((element, index) => (
+                  {renderAttendanceNames(memoizedAttendanceOverview[eventId]?.maybe || []).map((element, index) => (
                     <React.Fragment key={index}>{element}</React.Fragment>
                   ))}
                 </View>
                 <View style={styles.tableCell}>
-                  {renderAttendanceNames(attendanceOverview[eventId]?.no || []).map((element, index) => (
+                  {renderAttendanceNames(memoizedAttendanceOverview[eventId]?.no || []).map((element, index) => (
                     <React.Fragment key={index}>{element}</React.Fragment>
                   ))}
                 </View>
@@ -655,7 +661,7 @@ const renderTools = () => (
       <View>
         {unitLogEvents.map((event, index) => (
           <ThemedText key={index} style={styles.logEntry}>
-            {`[${new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}] ${getUserShortName(event.userId, users)} ${
+            {`[${new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}] ${getUserShortName(event.userId)} ${
               event.change === -1
                 ? `tog en enhet (${event.oldUnits}->${event.newUnits})`
                 : `${event.oldUnits}->${event.newUnits} (${event.change > 0 ? '+' : ''}${event.change})`
@@ -696,22 +702,22 @@ const renderTools = () => (
 
   const getListData = (): ListItem[] => {
     const allUsers = sortUsers(users);
-    const listData: ListItem[] = [...allUsers];
+    const listData: ListItem[] = [];
 
-    if (!isDisplayTime()) {
-      const usersNotHome = users.filter((user) => !user.safeArrival);
-      const usersHome = users.filter((user) => !!user.safeArrival);
+    if (!isPartyMode) {
+      allUsers.forEach(user => listData.push({...user, key: `all-${user.userId}`}));
+    } else {
+      const usersNotHome = allUsers.filter((user) => !user.safeArrival);
+      const usersHome = allUsers.filter((user) => !!user.safeArrival);
 
-      listData.unshift(
-        { type: "header" as const, title: "Kvar på event" },
-        ...usersNotHome
-      );
+      if (usersNotHome.length > 0) {
+        listData.push({ type: "header", title: "Kvar på event" });
+        usersNotHome.forEach(user => listData.push({...user, key: `notHome-${user.userId}`}));
+      }
 
       if (usersHome.length > 0) {
-        listData.push(
-          { type: "header" as const, title: "Hemma" },
-          ...usersHome
-        );
+        listData.push({ type: "header", title: "Hemma" });
+        usersHome.forEach(user => listData.push({...user, key: `home-${user.userId}`}));
       }
     }
 
@@ -745,17 +751,30 @@ const renderTools = () => (
     </TouchableOpacity>
   );
 
+  const renderSubHeader = ({ title }) => (
+    <View style={styles.subHeaderContainer}>
+      <ThemedText style={styles.subHeader}>{title}</ThemedText>
+    </View>
+  );
+
   return (
     <View style={styles.blackBackground}>
       <SectionList<ListItem | "tools", Section>
         sections={sections}
         keyExtractor={(item, index) => {
-          if (typeof item === 'string') return item;
+          if (typeof item === 'string') return `tools-${index}`;
+          if ('key' in item) return item.key;
           if ('userId' in item) return item.userId;
-          return index.toString();
+          if ('type' in item && item.type === 'header') return `header-${item.title}`;
+          return `item-${index}`;
         }}
         renderSectionHeader={renderSectionHeader}
-        renderItem={({ item, section }) => renderItem(item, section.title)}
+        renderItem={({ item, section }: { item: ListItem | "tools"; section: Section }) => {
+          if (typeof item === 'object' && 'type' in item && item.type === 'header') {
+            return renderSubHeader(item);
+          }
+          return renderItem({ item, section });
+        }}
         contentContainerStyle={styles.sectionScrollContainer}
         showsVerticalScrollIndicator={false}
         style={styles.scrollContainer}
@@ -1181,5 +1200,18 @@ const styles = StyleSheet.create({
   },
   toolsContainer: {
     paddingBottom: 25,
+  },
+  subHeaderContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    marginTop: 10,
+    marginBottom: 5,
+    borderRadius: 5,
+  },
+  subHeader: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
   },
 });

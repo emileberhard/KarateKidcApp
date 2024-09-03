@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, TouchableOpacity, Linking, Alert  } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Linking, Alert, Platform } from "react-native";
 import { ThemedText } from "./ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { getDatabase, ref, get } from "firebase/database";
@@ -41,11 +41,15 @@ export function ResponsiblePhaddersPanel() {
         if (relevantEvent) {
           const phadders: ResponsiblePhadder[] = [];
           if (relevantEvent.Ansvarig) {
-            const [firstName, lastName] = relevantEvent.Ansvarig.split(' ');
-            phadders.push({ role: "Ansvarigphadder", name: relevantEvent.Ansvarig, userId: `${firstName}_${lastName}` });
+            const ansvarigArray = Array.isArray(relevantEvent.Ansvarig) ? relevantEvent.Ansvarig : [relevantEvent.Ansvarig];
+            ansvarigArray.forEach((name) => {
+              const [firstName, lastName] = name.split(' ');
+              phadders.push({ role: "Ansvarigphadder", name, userId: `${firstName}_${lastName}` });
+            });
           }
-          if (relevantEvent.Nykter && Array.isArray(relevantEvent.Nykter)) {
-            relevantEvent.Nykter.forEach((name) => {
+          if (relevantEvent.Nykter) {
+            const nykterArray = Array.isArray(relevantEvent.Nykter) ? relevantEvent.Nykter : [relevantEvent.Nykter];
+            nykterArray.forEach((name) => {
               const [firstName, lastName] = name.split(' ');
               phadders.push({ role: "Nykterphadder", name, userId: `${firstName}_${lastName}` });
             });
@@ -64,7 +68,7 @@ export function ResponsiblePhaddersPanel() {
     fetchPhadders();
   }, []);
 
-  const handlePhonePress = async (userId: string) => {
+  const handlePhonePress = async (userId: string, action: 'call' | 'text') => {
     try {
       const db = getDatabase();
       const usersRef = ref(db, 'users');
@@ -79,12 +83,10 @@ export function ResponsiblePhaddersPanel() {
 
       if (user && user.phoneNumber) {
         const phoneNumber = user.phoneNumber.replace(/\s/g, '');
-        const supported = await Linking.canOpenURL(`tel:${phoneNumber}`);
-
-        if (supported) {
-          await Linking.openURL(`tel:${phoneNumber}`);
+        if (action === 'call') {
+          handleCall(phoneNumber);
         } else {
-          Alert.alert("Error", "Phone calls are not supported on this device");
+          handleText(phoneNumber);
         }
       } else {
         Alert.alert("Sorry :(", `Inget telefonnummer inlagt för ${firstName}`);
@@ -92,6 +94,26 @@ export function ResponsiblePhaddersPanel() {
     } catch (error) {
       console.error("Error fetching phone number:", error);
       Alert.alert("Error", "Failed to fetch phone number");
+    }
+  };
+
+  const handleCall = async (phoneNumber: string) => {
+    const supported = await Linking.canOpenURL(`tel:${phoneNumber}`);
+    if (supported) {
+      await Linking.openURL(`tel:${phoneNumber}`);
+    } else {
+      Alert.alert("Error", "Phone calls are not supported on this device");
+    }
+  };
+
+  const handleText = async (phoneNumber: string) => {
+    const separator = Platform.OS === 'ios' ? '&' : '?';
+    const url = `sms:${phoneNumber}${separator}body=`;
+    const supported = await Linking.canOpenURL(url);
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      Alert.alert("Error", "SMS is not supported on this device");
     }
   };
 
@@ -115,20 +137,41 @@ export function ResponsiblePhaddersPanel() {
       </View>
       <View style={styles.phadderBubbleContainer}>
         {responsiblePhadders.map((phadder, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.phadderBubbleWrapper}
-            onPress={() => handlePhonePress(phadder.userId)}
+          <View 
+            key={index} 
+            style={[
+              styles.phadderBubbleWrapper, 
+              responsiblePhadders.length === 1 && styles.singlePhadderWrapper
+            ]}
           >
-            <View style={styles.phadderBubble}>
-              <View style={styles.phoneButton}>
-                <Ionicons name="call" size={20} color="white" />
+            <View style={[
+              styles.phadderBubble,
+              responsiblePhadders.length === 1 && styles.singlePhadderBubble
+            ]}>
+              <View style={responsiblePhadders.length === 1 ? styles.singlePhadderContent : styles.multiplePhadderContent}>
+                <ThemedText style={styles.phadderBubbleText}>
+                  {phadder.name.split(' ')[0]}
+                </ThemedText>
+                <View style={[
+                  styles.iconContainer,
+                  responsiblePhadders.length === 1 && styles.singlePhadderIconContainer
+                ]}>
+                  <TouchableOpacity
+                    style={styles.phoneButton}
+                    onPress={() => handlePhonePress(phadder.userId, 'call')}
+                  >
+                    <Ionicons name="call" size={30} color="white"/>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.textButton}
+                    onPress={() => handlePhonePress(phadder.userId, 'text')}
+                  >
+                    <Ionicons name="chatbubble" size={30} color="white" />
+                  </TouchableOpacity>
+                </View>
               </View>
-              <ThemedText style={styles.phadderBubbleText}>
-                {phadder.name.split(' ')[0]}
-              </ThemedText>
             </View>
-          </TouchableOpacity>
+          </View>
         ))}
       </View>
     </View>
@@ -162,14 +205,17 @@ const styles = StyleSheet.create({
   phadderBubbleWrapper: {
     flex: 1,
     minWidth: '40%',
-    maxWidth: '45%',
     padding: 4,
   },
-  phadderBubble: {
-    flexDirection: 'row',
+  singlePhadderWrapper: {
+    width: '100%',
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    backgroundColor: '#A500CE86',
+  },
+  phadderBubble: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgb(255 126 208)',
     borderRadius: 15,
     paddingHorizontal: 15,
     paddingVertical: 10,
@@ -177,17 +223,52 @@ const styles = StyleSheet.create({
     borderColor: '#F2C0FF',
     flex: 1,
   },
+  singlePhadderBubble: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    width: '70%',
+  },
+  multiplePhadderContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  singlePhadderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
   phadderBubbleText: {
-    fontSize: 23,
+    fontSize: 30,
     fontWeight: 'bold',
     color: 'white',
-    flexShrink: 1,
-    marginLeft: 10,
+    textAlign: 'center',
+  },
+  iconContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  singlePhadderIconContainer: {
+    marginTop: 0,
+    marginLeft: 20,
   },
   phoneButton: {
-    paddingVertical: 5,
-    paddingHorizontal: 5,
+    padding: 10,
     backgroundColor: 'limegreen',
     borderRadius: 15,
+    marginRight: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  textButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    backgroundColor: '#007AFF',
+    borderRadius: 15,
+    marginLeft: 5,
   },
 });

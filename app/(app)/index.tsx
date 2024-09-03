@@ -36,6 +36,7 @@ import { ScrollView } from "react-native";
 import { theme } from "@/theme";
 import PhoneNumberPrompt from "@/components/PhoneNumberPrompt";
 import { useDebugSettings } from "@/hooks/useDebugSettings";
+import { useEventSections } from '@/hooks/useEventSections';
 
 export default function HomeScreen() {
   const { user } = useAuth();
@@ -45,10 +46,10 @@ export default function HomeScreen() {
   const [safeArrival, setSafeArrival] = useState<string | null>(null);
   const [firstName, setFirstName] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [showHomeSlider, _setShowHomeSlider] = useState(false);
   const [showPhonePrompt, setShowPhonePrompt] = useState(false);
   const [debugTime, setDebugTime] = useState<Date | null>(null);
   const { debugMode } = useDebugSettings();
+  const { isPartyMode } = useEventSections();
 
   useEffect(() => {
     if (user) {
@@ -227,8 +228,8 @@ export default function HomeScreen() {
                   <UnitPurchaseButton />
                 </View>
               </View>
-              {showHomeSlider && (
-                <View style={styles.homeSliderContainer}>
+              {isPartyMode && (
+                <View>
                   <HomeSlider
                     onSlideComplete={arrivedHomeSafely}
                     text="Bekräfta Hemkomst"
@@ -321,10 +322,6 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     flexGrow: 1,
     paddingBottom: 20, 
-  },
-  homeSliderContainer: {
-    marginBottom: 10,
-
   },
   loadingContainer: {
     flex: 1,
