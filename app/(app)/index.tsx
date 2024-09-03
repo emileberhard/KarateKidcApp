@@ -28,6 +28,7 @@ import SettingsMenu from "@/components/SettingsMenu";
 import UnitPurchaseButton from "@/components/UnitPurchaseButton";
 import { TodaysEvents } from "@/components/TodaysEvents";
 import { ResponsiblePhaddersPanel } from "@/components/ResponsiblePhaddersPanel";
+import UpcomingEvents from "@/components/UpcomingEvents";
 
 import { DrinkEntry } from "../../firebaseConfig";
 import { useAuth } from "@/hooks/useAuth";
@@ -237,6 +238,7 @@ export default function HomeScreen() {
               )}
               <ResponsiblePhaddersPanel />
               <TodaysEvents debugMode={debugMode} />
+              <UpcomingEvents />
             </View>
           )}
         </ThemedView>

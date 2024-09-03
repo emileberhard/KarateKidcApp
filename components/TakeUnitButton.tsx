@@ -181,8 +181,6 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
           styles.container,
           animatedStyle,
           {
-            width: "48%",
-            aspectRatio: 2 / 3,
             backgroundColor,
             borderColor,
           },
@@ -205,11 +203,12 @@ const TakeUnitButton: React.FC<TakeUnitButtonProps> = ({
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 15,
     borderWidth: 2,
-    flex: 1,
+    aspectRatio: 2 / 3,
   },
   beerCanIcon: {
     height: "80%",

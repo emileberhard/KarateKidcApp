@@ -7,6 +7,11 @@ export interface Event {
   location: string;
   Ansvarig?: string;
   Nykter?: string[];
+  attendance?: {
+    maybe?: Record<string, string>;
+    yes?: Record<string, string>;
+    no?: Record<string, string>;
+  };
 }
 
 // User related types

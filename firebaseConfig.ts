@@ -58,7 +58,8 @@ const cloudFunctions = {
   sendAnnouncement: httpsCallable(functions, 'sendAnnouncement'),
   getTransactions: httpsCallable(functions, 'getTransactions'),
   sendSwishReturnNotification: httpsCallable(functions, 'sendSwishReturnNotification'),
-  getEvents: httpsCallable(functions, 'getEvents'), // Add this line
+  getEvents: httpsCallable(functions, 'getEvents'),
+  getUpcomingEvents: httpsCallable(functions, 'getUpcomingEvents')
 };
 
 let messaging: Messaging | null = null;

@@ -29,7 +29,7 @@ export default ({ config }) => {
     ...config,
     ...variantConfig,
     slug: "KarateKidcApp",
-    version: "1.4.5",
+    version: "1.5.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     scheme: "karatekidcapp",
@@ -80,6 +80,7 @@ export default ({ config }) => {
       },
       eas: {
         projectId: "06df8d9a-ac9e-460a-a314-10f4ac2bfa4b",
+        owner: "emileberhard" 
       },
     },
     fonts: [

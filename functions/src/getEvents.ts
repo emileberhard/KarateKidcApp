@@ -20,7 +20,9 @@ export const getEvents = onCall({
     const db = admin.database();
     const eventsRef = db.ref('events');
     const snapshot = await eventsRef.once('value');
-    const allEvents: Event[] = snapshot.val() || [];
+    const eventsData = snapshot.val() || {};
+
+    const allEvents: Event[] = Object.values(eventsData);
 
     const now = new Date();
     const today = new Date(now);

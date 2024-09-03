@@ -16,7 +16,7 @@ import nollaImage from "@/assets/images/nollla.png";
 import phadderImage from "@/assets/images/phadder.png";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
-import { getDatabase, ref, onValue, set, remove } from "firebase/database";
+import { getDatabase, ref, onValue, set, remove, off } from "firebase/database";
 import { AntDesign } from "@expo/vector-icons";
 import { useAuth } from "@/hooks/useAuth";
 import * as Notifications from "expo-notifications";
@@ -26,6 +26,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useDebugSettings } from "@/hooks/useDebugSettings";
+import { Event } from "@/types";
 
 interface User {
   firstName: string;
@@ -74,6 +75,9 @@ export default function AdminScreen() {
   const { debugMode, toggleDebugMode } = useDebugSettings();
   const [godMode, setgodMode] = useState(false);
   const [showEventSections, setShowEventSections] = useState(false);
+  const [upcomingEvents, setUpcomingEvents] = useState<{ [key: string]: Event }>({});
+  const [attendanceOverview, setAttendanceOverview] = useState<{ [key: string]: { yes: string[], maybe: string[], no: string[] } }>({});
+  const [attendanceListeners, setAttendanceListeners] = useState<{ [key: string]: () => void }>({});
 
   const notificationListener = useRef<Notifications.Subscription>();
   const responseListener = useRef<Notifications.Subscription>();
@@ -182,6 +186,67 @@ export default function AdminScreen() {
       unsubscribeEvents();
     };
   }, []);
+
+  useEffect(() => {
+    const fetchUpcomingEvents = async () => {
+      try {
+        const result = await cloudFunctions.getUpcomingEvents();
+        const events = (result.data as { events: { [key: string]: Event } }).events;
+        const now = new Date();
+        const threeDaysLater = new Date(now);
+        threeDaysLater.setDate(now.getDate() + 3);
+
+        const filteredEvents = Object.entries(events).filter(([_, event]) => {
+          const eventDate = new Date(event.start);
+          return eventDate >= now && eventDate <= threeDaysLater;
+        });
+
+        setUpcomingEvents(Object.fromEntries(filteredEvents));
+
+        // Set up real-time listeners for each event's attendance
+        const db = getDatabase();
+        const newListeners: { [key: string]: () => void } = {};
+
+        filteredEvents.forEach(([eventId, _]) => {
+          const eventAttendanceRef = ref(db, `events/${eventId}/attendance`);
+          onValue(eventAttendanceRef, (snapshot) => {
+            if (snapshot.exists()) {
+              const attendanceData = snapshot.val();
+              const eventOverview = {
+                yes: Object.entries(attendanceData)
+                  .filter(([_, status]) => status === 'yes')
+                  .map(([userId, _]) => getUserShortName(userId, users)),
+                maybe: Object.entries(attendanceData)
+                  .filter(([_, status]) => status === 'maybe')
+                  .map(([userId, _]) => getUserShortName(userId, users)),
+                no: Object.entries(attendanceData)
+                  .filter(([_, status]) => status === 'no')
+                  .map(([userId, _]) => getUserShortName(userId, users)),
+              };
+              setAttendanceOverview(prev => ({
+                ...prev,
+                [eventId]: eventOverview
+              }));
+            }
+          });
+          newListeners[eventId] = () => off(eventAttendanceRef);
+        });
+
+        // Clean up old listeners and set new ones
+        Object.values(attendanceListeners).forEach(removeListener => removeListener());
+        setAttendanceListeners(newListeners);
+      } catch (error) {
+        console.error("Error fetching upcoming events:", error);
+      }
+    };
+
+    fetchUpcomingEvents();
+
+    // Clean up function
+    return () => {
+      Object.values(attendanceListeners).forEach(removeListener => removeListener());
+    };
+  }, [users]); // Dependencies array includes users to re-fetch when user list changes
 
   const isDisplayTime = () => !showEventSections;
 
@@ -513,6 +578,33 @@ export default function AdminScreen() {
             )}
           </TouchableOpacity>
         </View>
+      </View>
+      <View style={styles.eventOverviewContainer}>
+        <ThemedText style={styles.eventOverviewHeader}>Vem kommer?</ThemedText>
+        {Object.entries(upcomingEvents).map(([eventId, event]) => {
+          const eventDate = new Date(event.start);
+          const weekdays = ['Söndag', 'Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag'];
+          const weekday = weekdays[eventDate.getDay()];
+          return (
+            <View key={eventId} style={styles.eventOverview}>
+              <ThemedText style={styles.eventTitle}>
+                {event.summary} ({weekday})
+              </ThemedText>
+              <View style={styles.table}>
+                <View style={styles.tableRow}>
+                  <ThemedText style={[styles.tableHeader, styles.yesTag]}>Ja</ThemedText>
+                  <ThemedText style={[styles.tableHeader, styles.maybeTag]}>Kanske</ThemedText>
+                  <ThemedText style={[styles.tableHeader, styles.noTag]}>Nej</ThemedText>
+                </View>
+                <View style={styles.tableRow}>
+                  <ThemedText style={styles.tableCell}>{attendanceOverview[eventId]?.yes.join(', ') || '-'}</ThemedText>
+                  <ThemedText style={styles.tableCell}>{attendanceOverview[eventId]?.maybe.join(', ') || '-'}</ThemedText>
+                  <ThemedText style={styles.tableCell}>{attendanceOverview[eventId]?.no.join(', ') || '-'}</ThemedText>
+                </View>
+              </View>
+            </View>
+          );
+        })}
       </View>
       <View style={styles.logContainer}>
         <ThemedText style={styles.logHeader}>Enhetslogg</ThemedText>
@@ -949,5 +1041,72 @@ const styles = StyleSheet.create({
   debugTimeButtonText: {
     color: 'white',
     fontSize: 14,
+  },
+  eventOverviewContainer: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: '#48002f',
+    borderRadius: 15,
+    borderWidth: 3,
+    borderColor: '#b40075',
+  },
+  eventOverviewHeader: {
+    fontSize: 30,
+    marginLeft: 4,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 5,
+  },
+  eventOverview: {
+    marginBottom: 10,
+  },
+  eventTitle: {
+    marginTop: 10,
+    marginLeft: 4,
+    fontSize: 19,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  attendanceText: {
+    fontSize: 14,
+    color: 'white',
+  },
+  table: {
+    marginTop: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 5,
+  },
+  tableRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  tableHeader: {
+    flex: 1,
+    fontWeight: 'bold',
+    color: 'white',
+    textAlign: 'center',
+    borderRadius: 1,
+    overflow: 'hidden',
+  },
+  tableCell: {
+    flex: 1,
+    color: 'white',
+    textAlign: 'center',
+    paddingVertical: 5,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  yesTag: {
+    backgroundColor: '#4CAF50', // Green
+    paddingVertical: 5,
+  },
+  maybeTag: {
+    backgroundColor: 'orange', // Yellow
+    paddingVertical: 5,
+  },
+  noTag: {
+    backgroundColor: '#FF5252', // Red
+    paddingVertical: 5,
   },
 });
