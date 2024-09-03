@@ -209,7 +209,7 @@ export default function HomeScreen() {
               <HelloWave />
             </ThemedView>
             <ThemedText bold style={styles.welcomeText}>
-              Välkommen till dojen!
+              Välkommen till dojon!
             </ThemedText>
           </ThemedView>
           {user && (

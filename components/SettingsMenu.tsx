@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   container: {
     position: "absolute",
     right: -40,
-    top: 55,
+    top: 60,
     zIndex: 1000,
   },
   menuButton: {
