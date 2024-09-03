@@ -14,7 +14,8 @@ export function useEventSections() {
         const currentEvent = Object.values(events).find((event: any) => {
           const startTime = new Date(event.start);
           const endTime = new Date(event.end);
-          const extendedEndTime = new Date(endTime.getTime() + 2 * 60 * 60 * 1000); 
+          const extendedTime = endTime.getHours() >= 22 ? 4 : 1;
+          const extendedEndTime = new Date(endTime.getTime() + extendedTime * 60 * 60 * 1000);
           return now >= startTime && now <= extendedEndTime && (event.ansvarig || event.nykter);
         });
         setIsPartyMode(!!currentEvent);
