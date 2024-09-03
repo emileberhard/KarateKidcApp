@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { View, StyleSheet, TouchableOpacity, Linking, Alert  } from "react-native";
 import { ThemedText } from "./ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import events from "../data/events.json";
 import { getDatabase, ref, get } from "firebase/database";
 import { Ionicons } from '@expo/vector-icons';
 import { Event, ResponsiblePhadder, UserInfo } from '../types';
@@ -17,42 +16,52 @@ export function ResponsiblePhaddersPanel() {
   const { fontSize, onTextLayout, onContainerLayout } = useAutoSizeText(24, 12);
 
   useEffect(() => {
-    const now = new Date();
-    const today = new Date(now);
-    today.setHours(0, 0, 0, 0);
+    const fetchPhadders = async () => {
+      try {
+        const db = getDatabase();
+        const eventsRef = ref(db, 'events');
+        const snapshot = await get(eventsRef);
+        const eventsData = snapshot.val() as Record<string, Event>;
 
-    const relevantEvent = events.reduce((mostRecentEvent, event) => {
-      const eventStart = new Date(event.start);
-      const eventEnd = new Date(event.end);
-      eventEnd.setDate(eventEnd.getDate() + 1);
-      eventEnd.setHours(8, 0, 0, 0);
+        const now = new Date();
+        const relevantEvent = Object.values(eventsData).reduce((mostRecentEvent, event) => {
+          const eventStart = new Date(event.start);
+          const eventEnd = new Date(event.end);
+          eventEnd.setDate(eventEnd.getDate() + 1);
+          eventEnd.setHours(8, 0, 0, 0);
 
-      if (eventStart <= now && now < eventEnd) {
-        if (!mostRecentEvent || eventStart > new Date(mostRecentEvent.start)) {
-          return event;
+          if (eventStart <= now && now < eventEnd) {
+            if (!mostRecentEvent || eventStart > new Date(mostRecentEvent.start)) {
+              return event;
+            }
+          }
+          return mostRecentEvent;
+        }, null as Event | null);
+
+        if (relevantEvent) {
+          const phadders: ResponsiblePhadder[] = [];
+          if (relevantEvent.Ansvarig) {
+            const [firstName, lastName] = relevantEvent.Ansvarig.split(' ');
+            phadders.push({ role: "Ansvarigphadder", name: relevantEvent.Ansvarig, userId: `${firstName}_${lastName}` });
+          }
+          if (relevantEvent.Nykter && Array.isArray(relevantEvent.Nykter)) {
+            relevantEvent.Nykter.forEach((name) => {
+              const [firstName, lastName] = name.split(' ');
+              phadders.push({ role: "Nykterphadder", name, userId: `${firstName}_${lastName}` });
+            });
+          }
+          setResponsiblePhadders(phadders);
+          setEventName(relevantEvent.summary);
+        } else {
+          setResponsiblePhadders([]);
+          setEventName("");
         }
+      } catch (error) {
+        console.error("Error fetching events from database:", error);
       }
-      return mostRecentEvent;
-    }, null as Event | null);
+    };
 
-    if (relevantEvent) {
-      const phadders: ResponsiblePhadder[] = [];
-      if (relevantEvent.Ansvarig) {
-        const [firstName, lastName] = relevantEvent.Ansvarig.split(' ');
-        phadders.push({ role: "Ansvarigphadder", name: relevantEvent.Ansvarig, userId: `${firstName}_${lastName}` });
-      }
-      if (relevantEvent.Nykter && Array.isArray(relevantEvent.Nykter)) {
-        relevantEvent.Nykter.forEach((name) => {
-          const [firstName, lastName] = name.split(' ');
-          phadders.push({ role: "Nykterphadder", name, userId: `${firstName}_${lastName}` });
-        });
-      }
-      setResponsiblePhadders(phadders);
-      setEventName(relevantEvent.summary);
-    } else {
-      setResponsiblePhadders([]);
-      setEventName("");
-    }
+    fetchPhadders();
   }, []);
 
   const handlePhonePress = async (userId: string) => {
@@ -128,7 +137,7 @@ export function ResponsiblePhaddersPanel() {
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 10,
+    marginVertical: 10,
     padding: 10,
     borderRadius: 15,
     borderWidth: 2,
