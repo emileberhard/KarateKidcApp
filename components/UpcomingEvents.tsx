@@ -14,7 +14,7 @@ interface Event {
   start: string;
 }
 
-type AttendanceStatus = 'initial' | 'yes' | 'no' | 'maybe';
+type AttendanceStatus = 'initial' | 'yes' | 'no' | 'maybe' | 'wantTicket';
 
 const UpcomingEvents = () => {
   const [events, setEvents] = useState<{ [key: string]: Event }>({});
@@ -133,27 +133,34 @@ const UpcomingEvents = () => {
               <Text style={styles.eventText}>{event.summary}</Text>
             </View>
             <View style={styles.optionsContainer}>
-              {['yes', 'maybe', 'no'].map((option) => {
+              {['yes', 'maybe', 'no', 'wantTicket'].map((option) => {
                 const isSelected = status === option;
                 const isGreyedOut = status !== 'initial' && !isSelected;
-                const newStatus: AttendanceStatus = option === 'yes' ? 'yes' : option === 'no' ? 'no' : 'maybe';
+                const newStatus: AttendanceStatus = option as AttendanceStatus;
 
                 return (
-                  <TouchableOpacity
-                    key={option}
-                    style={[
-                      styles.optionButton,
-                      styles[`${option}Button`],
-                      isSelected && styles.selectedButton,
-                      isGreyedOut && styles.greyedOutButton,
-                      option === 'no' && styles.lastOptionButton // Add this line
-                    ]}
-                    onPress={() => handleAttendanceUpdate(event.start, newStatus)}
-                  >
-                    <Text style={styles.optionText}>
-                      {option === 'yes' ? 'Ja' : option === 'no' ? 'Nej' : 'Kanske'}
-                    </Text>
-                  </TouchableOpacity>
+                  <View key={option} style={styles.optionButtonWrapper}>
+                    <TouchableOpacity
+                      style={[
+                        styles.optionButton,
+                        styles[`${option}Button`],
+                        isGreyedOut && styles.greyedOutButton,
+                        option === 'wantTicket' && styles.wantTicketButton,
+                      ]}
+                      onPress={() => handleAttendanceUpdate(event.start, newStatus)}
+                    >
+                      <Text style={[
+                        styles.optionText,
+                        option === 'wantTicket' && styles.wantTicketText
+                      ]}>
+                        {option === 'yes' ? 'Ja' :
+                         option === 'no' ? 'Nej' :
+                         option === 'maybe' ? 'Kanske' :
+                         'Vill ha\nbiljett'}
+                      </Text>
+                    </TouchableOpacity>
+                    {isSelected && <View style={styles.selectedBorder} />}
+                  </View>
                 );
               })}
             </View>
@@ -175,38 +182,36 @@ const styles = StyleSheet.create({
   },
   eventContainer: {
     marginBottom: 10,
-    paddingLeft: 10,
+    padding: 10,
     backgroundColor: 'rgb(255 126 208)',
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#FFD900',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
   },
   eventInfo: {
-    flex: 1,
+    marginBottom: 12,
+    marginLeft: 5,
   },
   eventText: {
-    fontSize: 15,
+    fontSize: 18,
     color: 'white',
     fontFamily: theme.fonts.bold,
   },
   optionsContainer: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
   },
   optionButton: {
-    paddingVertical: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
     alignItems: 'center',
-    minWidth: 60,
+    justifyContent: 'center',
+    borderRadius: 5,
+    flex: 1,
+    marginHorizontal: 2,
   },
-  lastOptionButton: {
-    paddingVertical: 12,
-    borderTopRightRadius: 10,
-    borderBottomRightRadius: 10,
-    alignItems: 'center',
-    minWidth: 60,
+  wantTicketButton: {
+    backgroundColor: 'fuchsia',
   },
   yesButton: {
     backgroundColor: 'green',
@@ -229,6 +234,12 @@ const styles = StyleSheet.create({
   optionText: {
     color: 'white',
     fontFamily: theme.fonts.bold,
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  wantTicketText: {
+    fontSize: 10,
+    lineHeight: 12,
   },
   weekdayText: {
     fontSize: 13,
@@ -251,6 +262,22 @@ const styles = StyleSheet.create({
   },
   calendarIcon: {
     marginRight: 3,
+  },
+  optionButtonWrapper: {
+    flex: 1,
+    marginHorizontal: 2,
+    position: 'relative',
+  },
+  selectedBorder: {
+    position: 'absolute',
+    top: -3,
+    left: -1,
+    right: -1,
+    bottom: -3,
+    borderWidth: 3,
+    borderRadius: 8,
+    borderColor: '#FFEA71',
+    zIndex: -1,
   },
 });
 

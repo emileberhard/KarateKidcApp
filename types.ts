@@ -5,12 +5,13 @@ export interface Event {
   end: string;
   description: string;
   location: string;
-  Ansvarig?: string;
-  Nykter?: string[];
+  ansvarig?: string;
+  nykter?: string[];
   attendance?: {
     maybe?: Record<string, string>;
     yes?: Record<string, string>;
     no?: Record<string, string>;
+    wantTicket?: Record<string, string>;
   };
 }
 

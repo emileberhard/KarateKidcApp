@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import * as Haptics from "expo-haptics";
 
+
 interface SettingsMenuProps {
   onResetSlider: () => void;
 }
@@ -88,7 +89,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onResetSlider }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container]}>
       <TouchableOpacity onPress={handleOpenMenu} style={styles.menuButton}>
         <View style={styles.iconContainer}>
           <Ionicons name="settings-outline" size={40} color={iconColor} />
@@ -168,8 +169,8 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ onResetSlider }) => {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
+    top: 7,
     right: -40,
-    top: 60,
     zIndex: 1000,
   },
   menuButton: {

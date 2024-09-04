@@ -83,7 +83,7 @@ export default function AdminScreen() {
   const [godMode, setgodMode] = useState(false);
   const { isPartyMode } = useEventSections();
   const [upcomingEvents, setUpcomingEvents] = useState<{ [key: string]: Event }>({});
-  const [attendanceOverview, setAttendanceOverview] = useState<{ [key: string]: { yes: string[], maybe: string[], no: string[] } }>({});
+  const [attendanceOverview, setAttendanceOverview] = useState<{ [key: string]: { yes: string[], maybe: string[], no: string[], wantTicket: string[] } }>({});
   const [attendanceListeners, setAttendanceListeners] = useState<{ [key: string]: () => void }>({});
 
   const notificationListener = useRef<Notifications.Subscription>();
@@ -97,7 +97,7 @@ export default function AdminScreen() {
 
   const [usersLoaded, setUsersLoaded] = useState(false);
 
-  const [cachedAttendanceOverview, setCachedAttendanceOverview] = useState<{ [key: string]: { yes: string[], maybe: string[], no: string[] } }>({});
+  const [cachedAttendanceOverview, setCachedAttendanceOverview] = useState<{ [key: string]: { yes: string[], maybe: string[], no: string[], wantTicket: string[] } }>({});
 
   // Load cached data on component mount
   useEffect(() => {
@@ -243,6 +243,9 @@ export default function AdminScreen() {
                   .map(([userId, _]) => getUserShortName(userId)),
                 no: Object.entries(attendanceData)
                   .filter(([_, status]) => status === 'no')
+                  .map(([userId, _]) => getUserShortName(userId)),
+                wantTicket: Object.entries(attendanceData)
+                  .filter(([_, status]) => status === 'wantTicket')
                   .map(([userId, _]) => getUserShortName(userId)),
               };
               setAttendanceOverview(prev => {
@@ -586,6 +589,7 @@ export default function AdminScreen() {
         const eventDate = new Date(event.start);
         const weekdays = ['Söndag', 'Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag'];
         const weekday = weekdays[eventDate.getDay()];
+        const wantTicket = memoizedAttendanceOverview[eventId]?.wantTicket || [];
         return (
           <View key={eventId} style={styles.eventOverview}>
             <ThemedText style={styles.eventTitle}>
@@ -599,21 +603,27 @@ export default function AdminScreen() {
               </View>
               <View style={styles.tableRow}>
                 <View style={styles.tableCell}>
-                  {renderAttendanceNames(memoizedAttendanceOverview[eventId]?.yes || []).map((element, index) => (
-                    <React.Fragment key={index}>{element}</React.Fragment>
-                  ))}
+                  {renderAttendanceNames(memoizedAttendanceOverview[eventId]?.yes || [])}
                 </View>
                 <View style={styles.tableCell}>
-                  {renderAttendanceNames(memoizedAttendanceOverview[eventId]?.maybe || []).map((element, index) => (
-                    <React.Fragment key={index}>{element}</React.Fragment>
-                  ))}
+                  {renderAttendanceNames(memoizedAttendanceOverview[eventId]?.maybe || [])}
                 </View>
                 <View style={styles.tableCell}>
-                  {renderAttendanceNames(memoizedAttendanceOverview[eventId]?.no || []).map((element, index) => (
-                    <React.Fragment key={index}>{element}</React.Fragment>
-                  ))}
+                  {renderAttendanceNames(memoizedAttendanceOverview[eventId]?.no || [])}
                 </View>
               </View>
+              {wantTicket.length > 0 && (
+                <>
+                  <View style={[styles.tableRow, styles.wantTicketRow]}>
+                    <ThemedText style={[styles.tableHeader, styles.wantTicketTag]}>Vill ha biljett</ThemedText>
+                  </View>
+                  <View style={styles.tableRow}>
+                    <View style={[styles.tableCell, styles.wantTicketCell]}>
+                      {renderAttendanceNames(wantTicket)}
+                    </View>
+                  </View>
+                </>
+              )}
             </View>
           </View>
         );
@@ -758,7 +768,6 @@ const renderTools = () => (
   );
 
   return (
-    <View style={styles.blackBackground}>
       <SectionList<ListItem | "tools", Section>
         sections={sections}
         keyExtractor={(item, index) => {
@@ -780,7 +789,6 @@ const renderTools = () => (
         style={styles.scrollContainer}
         stickySectionHeadersEnabled={false}
       />
-    </View>
   );
 }
 
@@ -788,7 +796,7 @@ const styles = StyleSheet.create({
   blackBackground: {
     flex: 1,
     backgroundColor: 'black',
-    paddingTop: 50
+    paddingTop: 45
   },
   userContainer: {
     marginBottom: 10,
@@ -1184,19 +1192,34 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF5252',
     paddingVertical: 5,
   },
+  wantTicketRow: {
+    paddingTop: 0,
+  },
+  wantTicketTag: {
+    backgroundColor: 'fuchsia',
+    paddingVertical: 5,
+  },
+  wantTicketCell: {
+    flex: 3,
+    maxWidth: '35%',
+    borderWidth: 0
+  },
   sectionScrollContainer: {
     paddingHorizontal: 10,
     backgroundColor: 'black',
+    paddingBottom: 45,
   },
   sectionHeaderContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingTop: 5,
+    paddingBottom: 5,
   },
   scrollContainer: {
     backgroundColor: 'black',
+    paddingTop: 40,
   },
   toolsContainer: {
     paddingBottom: 25,
@@ -1205,7 +1228,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     paddingVertical: 5,
     paddingHorizontal: 10,
-    marginTop: 10,
     marginBottom: 5,
     borderRadius: 5,
   },

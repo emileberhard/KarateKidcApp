@@ -40,15 +40,15 @@ export function ResponsiblePhaddersPanel() {
 
         if (relevantEvent) {
           const phadders: ResponsiblePhadder[] = [];
-          if (relevantEvent.Ansvarig) {
-            const ansvarigArray = Array.isArray(relevantEvent.Ansvarig) ? relevantEvent.Ansvarig : [relevantEvent.Ansvarig];
+          if (relevantEvent.ansvarig) {
+            const ansvarigArray = Array.isArray(relevantEvent.ansvarig) ? relevantEvent.ansvarig : [relevantEvent.ansvarig];
             ansvarigArray.forEach((name) => {
               const [firstName, lastName] = name.split(' ');
               phadders.push({ role: "Ansvarigphadder", name, userId: `${firstName}_${lastName}` });
             });
           }
-          if (relevantEvent.Nykter) {
-            const nykterArray = Array.isArray(relevantEvent.Nykter) ? relevantEvent.Nykter : [relevantEvent.Nykter];
+          if (relevantEvent.nykter) {
+            const nykterArray = Array.isArray(relevantEvent.nykter) ? relevantEvent.nykter : [relevantEvent.nykter];
             nykterArray.forEach((name) => {
               const [firstName, lastName] = name.split(' ');
               phadders.push({ role: "Nykterphadder", name, userId: `${firstName}_${lastName}` });
@@ -121,7 +121,9 @@ export function ResponsiblePhaddersPanel() {
     return null;
   }
 
-  const headerText = `${responsiblePhadders[0].role === "Nykterphadder" ? "Nykterphaddrar" : "Ansvarigphaddrar"} ${eventName}`;
+  const headerText = responsiblePhadders.length === 1
+    ? `${responsiblePhadders[0].role} ${eventName}`
+    : `${responsiblePhadders[0].role === "Nykterphadder" ? "Nykterphaddrar" : "Ansvarigphaddrar"} ${eventName}`;
 
   return (
     <View style={[styles.container, { backgroundColor: primaryColor, borderColor: accentColor }]}>
@@ -146,7 +148,8 @@ export function ResponsiblePhaddersPanel() {
           >
             <View style={[
               styles.phadderBubble,
-              responsiblePhadders.length === 1 && styles.singlePhadderBubble
+              responsiblePhadders.length === 1 && styles.singlePhadderBubble,
+              { borderColor: accentColor }
             ]}>
               <View style={responsiblePhadders.length === 1 ? styles.singlePhadderContent : styles.multiplePhadderContent}>
                 <ThemedText style={styles.phadderBubbleText}>
@@ -219,8 +222,8 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     paddingHorizontal: 15,
     paddingVertical: 10,
-    borderWidth: 1,  
-    borderColor: '#F2C0FF',
+    borderWidth: 1,
+    // borderColor is now set dynamically
     flex: 1,
   },
   singlePhadderBubble: {

@@ -37,6 +37,8 @@ import { theme } from "@/theme";
 import PhoneNumberPrompt from "@/components/PhoneNumberPrompt";
 import { useDebugSettings } from "@/hooks/useDebugSettings";
 import { useEventSections } from '@/hooks/useEventSections';
+import { StatusBar } from "expo-status-bar";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
   const { user } = useAuth();
@@ -50,6 +52,7 @@ export default function HomeScreen() {
   const [debugTime, setDebugTime] = useState<Date | null>(null);
   const { debugMode } = useDebugSettings();
   const { isPartyMode } = useEventSections();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (user) {
@@ -101,6 +104,11 @@ export default function HomeScreen() {
       };
     }
   }, [user]);
+
+  useEffect(() => {
+    console.log('Top inset:', insets.top);
+    console.log('Has notch:', insets.top > 20); // A simple heuristic
+  }, [insets]);
 
   const handlePhoneSubmit = useCallback((phoneNumber: string) => {
     if (user && user.userId) {
@@ -196,8 +204,12 @@ export default function HomeScreen() {
 
   return (
     <GestureHandlerRootView style={styles.container}>
+      <StatusBar hidden={true} />
       <ScrollView 
-        contentContainerStyle={styles.scrollViewContent}
+        contentContainerStyle={[
+          styles.scrollViewContent,
+          { paddingTop: Math.max(insets.top, 20) } // Ensure minimum padding
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <ThemedView style={styles.contentContainer}>
@@ -262,7 +274,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#460038",
-    paddingHorizontal: 20,
+    paddingHorizontal: 15,
   },
   headerContainer: {
     flexDirection: "column",
@@ -317,11 +329,11 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    paddingTop: Platform.OS === 'ios' ? 55 : 45,
+    // paddingTop is now handled dynamically
   },
   scrollViewContent: {
     flexGrow: 1,
-    paddingBottom: 20, 
+    paddingBottom: 10, 
   },
   loadingContainer: {
     flex: 1,
