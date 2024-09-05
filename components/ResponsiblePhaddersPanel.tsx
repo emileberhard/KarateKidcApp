@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    width: '70%',
+    width: '90%',
   },
   multiplePhadderContent: {
     alignItems: 'center',

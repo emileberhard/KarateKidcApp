@@ -6,6 +6,7 @@ import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
 import { getDevicePushTokenAsync } from "expo-notifications";
 import { UserInfo } from "@/types";
+import * as Application from 'expo-application';
 
 interface UserData {
   userId: string;
@@ -19,6 +20,7 @@ interface UserData {
   email: string;
   platform?: string;
   profile?: string;
+  appVersion?: string;
 }
 
 export function useAuth() {
@@ -34,7 +36,7 @@ export function useAuth() {
         onValue(usersRef, async (snapshot) => {
           const usersData = snapshot.val();
           const userEntry = Object.entries(usersData).find(([_, userData]: [string, UserData]) => userData.userId === firebaseUser.uid);
-          
+          const version = Application.nativeBuildVersion;
           if (userEntry) {
             const [firstName, userData] = userEntry as [string, UserData];
             const userObj: UserData = {
@@ -47,6 +49,8 @@ export function useAuth() {
               firstName,
               lastName: userData.lastName,
               pushToken: userData.pushToken,
+              appVersion: version
+
             };
             setUser(userObj as UserInfo);
 
@@ -115,13 +119,16 @@ export function useAuth() {
       console.log("Push token:", currentToken);
 
       const currentPlatform = Platform.OS;
+      const appVersion = Application.nativeApplicationVersion
+      console.log("App version:", appVersion);
       const currentProfile = process.env.EXPO_PUBLIC_EAS_BUILD_PROFILE;
       
       const userRef = ref(database, `users/${firstName}`);
       await update(userRef, { 
         pushToken: currentToken.data, 
         platform: currentPlatform, 
-        profile: currentProfile 
+        profile: currentProfile,
+        appVersion: appVersion
       });
       
     } catch (error) {
