@@ -223,7 +223,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 10,
     borderWidth: 1,
-    // borderColor is now set dynamically
     flex: 1,
   },
   singlePhadderBubble: {
@@ -231,7 +230,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    width: '90%',
+    width: '85%',
   },
   multiplePhadderContent: {
     alignItems: 'center',

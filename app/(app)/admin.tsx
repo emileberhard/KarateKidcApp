@@ -12,6 +12,8 @@ import {
   Switch,
   Linking,
   Text,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from "react-native";
 import nollaImage from "@/assets/images/nollla.png";
 import phadderImage from "@/assets/images/phadder.png";
@@ -30,6 +32,8 @@ import { useDebugSettings } from "@/hooks/useDebugSettings";
 import { Event } from "@/types";
 import { useEventSections } from '@/hooks/useEventSections';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StatusBar } from "expo-status-bar";
+import { useIsFocused } from '@react-navigation/native';
 
 interface User {
   firstName: string;
@@ -98,6 +102,14 @@ export default function AdminScreen() {
   const [usersLoaded, setUsersLoaded] = useState(false);
 
   const [cachedAttendanceOverview, setCachedAttendanceOverview] = useState<{ [key: string]: { yes: string[], maybe: string[], no: string[], wantTicket: string[] } }>({});
+
+  const [statusBarHidden, setStatusBarHidden] = useState(false);
+  const isFocused = useIsFocused();
+
+  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    setStatusBarHidden(offsetY > 20);
+  }, []);
 
   // Load cached data on component mount
   useEffect(() => {
@@ -768,6 +780,8 @@ const renderTools = () => (
   );
 
   return (
+    <>
+      {isFocused && <StatusBar hidden={statusBarHidden} />}
       <SectionList<ListItem | "tools", Section>
         sections={sections}
         keyExtractor={(item, index) => {
@@ -788,7 +802,10 @@ const renderTools = () => (
         showsVerticalScrollIndicator={false}
         style={styles.scrollContainer}
         stickySectionHeadersEnabled={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       />
+    </>
   );
 }
 

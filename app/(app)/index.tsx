@@ -39,6 +39,8 @@ import { useDebugSettings } from "@/hooks/useDebugSettings";
 import { useEventSections } from '@/hooks/useEventSections';
 import { StatusBar } from "expo-status-bar";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useIsFocused } from '@react-navigation/native';
+import { NativeSyntheticEvent, NativeScrollEvent } from "react-native";
 
 export default function HomeScreen() {
   const { user } = useAuth();
@@ -53,6 +55,8 @@ export default function HomeScreen() {
   const { debugMode } = useDebugSettings();
   const { isPartyMode } = useEventSections();
   const insets = useSafeAreaInsets();
+  const [statusBarHidden, setStatusBarHidden] = useState(false);
+  const isFocused = useIsFocused();
 
   useEffect(() => {
     if (user) {
@@ -194,6 +198,11 @@ export default function HomeScreen() {
     }
   }, [user]);
 
+  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    setStatusBarHidden(offsetY > 75);
+  }, []);
+
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -204,13 +213,15 @@ export default function HomeScreen() {
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <StatusBar hidden={true} />
+      {isFocused && <StatusBar hidden={statusBarHidden} />}
       <ScrollView 
         contentContainerStyle={[
           styles.scrollViewContent,
           { paddingTop: Math.max(insets.top, 20) } // Ensure minimum padding
         ]}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
         <ThemedView style={styles.contentContainer}>
           <SettingsMenu onResetSlider={resetSlider} />
