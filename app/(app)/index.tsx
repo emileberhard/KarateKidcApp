@@ -213,7 +213,7 @@ export default function HomeScreen() {
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      {isFocused && <StatusBar hidden={statusBarHidden} />}
+      {isFocused && <StatusBar style="light" hidden={statusBarHidden} />}
       <ScrollView 
         contentContainerStyle={[
           styles.scrollViewContent,

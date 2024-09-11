@@ -1,4 +1,4 @@
-import { onValueWritten } from "firebase-functions/v2/database";
+import { onValueCreated } from "firebase-functions/v2/database";
 import * as admin from 'firebase-admin';
 import { initializeNotificationService, sendNotifications, shutdownNotificationService } from "./notificationService";
 
@@ -6,15 +6,18 @@ if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-export const notifyAdminsOnSafeArrival = onValueWritten({
+export const safeArrivalNotification = onValueCreated({
   ref: '/users/{userId}/safeArrival',
   region: 'europe-west1',
 }, async (event) => {
+  const safeArrival = event.data.val();
   const userId = event.params.userId;
-  const newValue = event.data.after;
 
-  if (!newValue) {
-    console.log(`Safe arrival not set for user: ${userId}`);
+  console.log(`New safe arrival value: ${safeArrival}`);
+
+  // Stop if the new value is null
+  if (safeArrival === null) {
+    console.log(`Skipping notification for user ${userId} as safe arrival is null`);
     return null;
   }
 
@@ -32,24 +35,21 @@ export const notifyAdminsOnSafeArrival = onValueWritten({
       return null;
     }
 
-   
-    if (user.admin) {
-      console.log(`User ${userId} is an admin. Skipping notification.`);
-      return null;
-    }
-
+    // Fetch all admin users
     const adminUsersSnapshot = await db.ref('users').orderByChild('admin').equalTo(true).once('value');
     const adminUsers = adminUsersSnapshot.val();
 
-    console.log(`Admin users:`, JSON.stringify(adminUsers, null, 2));
-
     if (adminUsers) {
+      console.log(`Sending notification to admin users:`, JSON.stringify(adminUsers, null, 2));
+
       await initializeNotificationService(adminUsers);
       await sendNotifications(adminUsers, {
         title: `${user.firstName} har gått hem 🏠`,
         body: `${user.firstName} har markerat sig själv som hemkommen`,
         data: { userId: userId, safeArrival: 'true' }
       });
+    } else {
+      console.log(`No admin users found. No notification sent.`);
     }
 
     return null;

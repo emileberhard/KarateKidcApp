@@ -781,7 +781,7 @@ const renderTools = () => (
 
   return (
     <>
-      {isFocused && <StatusBar hidden={statusBarHidden} />}
+      {isFocused && <StatusBar style="light" hidden={statusBarHidden} />}
       <SectionList<ListItem | "tools", Section>
         sections={sections}
         keyExtractor={(item, index) => {

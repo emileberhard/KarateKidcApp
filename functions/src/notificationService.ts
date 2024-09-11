@@ -3,7 +3,6 @@ import * as apn from "apn";
 
 let apnProviders: Record<string, apn.Provider> = {};
 
-
 interface NotificationData {
   title: string;
   body: string;
@@ -11,9 +10,11 @@ interface NotificationData {
 }
 
 export async function initializeNotificationService(users: Record<string, any>) {
+  console.log("Initializing Notification Service");
   for (const userId in users) {
     const user = users[userId];
     if (user.platform === "ios") {
+      console.log(`Initializing APN Provider for user ${userId}`);
       apnProviders[userId] = new apn.Provider({
         token: {
           key: process.env.APN_KEY_PATH || "./ApnsKey.p8",
@@ -24,9 +25,11 @@ export async function initializeNotificationService(users: Record<string, any>) 
       });
     }
   }
+  console.log(`Initialized ${Object.keys(apnProviders).length} APN Providers`);
 }
 
 export async function sendNotifications(users: Record<string, any>, notificationData: NotificationData) {
+  console.log("Sending notifications", { notificationData });
   const fcmMessages: admin.messaging.Message[] = [];
   const apnsMessages: NotificationData[] = [];
 
@@ -40,6 +43,8 @@ export async function sendNotifications(users: Record<string, any>, notification
       }
     }
   }
+
+  console.log(`Prepared ${fcmMessages.length} FCM messages and ${apnsMessages.length} APNS messages`);
 
   await sendFCMNotifications(fcmMessages);
   await sendAPNSNotifications(apnsMessages, users);
@@ -70,24 +75,31 @@ function createAPNSMessage(notificationData: NotificationData): apn.Notification
 
 async function sendFCMNotifications(fcmMessages: admin.messaging.Message[]) {
   if (fcmMessages.length > 0) {
+    console.log(`Sending ${fcmMessages.length} FCM notifications`);
     try {
       const response = await admin.messaging().sendAll(fcmMessages);
       console.log("FCM Notifications sent:", JSON.stringify(response, null, 2));
     } catch (error) {
       console.error("Error sending FCM notifications:", error);
     }
+  } else {
+    console.log("No FCM notifications to send");
   }
 }
 
 async function sendAPNSNotifications(apnsMessages: NotificationData[], users: Record<string, any>) {
   if (apnsMessages.length > 0) {
+    console.log(`Sending ${apnsMessages.length} APNS notifications`);
     try {
       const results = await Promise.all(
         Object.entries(users).map(([userId, user]) => {
           if (user.platform === "ios" && !user.muted && user.pushToken) {
             const provider = apnProviders[userId];
             if (provider) {
+              console.log(`Sending APNS notification to user ${userId}`);
               return provider.send(createAPNSMessage(apnsMessages[0]), user.pushToken);
+            } else {
+              console.warn(`No APN provider found for user ${userId}`);
             }
           }
           return Promise.resolve(null);
@@ -97,12 +109,16 @@ async function sendAPNSNotifications(apnsMessages: NotificationData[], users: Re
     } catch (error) {
       console.error("Error sending APNS notifications:", error);
     }
+  } else {
+    console.log("No APNS notifications to send");
   }
 }
 
 export function shutdownNotificationService() {
+  console.log("Shutting down Notification Service");
   for (const provider of Object.values(apnProviders)) {
     provider.shutdown();
   }
   apnProviders = {};
+  console.log("Notification Service shut down");
 }

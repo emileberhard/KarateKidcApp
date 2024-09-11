@@ -20,7 +20,6 @@ export const resetUnitsDaily = onSchedule({
     snapshot.forEach((childSnapshot) => {
       const userKey = childSnapshot.key;
       if (userKey) {
-        updates[`${userKey}/unitTakenTimestamps`] = null;
         updates[`${userKey}/safe/notifications`] = [];
         updates[`${userKey}/safeArrival`] = null;
       }
